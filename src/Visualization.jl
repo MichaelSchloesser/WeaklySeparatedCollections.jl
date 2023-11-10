@@ -1,5 +1,3 @@
-using Luxor
-using Colors
 
 const scale_factor = 2.4
 

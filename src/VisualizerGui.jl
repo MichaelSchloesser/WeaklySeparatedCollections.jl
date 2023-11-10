@@ -1,19 +1,3 @@
-begin
-    root_path = dirname(@__DIR__) # path to WSCollection-Visualizer
-    cd(root_path)
-    using Pkg
-    Pkg.activate(".")
-
-    using Mousetrap
-    using NativeFileDialog
-    using JLD2
-    using FileIO
-
-    include("WSCollections.jl")
-    include("Visualization.jl")
-
-    Point = Luxor.Point
-end
 
 main() do app::Application
     
