@@ -10,12 +10,15 @@ using NativeFileDialog
 using JLD2
 using FileIO
 
-include("WSCollections.jl")
+root_path = dirname(@__DIR__) # path to WeaklySeparatedCollections
+
+include("Combinatorics.jl")
 include("Visualization.jl")
+include("VisualizerGui.jl")
 
 Point = Luxor.Point
 
-root_path = dirname(@__DIR__) # path to WSCollection-Visualizer
+
 
 
 end
