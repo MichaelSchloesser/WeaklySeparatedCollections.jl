@@ -1,6 +1,8 @@
+
+import Mousetrap # can be removed after mousetrap reaches version 0.3.1
 module WeaklySeparatedCollections
 
-# export, using, import statements are usually here; we discuss these below
+export visualizer
 
 using Graphs
 using Luxor
@@ -9,16 +11,10 @@ using Mousetrap
 using NativeFileDialog
 using JLD2
 using FileIO
-
-root_path = dirname(@__DIR__) # path to WeaklySeparatedCollections
+using Scratch
 
 include("Combinatorics.jl")
-include("Plotting.jl")
-include("Gui.jl")
-
-Point = Luxor.Point
-
-
-
+include("Plotting.jl")  
+include("Gui.jl")      
 
 end

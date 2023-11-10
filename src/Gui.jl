@@ -1,16 +1,14 @@
 
+bin_path = ""
+
 function visualizer()
+    LPoint = Luxor.Point
 
     main() do app::Application
         
         ####################################################################################
         ###                                Internal data                                 ###
         ####################################################################################
-        
-        # paths
-        src_path = root_path * "\\src\\"
-        asset_path = src_path * "\\assets\\"
-        # currently_opened = "" 
         
         # display data 
         size = 500
@@ -34,7 +32,7 @@ function visualizer()
             D = Dict()
 
             try 
-                D = FileIO.load(src_path * "config.jld2")
+                D = FileIO.load(bin_path * "config.jld2")
             catch e
                 # if no config file exists, create one
                 D = Dict(
@@ -46,7 +44,7 @@ function visualizer()
                 "adjust_angle" => adjust_angle,
                 "theme" => theme
                 )
-                FileIO.save(src_path * "config.jld2", D)
+                FileIO.save(bin_path * "config.jld2", D)
             end
             
             size = D["size"]
@@ -72,13 +70,13 @@ function visualizer()
         tau = i -> scale*sum( reference_polygon[G.labels[i]] )
 
         function update_embedding_data()
-            reference_polygon = [Point( sin(i*2*pi/G.n), -cos(i*2*pi/G.n) ) for i = 0:G.n-1 ]
+            reference_polygon = [LPoint( sin(i*2*pi/G.n), -cos(i*2*pi/G.n) ) for i = 0:G.n-1 ]
             reference_radius = norm(sum(reference_polygon[1:G.k]))
             scale = resolution/(scale_factor * reference_radius)
 
             if adjust_angle
                 angle = acos( -sum(reference_polygon[1:G.k]).y/norm(sum(reference_polygon[1:G.k])) ) - (G.k-1)*2*pi/G.n
-                reference_polygon = [Point( sin(i*2*pi/G.n - angle), -cos(i*2*pi/G.n - angle) ) for i = 0:G.n-1 ]
+                reference_polygon = [LPoint( sin(i*2*pi/G.n - angle), -cos(i*2*pi/G.n - angle) ) for i = 0:G.n-1 ]
             end
         end
         update_embedding_data()
@@ -130,22 +128,22 @@ function visualizer()
         set_expand!(image_display_right, true)
         
         function update_displays()
-            drawWSC(G, asset_path*"display.png", resolution, resolution, 
+            drawWSC(G, bin_path*"display.png", resolution, resolution, 
             backgroundColor = "lightblue4", drawLabels = draw_vertex_labels, adjustAngle = adjust_angle)
 
             if plg_drawmode == "smooth"
-                drawPLG_smooth(G, asset_path*"display2.png", resolution, resolution, 
+                drawPLG_smooth(G, bin_path*"display2.png", resolution, resolution, 
                 backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle)
             elseif plg_drawmode == "straight"
-                drawPLG_straight(G, asset_path*"display2.png", resolution, resolution, 
+                drawPLG_straight(G, bin_path*"display2.png", resolution, resolution, 
                 backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle)
             else
-                drawPLG(G, asset_path*"display2.png", resolution, resolution, 
+                drawPLG(G, bin_path*"display2.png", resolution, resolution, 
                 backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle)
             end
 
-            create_from_file!(image_display_left, asset_path * "display.png")
-            create_from_file!(image_display_right, asset_path * "display2.png")
+            create_from_file!(image_display_left, bin_path * "display.png")
+            create_from_file!(image_display_right, bin_path * "display2.png")
         end
         
         update_displays() # draw once initially
@@ -577,12 +575,12 @@ function visualizer()
         #     w, h = get_allocated_size(data).x, get_allocated_size(data).y
         #     x, y = (x-w/2)*resolution/w, (y-h/2)*resolution/h
             
-        #     is_close_mutable = p -> norm(tau(p) - Point(x, y)) < 25.0 && isMutable(G, p)
+        #     is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && isMutable(G, p)
         #     close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
 
         #     if length(close_mutable) > 0 # show nearest close mutable label
 
-        #         i = argmin(p -> norm(tau(p) - Point(x, y)), close_mutable)
+        #         i = argmin(p -> norm(tau(p) - LPoint(x, y)), close_mutable)
         #         set_text!(currently_selected_label, "currently selected: $(G.labels[i])")
         #     else
         #         set_text!(currently_selected_label, "currently selected: nothing")
@@ -615,7 +613,7 @@ function visualizer()
         #             p3 = arith_mean( G.whiteCliques[ intersect( G.labels[p], G.labels[N_out[2]])  ] )
         #             p4 = arith_mean( G.blackCliques[ sort(union(G.labels[p], G.labels[N_out[2]])) ] )
 
-        #             return isinside(Point(x, y), [p1, p2, p3, p4], allowonedge = false)
+        #             return isinside(LPoint(x, y), [p1, p2, p3, p4], allowonedge = false)
         #         else
         #             return false
         #         end
@@ -646,12 +644,12 @@ function visualizer()
 
             if get_current_button(self) == BUTTON_ID_BUTTON_03 # select label
                 
-                is_close_mutable = p -> norm(tau(p) - Point(x, y)) < 25.0 && isMutable(G, p)
+                is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && isMutable(G, p)
                 close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
 
                 if length(close_mutable) > 0 # show nearest close mutable label
 
-                    i = argmin(p -> norm(tau(p) - Point(x, y)), close_mutable)
+                    i = argmin(p -> norm(tau(p) - LPoint(x, y)), close_mutable)
                     set_text!(currently_selected_label, "currently selected: $(G.labels[i])")
                 else
                     set_text!(currently_selected_label, "currently selected: nothing")
@@ -660,12 +658,12 @@ function visualizer()
             elseif get_current_button(self) == BUTTON_ID_BUTTON_01 # mutate label
                 
                 set_mouse_input_blocked!(true)
-                is_close_mutable = p -> norm(tau(p) - Point(x, y)) < 25.0 && isMutable(G, p)
+                is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && isMutable(G, p)
                 close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
         
                 if length(close_mutable) > 0 # mutate
                     # select direction of mutation
-                    i = argmin(p -> norm(tau(p) - Point(x, y)), close_mutable)
+                    i = argmin(p -> norm(tau(p) - LPoint(x, y)), close_mutable)
                     
                     # mutate and update displays
                     mutate!(G, i)
@@ -702,7 +700,7 @@ function visualizer()
                     p3 = arith_mean( G.whiteCliques[ intersect( G.labels[p], G.labels[N_out[2]])  ] )
                     p4 = arith_mean( G.blackCliques[ sort(union(G.labels[p], G.labels[N_out[2]])) ] )
 
-                    return isinside(Point(x, y), [p1, p2, p3, p4], allowonedge = false)
+                    return isinside(LPoint(x, y), [p1, p2, p3, p4], allowonedge = false)
                 else
                     return false
                 end
@@ -1238,14 +1236,14 @@ function visualizer()
                 "display_right_visible" => get_is_visible(image_display_right),
                 "history_visible" => get_is_visible(history_notebook)
             )
-            FileIO.save(src_path * "view_settings.jld2", D)
+            FileIO.save(bin_path * "view_settings.jld2", D)
         end
 
 
         function load_view_settings()
             D = Dict()
             try
-                D = FileIO.load(src_path * "view_settings.jld2")
+                D = FileIO.load(bin_path * "view_settings.jld2")
             catch e
                 D = Dict(
                 "menubar_visible" => get_is_visible(menubar),
@@ -1253,7 +1251,7 @@ function visualizer()
                 "display_right_visible" => get_is_visible(image_display_right),
                 "history_visible" => get_is_visible(history_notebook)
                 )
-                FileIO.save(src_path * "view_settings.jld2", D)
+                FileIO.save(bin_path * "view_settings.jld2", D)
             end
 
             set_is_visible!(menubar, D["menubar_visible"])
@@ -1400,7 +1398,7 @@ function visualizer()
                 "adjust_angle" => adjust_angle,
                 "theme" => theme
             )
-            FileIO.save(src_path * "config.jld2", D)
+            FileIO.save(bin_path * "config.jld2", D)
 
             update_embedding_data()
             update_displays()
@@ -1481,5 +1479,9 @@ function visualizer()
         present!(main_window)
 
     end
+end
+
+function __init__()
+    global bin_path = @get_scratch!("bin")
 end
 

@@ -1,4 +1,5 @@
 
+LPoint = Luxor.Point
 const scale_factor = 2.4
 
 norm = P -> sqrt(P.x^2 + P.y^2)
@@ -17,7 +18,7 @@ function drawWSC(collection::WSCollection, title::String, width = 500, height = 
     B = collection.blackCliques
     
     s = 1
-    v = [Point( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
+    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
     tau = i -> s*sum( v[labels[i]] )
 
     if isnothing(scale) # autoselect scale such that plabic tiling fits into window
@@ -30,7 +31,7 @@ function drawWSC(collection::WSCollection, title::String, width = 500, height = 
     angle = 0
     if adjustAngle
         angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [Point( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
+        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
     end
 
     Drawing(width, height, title)
@@ -116,7 +117,7 @@ function drawPLG(collection::WSCollection, title::String, width = 500, height = 
     B = collection.blackCliques
     
     s = 1
-    v = [Point( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
+    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
     tau = i -> s*sum( v[labels[i]] )
 
     if isnothing(scale) # autoselect scale 
@@ -129,7 +130,7 @@ function drawPLG(collection::WSCollection, title::String, width = 500, height = 
     angle = 0
     if adjustAngle
         angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [Point( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
+        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
     end
 
     Drawing(width, height, title)
@@ -149,16 +150,16 @@ function drawPLG(collection::WSCollection, title::String, width = 500, height = 
             text( "$(pmod(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
-        circle(Point(0,0), s*r, :stroke)
+        circle(LPoint(0,0), s*r, :stroke)
 
         # draw inner edges and vertices
         sethue("black")
         for w in values(W)
             w = tau.(w)
             len_w = length(w)
-            c = sum(w)/len_w # point in face. 
+            c = sum(w)/len_w # LPoint in face. 
             
-            for i = 1:len_w # draw lines from c to edge midpoints
+            for i = 1:len_w # draw lines from c to edge midPoints
                 line(c, (w[i] + w[pmod(i+1, len_w)])/2,  :stroke)
             end
 
@@ -171,9 +172,9 @@ function drawPLG(collection::WSCollection, title::String, width = 500, height = 
         for b in values(B)
             b = tau.(b)
             len_b = length(b)
-            c = sum(b)/len_b # point in face. 
+            c = sum(b)/len_b # LPoint in face. 
 
-            for i = 1:len_b # draw lines from c to edge midpoints
+            for i = 1:len_b # draw lines from c to edge midPoints
                 line(c, (b[i] + b[pmod(i+1, len_b)])/2,  :stroke)
             end
 
@@ -248,7 +249,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width = 500, 
     B = collection.blackCliques
 
     s = 1
-    v = [Point( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
+    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
     tau = i -> s*sum( v[labels[i]] )
 
     if isnothing(scale) # autoselect scale 
@@ -261,7 +262,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width = 500, 
     angle = 0
     if adjustAngle
         angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [Point( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
+        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
     end
     
     Drawing(width, height, title)
@@ -295,13 +296,13 @@ function drawPLG_straight(collection::WSCollection, title::String, width = 500, 
             text( "$(pmod(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
         end
 
-        circle(Point(0,0), s*r, :stroke)
+        circle(LPoint(0,0), s*r, :stroke)
 
         # draw inner edges and vertices
         sethue("black")
         for w in values(W)
             len_w = length(w)
-            p1 = sum(tau.(w))/len_w # point in face. 
+            p1 = sum(tau.(w))/len_w # LPoint in face. 
             
             for i = 1:len_w 
                 opp = sort(union(labels[w[i]], labels[w[pmod(i+1,len_w)]]))
@@ -322,7 +323,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width = 500, 
         for b in values(B)
             b = tau.(b)
             len_b = length(b)
-            p1 = sum(b)/len_b # point in face. 
+            p1 = sum(b)/len_b # LPoint in face. 
 
             circle(p1, s/8, :fill) # draw black vertex
         end
@@ -395,7 +396,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width = 500, he
     B = collection.blackCliques
 
     s = 1
-    v = [Point( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
+    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
     tau = i -> s*sum( v[labels[i]] )
 
     if isnothing(scale) # autoselect scale 
@@ -408,7 +409,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width = 500, he
     angle = 0
     if adjustAngle
         angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [Point( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
+        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
     end
     
     Drawing(width, height, title)
@@ -449,13 +450,13 @@ function drawPLG_smooth(collection::WSCollection, title::String, width = 500, he
             text( "$(pmod(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
-        circle(Point(0,0), s*r, :stroke)
+        circle(LPoint(0,0), s*r, :stroke)
 
         # draw inner edges and vertices
         sethue("black")
         for w in values(W)
             len_w = length(w)
-            p1 = sum(tau.(w))/len_w # point in face. 
+            p1 = sum(tau.(w))/len_w # LPoint in face. 
             
             for i = 1:len_w 
                 opp = sort(union(labels[w[i]], labels[w[pmod(i+1,len_w)]]))
@@ -480,7 +481,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width = 500, he
         for b in values(B)
             b = tau.(b)
             len_b = length(b)
-            p1 = sum(b)/len_b # point in face. 
+            p1 = sum(b)/len_b # LPoint in face. 
 
             circle(p1, s/8, :fill) # draw black vertex
         end
