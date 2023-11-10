@@ -1,7 +1,7 @@
 
 bin_path = ""
 
-function visualizer()
+function visualizer(collection::WSCollection = rectangle_collection(4, 9))
     LPoint = Luxor.Point
 
     main() do app::Application
@@ -16,6 +16,7 @@ function visualizer()
         plg_drawmode = "smooth"
         draw_vertex_labels = true
         draw_face_labels = true
+        highlight_mutables = false
         adjust_angle = false    
 
         # theme and colors
@@ -25,8 +26,8 @@ function visualizer()
         undo_list = Vector()
         redo_list = Vector()
 
-        # initial weakly separated collection
-        G = rectangle_collection(4, 9)
+        # initial weakly separated collection 
+        G = collection
 
         function load_settings()
             D = Dict()
@@ -41,6 +42,7 @@ function visualizer()
                 "plg_drawmode" => plg_drawmode,
                 "draw_vertex_labels" => draw_vertex_labels,
                 "draw_face_labels" => draw_face_labels,
+                "highlight_mutables" => highlight_mutables,
                 "adjust_angle" => adjust_angle,
                 "theme" => theme
                 )
@@ -54,6 +56,11 @@ function visualizer()
             draw_face_labels = D["draw_face_labels"]
             adjust_angle = D["adjust_angle"]
             theme = D["theme"]
+
+            try
+                highlight_mutables = D["highlight_mutables"]
+            catch e
+            end
             
             if theme == "dark"
                 set_current_theme!(app, THEME_DEFAULT_DARK)
@@ -136,7 +143,7 @@ function visualizer()
                 backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle)
             elseif plg_drawmode == "straight"
                 drawPLG_straight(G, bin_path*"display2.png", resolution, resolution, 
-                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle)
+                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle, highlightMutables = highlight_mutables)
             else
                 drawPLG(G, bin_path*"display2.png", resolution, resolution, 
                 backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle)
@@ -295,19 +302,21 @@ function visualizer()
         set_title!(settings_window, "Settings")
 
         display_size_label = Label("Display size:")
-        set_size_request!(display_size_label, Vector2f(120, 0))
+        set_size_request!(display_size_label, Vector2f(140, 0))
         display_resolution_label = Label("Display resolution:")
-        set_size_request!(display_resolution_label, Vector2f(120, 0))
+        set_size_request!(display_resolution_label, Vector2f(140, 0))
         plg_drawmode_label = Label("Plg draw mode:")
-        set_size_request!(plg_drawmode_label, Vector2f(120, 0))
+        set_size_request!(plg_drawmode_label, Vector2f(140, 0))
         draw_vertex_labels_label = Label("Draw vertex labels:")
-        set_size_request!(draw_vertex_labels_label, Vector2f(120, 0))
+        set_size_request!(draw_vertex_labels_label, Vector2f(140, 0))
         draw_face_labels_label = Label("Draw face labels:")
-        set_size_request!(draw_face_labels_label, Vector2f(120, 0))
+        set_size_request!(draw_face_labels_label, Vector2f(140, 0))
+        highlight_mutables_label = Label("Highlight mutable faces:")
+        set_size_request!(highlight_mutables_label, Vector2f(140, 0))
         adjust_angle_label = Label("Adjust drawing angle:")
-        set_size_request!(adjust_angle_label, Vector2f(120, 0))
+        set_size_request!(adjust_angle_label, Vector2f(140, 0))
         theme_label = Label("Theme:")
-        set_size_request!(theme_label, Vector2f(120, 0))
+        set_size_request!(theme_label, Vector2f(140, 0))
 
         display_size_entry = Entry()
         set_max_width_chars!(display_size_entry, 5)
@@ -323,14 +332,14 @@ function visualizer()
         set_margin_top!(display_resolution_clamp, 5)
 
         plg_drawmode_dropdown = DropDown()
-        plg_drawmode_dropdown_item_1 = push_back!(plg_drawmode_dropdown, "Smooth")
-        plg_drawmode_dropdown_item_2 = push_back!(plg_drawmode_dropdown, "Straight")
+        plg_drawmode_dropdown_item_1 = push_back!(plg_drawmode_dropdown, "Straight")
+        plg_drawmode_dropdown_item_2 = push_back!(plg_drawmode_dropdown, "Smooth")
         plg_drawmode_dropdown_item_3 = push_back!(plg_drawmode_dropdown, "Polygonal")
         set_size_request!(plg_drawmode_dropdown, Vector2f(110, 0))
         set_margin_top!(plg_drawmode_dropdown, 5)
-        if plg_drawmode == "smooth"
+        if plg_drawmode == "straight"
             set_selected!(plg_drawmode_dropdown, plg_drawmode_dropdown_item_1)
-        elseif plg_drawmode == "straight"
+        elseif plg_drawmode == "smooth"
             set_selected!(plg_drawmode_dropdown, plg_drawmode_dropdown_item_2)
         else
             set_selected!(plg_drawmode_dropdown, plg_drawmode_dropdown_item_3)
@@ -351,6 +360,14 @@ function visualizer()
             set_state!(draw_face_labels_check, CHECK_BUTTON_STATE_INACTIVE)
         end
         set_margin_top!(draw_face_labels_check, 5)
+
+        highlight_mutables_check = CheckButton()
+        if highlight_mutables
+            set_state!(highlight_mutables_check, CHECK_BUTTON_STATE_ACTIVE)
+        else
+            set_state!(highlight_mutables_check, CHECK_BUTTON_STATE_INACTIVE)
+        end
+        set_margin_top!(highlight_mutables_check, 5)
 
         adjust_angle_check = CheckButton()
         if adjust_angle
@@ -395,6 +412,7 @@ function visualizer()
             hbox(plg_drawmode_label, plg_drawmode_dropdown),
             hbox(draw_vertex_labels_label, draw_vertex_labels_check),
             hbox(draw_face_labels_label, draw_face_labels_check),
+            hbox(highlight_mutables_label, highlight_mutables_check),
             hbox(adjust_angle_label, adjust_angle_check),
             hline(2),
             hbox(theme_label, theme_dropdown),
@@ -1368,15 +1386,16 @@ function visualizer()
             plg_drawmode_item = get_selected(plg_drawmode_dropdown)
 
             if plg_drawmode_item == plg_drawmode_dropdown_item_1
-                plg_drawmode = "smooth"
-            elseif plg_drawmode_item == plg_drawmode_dropdown_item_2
                 plg_drawmode = "straight"
+            elseif plg_drawmode_item == plg_drawmode_dropdown_item_2
+                plg_drawmode = "smooth"
             else
                 plg_drawmode = "polygonal"
             end
 
             draw_vertex_labels = get_is_active(draw_vertex_labels_check)
             draw_face_labels = get_is_active(draw_face_labels_check)
+            highlight_mutables = get_is_active(highlight_mutables_check)
             adjust_angle = get_is_active(adjust_angle_check)
             
             theme_dropdown_item = get_selected(theme_dropdown)
@@ -1395,6 +1414,7 @@ function visualizer()
                 "plg_drawmode" => plg_drawmode,
                 "draw_vertex_labels" => draw_vertex_labels,
                 "draw_face_labels" => draw_face_labels,
+                "highlight_mutables" => highlight_mutables,
                 "adjust_angle" => adjust_angle,
                 "theme" => theme
             )

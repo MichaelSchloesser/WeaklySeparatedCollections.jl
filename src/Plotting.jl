@@ -236,7 +236,8 @@ function drawPLG(collection::WSCollection, title::String, width = 500, height = 
 end
 
 
-function drawPLG_straight(collection::WSCollection, title::String, width = 500, height = 500; backgroundColor = nothing, drawLabels = false, adjustAngle = false, scale = nothing) 
+function drawPLG_straight(collection::WSCollection, title::String, width = 500, height = 500; 
+    backgroundColor = nothing, drawLabels = false, adjustAngle = false, highlightMutables = false, scale = nothing) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -298,6 +299,31 @@ function drawPLG_straight(collection::WSCollection, title::String, width = 500, 
 
         circle(LPoint(0,0), s*r, :stroke)
 
+        # highlight mutable faces
+        if highlightMutables 
+            for i = n+1:length(labels)
+                if isMutable(collection, i)
+                    
+                    N_out = collect(outneighbors(collection.quiver, i))
+
+                    function arith_mean(x)
+                        len_x = length(x)
+                        return sum(tau.(x))/len_x
+                    end
+
+                    p1 = arith_mean(W[ intersect(labels[i], labels[N_out[1]]) ])
+                    p2 = arith_mean(B[ sort(union(labels[i], labels[N_out[1]])) ])
+                    p3 = arith_mean(W[ intersect(labels[i], labels[N_out[2]]) ])
+                    p4 = arith_mean(B[ sort(union(labels[i], labels[N_out[2]])) ])
+                    
+                    sethue("orange")
+                    setopacity(0.5)
+                    poly([p1, p2, p3, p4], :fill, close = true)
+                end
+            end
+        end
+        setopacity(1)
+
         # draw inner edges and vertices
         sethue("black")
         for w in values(W)
@@ -328,7 +354,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width = 500, 
             circle(p1, s/8, :fill) # draw black vertex
         end
 
-        # draw face labels.
+        # draw face labels
         if drawLabels
             fontsize( div(s,6))
             for i = 1:n
@@ -379,6 +405,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width = 500, 
                 text(label, c, halign=:center, valign=:middle)
             end
         end
+
     finish()
 end
 
@@ -538,7 +565,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width = 500, he
             end
         end
 
-        # highlight mutable face
+        # highlight mutable faces
         # for i = n+1:length(labels)
         #     if isMutable(collection, i)
                 
@@ -555,7 +582,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width = 500, he
         #         p4 = arith_mean(B[ sort(union(labels[i], labels[N_out[2]])) ])
                 
         #         sethue("orange")
-        #         poly([p1, p2, p3, p4], :stroke, close = true)
+        #         poly(offsetpoly([p1, p2, p3, p4], 15), :stroke, close = true)
         #     end
         # end
         
