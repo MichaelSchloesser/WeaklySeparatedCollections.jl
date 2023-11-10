@@ -52,8 +52,8 @@ function is_weakly_separated(n, v, w) # tests if two vectors v and w are weakly 
 end
 
 
-function is_weakly_separated(n, labels)
-    len = lenght(labels)
+function is_weakly_separated(n::Int, labels)
+    len = length(labels)
     for i = 1:len-1
         for j = i+1:len
             if !is_weakly_separated(n, labels[i], labels[j])
@@ -221,6 +221,17 @@ function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}},
                         blackCliques::Union{Missing, Dict{Vector{Int}, Vector{Int}} } = missing)
 
     return WSCollection(k, n, labels, quiver, whiteCliques, blackCliques)
+end
+
+
+function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
+    Q, W, B = compute_adjacencies(k, n, labels)
+
+    if computeCliques
+        return WSCollection(k, n, labels, Q, W, B)
+    else
+        return WSCollection(k, n, labels, Q)
+    end
 end
 
 
