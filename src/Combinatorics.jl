@@ -10,7 +10,7 @@ function degree(G::SimpleDiGraph{Int}, v::Int)
 end
 
 
-function is_ws(n, v, w) # tests if two vectors v and w are weakly separated
+function is_weakly_separated(n, v, w) # tests if two vectors v and w are weakly separated
     x = setdiff(v,w)
     y = setdiff(w,v)
     i = 1
@@ -52,11 +52,11 @@ function is_ws(n, v, w) # tests if two vectors v and w are weakly separated
 end
 
 
-function is_ws(n, labels)
+function is_weakly_separated(n, labels)
     len = lenght(labels)
     for i = 1:len-1
         for j = i+1:len
-            if !is_ws(n, labels[i], labels[j])
+            if !is_weakly_separated(n, labels[i], labels[j])
                 return false
             end
         end
@@ -229,19 +229,19 @@ function isequal(collection1::WSCollection, collection2::WSCollection) #two WSC'
 end
 
 
-function isFrozen(collection::WSCollection, i::Int) # may change this at some point
+function is_frozen(collection::WSCollection, i::Int) # may change this at some point
     return i <= collection.n
 end
 
 
-function isMutable(collection::WSCollection, i::Int) 
-    return !isFrozen(collection, i) && degree(collection.quiver, i) == 4
+function is_mutable(collection::WSCollection, i::Int) 
+    return !is_frozen(collection, i) && degree(collection.quiver, i) == 4
 end
 
 
 function mutate!(collection::WSCollection, i::Int, mutateCliques = true)
 
-    if !isMutable(collection, i)
+    if !is_mutable(collection, i)
         return error("vertex $i with label $(collection.labels[i]) of the given WSCollection is not mutable!")
     end
 
@@ -268,7 +268,7 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques = true)
         for l in N_out
             if has_edge(G, l, j)
                 rem_edge!(G, l, j)
-            elseif !isFrozen(collection, j) || !isFrozen(collection, l)
+            elseif !is_frozen(collection, j) || !is_frozen(collection, l)
                 add_edge!(G, j, l)
             end
         end

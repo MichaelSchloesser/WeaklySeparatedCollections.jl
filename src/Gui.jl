@@ -135,7 +135,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
         set_expand!(image_display_right, true)
         
         function update_displays()
-            drawWSC(G, bin_path*"display.png", resolution, resolution, 
+            drawTiling(G, bin_path*"display.png", resolution, resolution, 
             backgroundColor = "lightblue4", drawLabels = draw_vertex_labels, adjustAngle = adjust_angle)
 
             if plg_drawmode == "smooth"
@@ -145,7 +145,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                 drawPLG_straight(G, bin_path*"display2.png", resolution, resolution, 
                 backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle, highlightMutables = highlight_mutables)
             else
-                drawPLG(G, bin_path*"display2.png", resolution, resolution, 
+                drawPLG_poly(G, bin_path*"display2.png", resolution, resolution, 
                 backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle)
             end
 
@@ -168,8 +168,6 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
         add_submenu!(root, "File", file_submenu) # open save(as) exit
         add_submenu!(root, "Edit", edit_submenu) # undo redo
         add_submenu!(root, "View", view_submenu) # turn on/off ui elements
-
-        
 
         ############## export window ##############
 
@@ -867,14 +865,14 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                 export_adjust_angle = get_is_active(export_adjust_angle_check) 
 
                 if get_selected(export_figure_dropdown) == figure_dropdown_item_1
-                    drawWSC(G, chosen_path, w, h, adjustAngle = export_adjust_angle, highlightMutables = false, drawLabels = draw_vertex_labels)
+                    drawTiling(G, chosen_path, w, h, adjustAngle = export_adjust_angle, highlightMutables = false, drawLabels = draw_vertex_labels)
                 else
                     if plg_drawmode == "smooth"
                         drawPLG_smooth(G, chosen_path, w, h, adjustAngle = export_adjust_angle, drawLabels = draw_face_labels)
                     elseif plg_drawmode == "straight"
                         drawPLG_straight(G, chosen_path, w, h, adjustAngle = export_adjust_angle, drawLabels = draw_face_labels)
                     else
-                        drawPLG(G, chosen_path, w, h, adjustAngle = export_adjust_angle, drawLabels = draw_face_labels)
+                        drawPLG_poly(G, chosen_path, w, h, adjustAngle = export_adjust_angle, drawLabels = draw_face_labels)
                     end
                 end
 

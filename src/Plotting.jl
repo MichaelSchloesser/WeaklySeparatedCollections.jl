@@ -4,7 +4,7 @@ const scale_factor = 2.4
 
 norm = P -> sqrt(P.x^2 + P.y^2)
 
-function drawWSC(collection::WSCollection, title::String, width = 500, height = 500; 
+function drawTiling(collection::WSCollection, title::String, width = 500, height = 500; 
     backgroundColor = nothing, drawLabels = true, adjustAngle = false, highlightMutables = true, scale = nothing)
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -104,7 +104,7 @@ function drawWSC(collection::WSCollection, title::String, width = 500, height = 
 end
 
 
-function drawPLG(collection::WSCollection, title::String, width = 500, height = 500; backgroundColor = nothing, drawLabels = false, adjustAngle = false, scale = nothing) 
+function drawPLG_poly(collection::WSCollection, title::String, width = 500, height = 500; backgroundColor = nothing, drawLabels = false, adjustAngle = false, scale = nothing) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -564,27 +564,6 @@ function drawPLG_smooth(collection::WSCollection, title::String, width = 500, he
                 text(label, c, halign=:center, valign=:middle)
             end
         end
-
-        # highlight mutable faces
-        # for i = n+1:length(labels)
-        #     if isMutable(collection, i)
-                
-        #         N_out = collect(outneighbors(collection.quiver, i))
-
-        #         function arith_mean(x)
-        #             len_x = length(x)
-        #             return sum(tau.(x))/len_x
-        #         end
-
-        #         p1 = arith_mean(W[ intersect(labels[i], labels[N_out[1]]) ])
-        #         p2 = arith_mean(B[ sort(union(labels[i], labels[N_out[1]])) ])
-        #         p3 = arith_mean(W[ intersect(labels[i], labels[N_out[2]]) ])
-        #         p4 = arith_mean(B[ sort(union(labels[i], labels[N_out[2]])) ])
-                
-        #         sethue("orange")
-        #         poly(offsetpoly([p1, p2, p3, p4], 15), :stroke, close = true)
-        #     end
-        # end
         
     finish()
 end
