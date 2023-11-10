@@ -13,8 +13,8 @@ using FileIO
 root_path = dirname(@__DIR__) # path to WeaklySeparatedCollections
 
 include("Combinatorics.jl")
-include("Visualization.jl")
-include("VisualizerGui.jl")
+include("Plotting.jl")
+include("Gui.jl")
 
 Point = Luxor.Point
 
