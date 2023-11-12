@@ -5,7 +5,7 @@ const scale_factor = 2.4
 norm = P -> sqrt(P.x^2 + P.y^2)
 
 function drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{Nothing, Colors.RGBA{Float64}} = nothing, drawLabels::Bool = true, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, Colors.RGBA{Float64}} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
     highlightMutables::Bool = true, scale::Float64 = 0.0)
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -39,7 +39,7 @@ function drawTiling(collection::WSCollection, title::String, width::Int = 500, h
         origin()
 
         # also nice: "lightblue4"
-        if !isnothing(backgroundColor)
+        if backgroundColor != ""
             background(backgroundColor)
         end
         
@@ -106,7 +106,7 @@ end
 
 
 function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{Nothing, Colors.RGBA{Float64}} = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, Colors.RGBA{Float64}} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
     scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -140,7 +140,7 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
         origin()
         
         # also nice: "lightblue4"
-        if !isnothing(backgroundColor)
+        if backgroundColor != ""
             background(backgroundColor)
         end
         
@@ -240,7 +240,7 @@ end
 
 
 function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{Nothing, Colors.RGBA{Float64}} = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, Colors.RGBA{Float64}} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
     highlightMutables::Bool = false, scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -274,7 +274,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
         origin()
         
         # also nice: "lightblue4"
-        if !isnothing(backgroundColor)
+        if backgroundColor != ""
             background(backgroundColor)
         end
 
@@ -415,7 +415,7 @@ end
 
 
 function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{Nothing, Colors.RGBA{Float64}} = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, Colors.RGBA{Float64}} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
     scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -449,7 +449,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
         origin()
         
         # also nice: "lightblue4"
-        if !isnothing(backgroundColor)
+        if backgroundColor != ""
             background(backgroundColor)
         end
 
