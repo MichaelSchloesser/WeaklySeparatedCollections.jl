@@ -242,9 +242,12 @@ end
 # end
 
 
-function isequal(collection1::WSCollection, collection2::WSCollection) #two WSC's are equal if der sets of labels equal.
+function Base.isequal(collection1::WSCollection, collection2::WSCollection) #two WSC's are equal if der sets of labels equal.
     return issetequal(collection1.labels, collection2.labels)
 end
+
+
+Base.:(==)(collection1::WSCollection, collection2::WSCollection) = Base.isequal(collection1, collection2)
 
 
 function is_frozen(collection::WSCollection, i::Int) # may change this at some point
@@ -392,13 +395,13 @@ end
 
 function rectangle_collection(k::Int, n::Int)
     labels = rectangle_labels(k, n) 
-    Q, W, B = compute_adjacencies(k, n, labels) #TODO speed up using known quiver
+    Q, W, B = compute_adjacencies(k, n, labels) # TODO speed up using known quiver
 
     return WSCollection(k, n, labels, Q, W, B)
 end
 
 
-function rotate_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, amount::Int)
+function rotate_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, amount::Int) # TODO refine
     shift = x -> pmod(x + amount, n)
 
     for i = n+1:length(labels)
@@ -417,7 +420,7 @@ function rotate_collection(collection::WSCollection, amount::Int)
 end
 
 
-function reflect_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, axis::Int = 1)
+function reflect_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, axis::Int = 1) # TODO refine
     reflect = x -> pmod(1 + axis - x, n)
 
     for i = n+1:length(labels)
@@ -436,7 +439,7 @@ function reflect_collection(collection::WSCollection, axis::Int = 1)
 end
 
 
-function complement_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
+function complement_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) # TODO refine
 
     for i = 0:n-1 # frozen labels
         F = [pmod(l+i, n) for l = 1:n-k]
@@ -461,7 +464,7 @@ function complement_collection(collection::WSCollection)
 end
 
 
-function swaped_colors_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
+function swaped_colors_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) # TODO refine
     # swapping colors = complement + rotate by k
 
     for i = 0:n-1 # frozen labels

@@ -2,7 +2,7 @@
 import Mousetrap # can be removed after mousetrap reaches version 0.3.1
 module WeaklySeparatedCollections
 
-export  is_weakly_separated, checkboard_labels, rectangle_labels, WSCollection, is_frozen, 
+export  is_weakly_separated, checkboard_labels, rectangle_labels, WSCollection, isequal, is_frozen, 
         is_mutable, mutate!, mutate, checkboard_collection, rectangle_collection, rotate_collection,
         reflect_collection, complement_collection, swaped_colors_collection, dual_checkboard_collection, 
         dual_rectangle_collection, compute_cliques, compute_adjacencies
