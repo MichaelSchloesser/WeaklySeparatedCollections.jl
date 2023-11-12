@@ -591,7 +591,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
         #     w, h = get_allocated_size(data).x, get_allocated_size(data).y
         #     x, y = (x-w/2)*resolution/w, (y-h/2)*resolution/h
             
-        #     is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && isMutable(G, p)
+        #     is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && is_mutable(G, p)
         #     close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
 
         #     if length(close_mutable) > 0 # show nearest close mutable label
@@ -619,7 +619,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
         #     x, y = (x-w/2)*resolution/w, (y-h/2)*resolution/h
             
         #     function is_surounding_mutable(p::Int)
-        #         if isMutable(G, p)
+        #         if is_mutable(G, p)
         #             N_out = collect(outneighbors(G.quiver, p))
 
         #             arith_mean = x -> sum(tau.(x))/length(x)
@@ -660,7 +660,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
 
             if get_current_button(self) == BUTTON_ID_BUTTON_03 # select label
                 
-                is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && isMutable(G, p)
+                is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && is_mutable(G, p)
                 close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
 
                 if length(close_mutable) > 0 # show nearest close mutable label
@@ -674,7 +674,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
             elseif get_current_button(self) == BUTTON_ID_BUTTON_01 # mutate label
                 
                 set_mouse_input_blocked!(true)
-                is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && isMutable(G, p)
+                is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && is_mutable(G, p)
                 close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
         
                 if length(close_mutable) > 0 # mutate
@@ -706,7 +706,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
             x::AbstractFloat, y::AbstractFloat, data::Widget)
 
             function is_surounding_mutable(p::Int)
-                if isMutable(G, p)
+                if is_mutable(G, p)
                     N_out = collect(outneighbors(G.quiver, p))
 
                     arith_mean = x -> sum(tau.(x))/length(x)

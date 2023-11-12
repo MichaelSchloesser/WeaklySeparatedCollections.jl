@@ -5,7 +5,8 @@ const scale_factor = 2.4
 norm = P -> sqrt(P.x^2 + P.y^2)
 
 function drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor = nothing, drawLabels::Bool = true, adjustAngle::Bool = false, highlightMutables::Bool = true, scale = nothing)
+    backgroundColor::Union{Nothing, Colors.RGBA{Float64}} = nothing, drawLabels::Bool = true, adjustAngle::Bool = false, 
+    highlightMutables::Bool = true, scale::Float64 = 0.0)
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -21,7 +22,7 @@ function drawTiling(collection::WSCollection, title::String, width::Int = 500, h
     v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
     tau = i -> s*sum( v[labels[i]] )
 
-    if isnothing(scale) # autoselect scale such that plabic tiling fits into window
+    if scale == 0.0 # autoselect scale such that plabic tiling fits into window
         r = norm(sum(v[1:k]))
         s = min(width, height)/(scale_factor*r) 
     else
@@ -68,7 +69,7 @@ function drawTiling(collection::WSCollection, title::String, width::Int = 500, h
                 end
                 len = length(label)
 
-                if isMutable(collection, i) && highlightMutables
+                if is_mutable(collection, i) && highlightMutables
                     sethue("orange")
                 else
                     sethue("white")
@@ -83,7 +84,7 @@ function drawTiling(collection::WSCollection, title::String, width::Int = 500, h
             for i = 1:length(labels)
                 pos = tau(i)
 
-                if isMutable(collection, i) && highlightMutables
+                if is_mutable(collection, i) && highlightMutables
                     sethue("orange")
                     circle(pos, s/8, :fill)
                     sethue("black")
@@ -105,7 +106,8 @@ end
 
 
 function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, scale = nothing) 
+    backgroundColor::Union{Nothing, Colors.RGBA{Float64}} = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, 
+    scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -121,7 +123,7 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
     v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
     tau = i -> s*sum( v[labels[i]] )
 
-    if isnothing(scale) # autoselect scale 
+    if scale == 0.0 # autoselect scale 
         r = norm(sum(v[1:k]))
         s = min(width, height)/(scale_factor*r) 
     else
@@ -238,7 +240,8 @@ end
 
 
 function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, highlightMutables::Bool = false, scale = nothing) 
+    backgroundColor::Union{Nothing, Colors.RGBA{Float64}} = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, 
+    highlightMutables::Bool = false, scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -254,7 +257,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
     v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
     tau = i -> s*sum( v[labels[i]] )
 
-    if isnothing(scale) # autoselect scale 
+    if scale == 0.0 # autoselect scale 
         r = norm(sum(v[1:k]))
         s = min(width, height)/(scale_factor*r) 
     else
@@ -303,7 +306,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
         # highlight mutable faces
         if highlightMutables 
             for i = n+1:length(labels)
-                if isMutable(collection, i)
+                if is_mutable(collection, i)
                     
                     N_out = collect(outneighbors(collection.quiver, i))
 
@@ -412,7 +415,8 @@ end
 
 
 function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, scale = nothing) 
+    backgroundColor::Union{Nothing, Colors.RGBA{Float64}} = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, 
+    scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -428,7 +432,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
     v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
     tau = i -> s*sum( v[labels[i]] )
 
-    if isnothing(scale) # autoselect scale 
+    if scale == 0.0 # autoselect scale 
         r = norm(sum(v[1:k]))
         s = min(width, height)/(scale_factor*r) 
     else
