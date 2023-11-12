@@ -4,8 +4,8 @@ const scale_factor = 2.4
 
 norm = P -> sqrt(P.x^2 + P.y^2)
 
-function drawTiling(collection::WSCollection, title::String, width = 500, height = 500; 
-    backgroundColor = nothing, drawLabels = true, adjustAngle = false, highlightMutables = true, scale = nothing)
+function drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+    backgroundColor = nothing, drawLabels::Bool = true, adjustAngle::Bool = false, highlightMutables::Bool = true, scale = nothing)
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -104,7 +104,8 @@ function drawTiling(collection::WSCollection, title::String, width = 500, height
 end
 
 
-function drawPLG_poly(collection::WSCollection, title::String, width = 500, height = 500; backgroundColor = nothing, drawLabels = false, adjustAngle = false, scale = nothing) 
+function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+    backgroundColor = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, scale = nothing) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -236,8 +237,8 @@ function drawPLG_poly(collection::WSCollection, title::String, width = 500, heig
 end
 
 
-function drawPLG_straight(collection::WSCollection, title::String, width = 500, height = 500; 
-    backgroundColor = nothing, drawLabels = false, adjustAngle = false, highlightMutables = false, scale = nothing) 
+function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+    backgroundColor = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, highlightMutables::Bool = false, scale = nothing) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -410,7 +411,8 @@ function drawPLG_straight(collection::WSCollection, title::String, width = 500, 
 end
 
 
-function drawPLG_smooth(collection::WSCollection, title::String, width = 500, height = 500; backgroundColor = nothing, drawLabels = false, adjustAngle = false, scale = nothing) 
+function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+    backgroundColor = nothing, drawLabels::Bool = false, adjustAngle::Bool = false, scale = nothing) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
