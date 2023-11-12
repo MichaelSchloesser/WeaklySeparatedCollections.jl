@@ -44,6 +44,12 @@ using Test
         true
     end
 
+    # TODO 
+    # WSCollection, is_frozen, 
+    # is_mutable, mutate!, mutate, checkboard_collection, rectangle_collection, rotate_collection,
+    # reflect_collection, complement_collection, swaped_colors_collection, dual_checkboard_collection, 
+    # dual_rectangle_collection, compute_cliques, compute_adjacencies
+
     #### Plotting ####
     
     @test begin
@@ -74,5 +80,22 @@ using Test
     end
 
 
+    @test begin
+        G = checkboard_collection(4, 9)
+        drawPLG_poly(G, "C:\\Users\\Micha\\Desktop\\plotting_tests\\test_5.png", 500, 500, backgroundColor = "purple")
+        true
+    end
+
+    using Colors # fails without using Colors 
+    @test begin
+        G = checkboard_collection(4, 9)
+        drawPLG_poly(G, "C:\\Users\\Micha\\Desktop\\plotting_tests\\test_6.png", 500, 500, backgroundColor = RGBA(1.0, 1.0, 1.0, 0.4))
+        true
+    end
+
+    #### Gui ####
+
+    # TODO 
+    # visualizer
 
 end

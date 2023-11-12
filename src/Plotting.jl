@@ -1,12 +1,14 @@
 
+# TODO get rid of RGBA.Colors and take a Vector of floats instead
+
 LPoint = Luxor.Point
 const scale_factor = 2.4
 
 norm = P -> sqrt(P.x^2 + P.y^2)
 
 function drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, Colors.RGBA{Float64}} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
-    highlightMutables::Bool = true, scale::Float64 = 0.0)
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
+    highlightMutables::Bool = true, scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -106,7 +108,7 @@ end
 
 
 function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, Colors.RGBA{Float64}} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
     scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -240,7 +242,7 @@ end
 
 
 function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, Colors.RGBA{Float64}} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
     highlightMutables::Bool = false, scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -415,7 +417,7 @@ end
 
 
 function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, Colors.RGBA{Float64}} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
     scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
