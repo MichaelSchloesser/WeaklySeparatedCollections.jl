@@ -374,15 +374,15 @@ function rectangle_collection(k::Int, n::Int) # TODO use known quiver to speed u
 end
 
 
-function dual_checkboard_collection(k::Int, n::Int)
-    labels = dual_checkboard_labels(k, n)
+function dual_checkboard_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
+    labels = dual_checkboard_labels(k, n) 
     Q, W, B = compute_adjacencies(k, n, labels) 
 
     return WSCollection(k, n, labels, Q, W, B)
 end
 
 
-function dual_rectangle_collection(k::Int, n::Int)
+function dual_rectangle_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
     labels = dual_rectangle_labels(k, n)
     Q, W, B = compute_adjacencies(k, n, labels) 
 
