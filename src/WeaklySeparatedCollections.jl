@@ -5,7 +5,7 @@ module WeaklySeparatedCollections
 export  is_weakly_separated, checkboard_labels, rectangle_labels, WSCollection, isequal, is_frozen, 
         is_mutable, mutate!, mutate, checkboard_collection, rectangle_collection, rotate_collection,
         reflect_collection, complement_collection, swaped_colors_collection, dual_checkboard_collection, 
-        dual_rectangle_collection, compute_cliques, compute_adjacencies
+        dual_rectangle_collection, compute_cliques, compute_adjacencies, compute_boundaries
 
 export  drawTiling, drawPLG_straight, drawPLG_smooth, drawPLG_poly
 

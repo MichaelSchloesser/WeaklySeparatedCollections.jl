@@ -103,7 +103,7 @@ function rectangle_labels(k::Int, n::Int)
     return Vector{Vector{Int}}(labels)
 end
 
-# returns the non trivial white and black cliques as Dict{ Vector{Int}, Set{Vector{Int}} }
+# returns the non trivial white and black cliques
 function compute_cliques(k::Int, labels::Vector{Vector{Int}}) 
     N = length(labels)
     W = Dict()
@@ -136,22 +136,71 @@ function compute_cliques(k::Int, labels::Vector{Vector{Int}})
         end
     end
 
-    for (K, C) in W # remove trivial cliques
+    for (K, C) in W # remove trivial cliques, and convert to vector
         if length(C) < 3
             delete!(W, K)
+        else
+            W[K] = collect(C)
         end
     end
 
     for (L, C) in B
         if length(C) < 3
             delete!(B, L)
+        else
+            B[L] = collect(C)
         end
     end 
 
     return W, B        
 end
 
-# returns a graph encoding the adjacency between labels as well as face boundaries as Dict{ Vector{Int}, Vector{Vector{Int}} }
+# returns the non trivial white and black cliques. uses a quiver to speed up the computation TODO verify
+function compute_cliques(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
+    N = length(labels)
+    W = Dict()
+    B = Dict()
+
+    for e in edges(quiver)
+        i, j = src(e), dst(e)
+        K = intersect(labels[i], labels[j])
+        L = sort(union(labels[i], labels[j]))
+
+        if( haskey(W, K) )
+            W[K] = push!(W[K], labels[i])
+            W[K] = push!(W[K], labels[j])
+        else
+            W[K] = Set([labels[i], labels[j]])
+        end
+
+        if( haskey(B, L) )
+            B[L] = push!(B[L], labels[i])
+            B[L] = push!(B[L], labels[j])
+        else
+            B[L] = Set([labels[i], labels[j]])
+        end
+    end
+
+    for (K, C) in W # remove trivial cliques, and convert to vector
+        if length(C) < 3
+            delete!(W, K)
+        else
+            W[K] = collect(C)
+        end
+    end
+
+    for (L, C) in B
+        if length(C) < 3
+            delete!(B, L)
+        else
+            B[L] = collect(C)
+        end
+    end 
+
+    return W, B
+end
+
+# returns a graph encoding the adjacency between labels as well as face boundaries
 function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}}) 
     N = length(labels)
     W, B = compute_cliques(k, labels)
@@ -176,11 +225,11 @@ function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}})
     end
 
     for K in keys(W) # compute boundary and add edges for non trivial white cliques
-        C = collect(W[K])
+        C = W[K]
         C_minus_K = (x -> setdiff(x, K)).(C)
         
-        p = sortperm(C_minus_K)
-        C = [labelPos[c] for c in C]
+        p = sortperm(C_minus_K) 
+        C = (c -> labelPos[c]).(C)
         C = C[p]
         W[K] = C
 
@@ -188,22 +237,43 @@ function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}})
     end
 
     for L in keys(B) # compute boundary for non trivial black cliques (dont add edges here to avoid 2-cycles)
-        C = collect(B[L])
+        C = B[L]
         L_minus_C = (x -> setdiff(L, x)).(C)
         
         p = sortperm(L_minus_C)
-        C = C[p]
-        B[L] = [labelPos[c] for c in C]
+        C = (c -> labelPos[c]).(C)
+        B[L] = C[p]
     end
 
     return Q, W, B
 end
 
-# TODO
-# function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
+# returns face boundaries using known adjacencies
+function compute_boundaries(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
+    N = length(labels)
+    W, B = compute_cliques(labels, quiver)
+    labelPos = Dict(labels[i] => i for i = 1:N) # memorize positions of labels
     
+    for K in keys(W) # compute boundary 
+        C = W[K]
+        C_minus_K = (x -> setdiff(x, K)).(C)
+        
+        p = sortperm(C_minus_K)
+        C = (c -> labelPos[c]).(C)
+        W[K] = C[p]
+    end
 
-# end
+    for L in keys(B) # compute boundary
+        C = B[L]
+        L_minus_C = (x -> setdiff(L, x)).(C)
+        
+        p = sortperm(L_minus_C)
+        C = (c -> labelPos[c]).(C)
+        B[L] = C[p]
+    end
+
+    return W, B
+end
 
 # struct for weakly separated collections
 mutable struct WSCollection
@@ -215,42 +285,37 @@ mutable struct WSCollection
     blackCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} } }
 end
 
-
-function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, 
-                        quiver::SimpleDiGraph{Int}; 
-                        whiteCliques::Union{Missing, Dict{Vector{Int}, Vector{Int}} } = missing, 
-                        blackCliques::Union{Missing, Dict{Vector{Int}, Vector{Int}} } = missing)
-
-    return WSCollection(k, n, labels, quiver, whiteCliques, blackCliques)
-end
-
-
+# WSCollection from labels only
 function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
     Q, W, B = compute_adjacencies(k, n, labels)
 
     if computeCliques
         return WSCollection(k, n, labels, Q, W, B)
     else
-        return WSCollection(k, n, labels, Q)
+        return WSCollection(k, n, labels, Q, missing, missing)
     end
 end
 
-# TODO
-# function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, computeCliques::Bool = true)
-    
+# WSCollection from labels and quiver
+function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, computeCliques::Bool = true)
+    if !computeCliques
+        return WSCollection(k, n, labels, quiver, missing, missing)
+    else
+        W, B = compute_boundaries(labels, quiver)
+        return WSCollection(k, n, labels, quiver, W, B)
+    end
+end
 
-# end
-
-
-function Base.isequal(collection1::WSCollection, collection2::WSCollection) #two WSC's are equal if der sets of labels equal.
+# overload Base.isequal
+function Base.isequal(collection1::WSCollection, collection2::WSCollection) # two WSC's are equal if der sets of labels equal.
     return issetequal(collection1.labels, collection2.labels)
 end
 
-
+# overload Base.:(==)
 Base.:(==)(collection1::WSCollection, collection2::WSCollection) = Base.isequal(collection1, collection2)
 
 
-function is_frozen(collection::WSCollection, i::Int) # may change this at some point
+function is_frozen(collection::WSCollection, i::Int) 
     return i <= collection.n
 end
 
@@ -366,7 +431,6 @@ end
 function mutate(collection::WSCollection, i::Int, mutateCliques::Bool = true)
     return mutate!( deepcopy(collection), i, mutateCliques)
 end
-
 
 # for convenience we may mutate using labels
 function mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true) 

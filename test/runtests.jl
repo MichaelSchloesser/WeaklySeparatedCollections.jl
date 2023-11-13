@@ -5,47 +5,87 @@ using Test
 
     #### Combinatorics ####
 
-    # is_weakly_separated(n, v, w)
-    @test begin 
+    
+    @test begin
+        "is_weakly_separated, false example"
+        
         v = [1,2,3,5,6,9]
         w = [1,2,4,5,7,8]
         is_weakly_separated(9, v, w) == false
     end
 
-    @test begin 
+    @test begin
+        "is_weakly_separated, true example"
+
         v = [1,2,3,5,6,9]
         w = [1,2,3,5,7,8]
         is_weakly_separated(9, v, w) == true
     end
 
-    # checkboard_labels retuen type
+    
     @test begin
+        "checkboard_labels return type"
+
         labels = checkboard_labels(4, 9)
         typeof(labels) == Vector{Vector{Int}}
     end
 
-    # is_weakly_separated(n, collection)
+    
     @test begin
+        "is_weakly_separated for collections"
+
         labels = checkboard_labels(4, 9)
         is_weakly_separated(9, labels) == true
     end
 
-    # compute_cliques
+    
     @test begin
+        "compute_cliques from labels"
+
         labels = checkboard_labels(4, 9)
         compute_cliques(4, labels)
         true
     end
 
-    # compute_adjacencies
+    
     @test begin
+        "compute_adjacencies from labels"
+
         labels = checkboard_labels(4, 9)
         compute_adjacencies(4, 9, labels)
         true
     end
 
-    # WSCollection constructors
+    
     @test begin
+        "compute_cliques using quiver"
+
+        check = checkboard_collection(4, 9)
+        labels = check.labels
+        quiver = check.quiver
+        W, B = compute_cliques(labels, quiver)
+        W2, B2 = compute_cliques(4, labels)
+
+        (W == W2) && (B == B2) 
+    end
+
+    
+    @test begin
+        "compute_boundaries"
+
+        check = checkboard_collection(4, 9)
+        labels = check.labels
+        quiver = check.quiver
+
+        W, B = compute_boundaries(labels, quiver)
+        _, W2, B2 = compute_adjacencies(4, 9, labels)
+        (W == W2) && (B == B2)
+    end
+
+    
+    @test begin
+        "WSCollection constructors from labels"
+
         labels = checkboard_labels(4, 9)
         WSCollection(4, 9, labels)
         WSCollection(4, 9, labels, false)
@@ -53,28 +93,48 @@ using Test
         true
     end
 
-    # checkboard_collection
+    
     @test begin
+        "WSCollection constructor using quiver"
+
+        labels = checkboard_collection(4, 9).labels
+        quiver = checkboard_collection(4, 9).quiver
+        WSCollection(4, 9, labels, quiver)
+        WSCollection(4, 9, labels, quiver, false)
+
+        true
+    end
+
+    
+    @test begin
+        "checkboard_collection"
+
         checkboard_collection(4, 9)
         true
     end
 
-    # rectangle_collection
+    
     @test begin
+        "rectangle_collection"
+
         rectangle_collection(4, 9)
         true
     end
 
-    # isequal
+    
     @test begin
+        "isequal, false example"
+
         check = checkboard_collection(4, 9)
         rec = rectangle_collection(4, 9)
 
         isequal(check, rec) == false
     end
-
+    
 
     @test begin
+        "isequal, true example"
+
         check = checkboard_collection(4, 9)
         (check.labels[10], check.labels[11]) = (check.labels[11], check.labels[10])
         check2 = checkboard_collection(4, 9)
@@ -82,8 +142,10 @@ using Test
         isequal(check, check2) 
     end
 
-    # overload Base.:(==)
+    
     @test begin
+        "overload Base.:(==) , false example"
+
         check = checkboard_collection(4, 9)
         rec = rectangle_collection(4, 9)
 
@@ -92,6 +154,8 @@ using Test
 
 
     @test begin
+        "overload Base.:(==) , true example"
+
         check = checkboard_collection(4, 9)
         (check.labels[10], check.labels[11]) = (check.labels[11], check.labels[10])
         check2 = checkboard_collection(4, 9)
@@ -99,8 +163,10 @@ using Test
         check == check2
     end
 
-    # overload Base.:(!=)
+    
     @test begin
+        "overload Base.:(!=) , true example"
+
         check = checkboard_collection(4, 9)
         rec = rectangle_collection(4, 9)
 
@@ -109,6 +175,8 @@ using Test
 
 
     @test begin
+        "overload Base.:(!=) , false example"
+
         check = checkboard_collection(4, 9)
         (check.labels[10], check.labels[11]) = (check.labels[11], check.labels[10])
         check2 = checkboard_collection(4, 9)
@@ -116,108 +184,126 @@ using Test
         (check != check2) == false
     end
 
-    # is_frozen
+    
     @test begin
+        "is_frozen"
+
         check = checkboard_collection(4, 9)
         is_frozen(check, 1) && is_frozen(check, 9) && !is_frozen(check, 10)
     end
 
-    # is_mutable
+    
     @test begin
+        "is_mutable"
+
         rec = rectangle_collection(4, 9)
         !is_mutable(rec, 1) && is_mutable(rec, 10) && !is_mutable(rec, 11)
     end
 
-    # mutate! and mutate
+    
     @test begin
+        "mutate! and mutate"
+
         check = checkboard_collection(4, 9)
         mutate!(check, 10)
         mutate(check, 13)
         true
     end
 
-    # rotate_collection
+    
     @test begin
+        "rotate_collection"
+
         rec = rectangle_collection(4, 9)
         rotate_collection(rec, 1)
         rotate_collection(rec, 5)
         true
     end
 
-    # reflect_collection
+    
     @test begin
+        "reflect_collection"
+
         rec = rectangle_collection(4, 9)
         reflect_collection(rec, 1)
         reflect_collection(rec, 4)
         true
     end
 
-    # complement_collection
+    
     @test begin
+        "complement_collection"
+
         rec = rectangle_collection(4, 9)
         complement_collection(rec)
         true
     end
 
-    # swaped_colors_collection
-    @test begin
+    
+    @test begin 
+        "swaped_colors_collection"
+
         rec = rectangle_collection(4, 9)
         swaped_colors_collection(rec)
         true
     end
 
-    # dual_rectangle_collection
+    
     @test begin
+        "dual_rectangle_collection"
+        
         dual_rectangle_collection(4, 9)
         true
     end
 
-    # dual_checkboard_collection
+    
     @test begin
+        "dual_checkboard_collection"
+
         dual_checkboard_collection(4, 9)
         true
     end
 
     #### Plotting ####
     
-    # drawTiling
-    @test begin
+    
+    @test begin # drawTiling
         G = checkboard_collection(4, 9)
         drawTiling(G, "C:\\Users\\Micha\\Desktop\\plotting_tests\\test_1.png", 500, 500)
         true
     end
 
-    # drawPLG_poly
-    @test begin
+    
+    @test begin # drawPLG_poly
         G = checkboard_collection(4, 9)
         drawPLG_poly(G, "C:\\Users\\Micha\\Desktop\\plotting_tests\\test_2.png", 500, 500)
         true
     end
 
-    # drawPLG_straight
-    @test begin
+    
+    @test begin # drawPLG_straight
         G = checkboard_collection(4, 9)
         drawPLG_straight(G, "C:\\Users\\Micha\\Desktop\\plotting_tests\\test_3.png", 500, 500)
         true
     end
 
-    # drawPLG_smooth
-    @test begin
+    
+    @test begin # drawPLG_smooth
         G = checkboard_collection(4, 9)
         drawPLG_smooth(G, "C:\\Users\\Micha\\Desktop\\plotting_tests\\test_4.png", 500, 500)
         true
     end
 
-    # backgroundColor via named colors
-    @test begin
+    
+    @test begin # backgroundColor via named colors
         G = checkboard_collection(4, 9)
         drawPLG_poly(G, "C:\\Users\\Micha\\Desktop\\plotting_tests\\test_5.png", 500, 500, backgroundColor = "purple")
         true
     end
 
-    # backgroundColor via RGBA value. fails without using Colors 
+     
     using Colors 
-    @test begin
+    @test begin # backgroundColor via RGBA value. fails without using Colors
         G = checkboard_collection(4, 9)
         drawPLG_poly(G, "C:\\Users\\Micha\\Desktop\\plotting_tests\\test_6.png", 500, 500, backgroundColor = RGBA(1.0, 1.0, 1.0, 0.4))
         true
