@@ -7,8 +7,8 @@ end
 
 # tests if two vectors v and w are weakly separated
 function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int}) 
-    x = setdiff(v,w)
-    y = setdiff(w,v)
+    x = setdiff(v, w)
+    y = setdiff(w, v)
     i = 1
     
     # the following trys to finds a < b < c < d contradicting the the ws of v and w
@@ -61,6 +61,26 @@ function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     return true
 end
 
+# returns the labels of the rectangle graph. Frozen labels first.
+function rectangle_labels(k::Int, n::Int)
+    labels = Vector() 
+
+    for i = 0:n-1 # frozen labels
+        F = [pmod(l+i, n) for l = 1:k]
+        push!(labels, sort(F))
+    end
+
+    for i = 1:n-k-1 # mutable labels
+        for j = 1:k-1
+            L = collect(i+1:i+j)
+            R = collect(n-k+j+1:n)
+            push!(labels, union(L, R))
+        end
+    end
+
+    return Vector{Vector{Int}}(labels)
+end
+
 # returns the labels of the checkboard graph. Frozen labels first.
 function checkboard_labels(k::Int, n::Int) 
     sigma = (x, y) -> pmod(x+y, n)
@@ -74,8 +94,9 @@ function checkboard_labels(k::Int, n::Int)
 
     for i = 1:n-k-1 # mutable labels
         for j = 1:k-1
-            L = [sigma(l, Int(floor((i-j)/2))) for l = 1:j]
-            R = [sigma(l, n-k+Int(floor((j-i)/2))) for l = 1:k-j]
+            sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
+            L = sigma_ij.(collect(i+1:i+j))
+            R = sigma_ij.(collect(n-k+j+1:n))
             push!(labels, sort(union(L, R)))
         end
     end
@@ -83,8 +104,8 @@ function checkboard_labels(k::Int, n::Int)
     return Vector{Vector{Int}}(labels)
 end
 
-# returns the labels of the rectangle graph. Frozen labels first.
-function rectangle_labels(k::Int, n::Int)
+
+function dual_rectangle_labels(k::Int, n::Int) 
     labels = Vector() 
 
     for i = 0:n-1 # frozen labels
@@ -92,10 +113,10 @@ function rectangle_labels(k::Int, n::Int)
         push!(labels, sort(F))
     end
 
-    for i = 1:n-k-1 # mutable labels
-        for j = 1:k-1
-            L = [l for l = i+1:i+j]
-            R = [r for r = n-k+1+j:n]
+    for i = 1:k-1 # mutable labels
+        for j = 1:n-k-1
+            L = collect(1:i)
+            R = collect(i+j+1:k+j)
             push!(labels, union(L, R))
         end
     end
@@ -103,8 +124,30 @@ function rectangle_labels(k::Int, n::Int)
     return Vector{Vector{Int}}(labels)
 end
 
+
+function dual_checkboard_labels(k::Int, n::Int) 
+    labels =  Vector() 
+    sigma = (x, y) -> pmod(x+y, n)
+
+    for i = 0:n-1 # frozen labels
+        F = [pmod(l+i, n) for l = 1:k] 
+        push!(labels, sort(F))
+    end
+
+    for i = 1:k-1 # mutable labels
+        for j = 1:n-k-1
+            sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
+            L = sigma_ij.( collect(1:i))
+            R = sigma_ij.( collect(i+j+1:k+j))
+            push!(labels, sort(union(L, R)))
+        end
+    end
+
+    return Vector{Vector{Int}}(labels)
+end
+
 # returns the non trivial white and black cliques
-function compute_cliques(k::Int, labels::Vector{Vector{Int}}) 
+function compute_cliques(k::Int, labels::Vector{Vector{Int}})
     N = length(labels)
     W = Dict()
     B = Dict()
@@ -155,7 +198,7 @@ function compute_cliques(k::Int, labels::Vector{Vector{Int}})
     return W, B        
 end
 
-# returns the non trivial white and black cliques. uses a quiver to speed up the computation TODO verify
+# returns the non trivial white and black cliques. Uses known quiver to speed up the computation
 function compute_cliques(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
     N = length(labels)
     W = Dict()
@@ -314,6 +357,38 @@ end
 # overload Base.:(==)
 Base.:(==)(collection1::WSCollection, collection2::WSCollection) = Base.isequal(collection1, collection2)
 
+# return the wsc corresponding to the checkboard graph 
+function checkboard_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
+    labels = checkboard_labels(k, n)
+    Q, W, B = compute_adjacencies(k, n, labels) 
+
+    return WSCollection(k, n, labels, Q, W, B)
+end
+
+# return the wsc corresponding to the rectangle graph
+function rectangle_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
+    labels = rectangle_labels(k, n) 
+    Q, W, B = compute_adjacencies(k, n, labels) 
+
+    return WSCollection(k, n, labels, Q, W, B)
+end
+
+
+function dual_checkboard_collection(k::Int, n::Int)
+    labels = dual_checkboard_labels(k, n)
+    Q, W, B = compute_adjacencies(k, n, labels) 
+
+    return WSCollection(k, n, labels, Q, W, B)
+end
+
+
+function dual_rectangle_collection(k::Int, n::Int)
+    labels = dual_rectangle_labels(k, n)
+    Q, W, B = compute_adjacencies(k, n, labels) 
+
+    return WSCollection(k, n, labels, Q, W, B)
+end
+
 
 function is_frozen(collection::WSCollection, i::Int) 
     return i <= collection.n
@@ -449,23 +524,7 @@ function mutate(collection::WSCollection, label::Vector{Int}, mutateCliques::Boo
 end
 
 
-function checkboard_collection(k::Int, n::Int) # return the wsc corresponding to the checkboard graph
-    labels = checkboard_labels(k, n) 
-    Q, W, B = compute_adjacencies(k, n, labels) # TODO speed up using known quiver
-
-    return WSCollection(k, n, labels, Q, W, B)
-end
-
-
-function rectangle_collection(k::Int, n::Int)
-    labels = rectangle_labels(k, n) 
-    Q, W, B = compute_adjacencies(k, n, labels) # TODO speed up using known quiver
-
-    return WSCollection(k, n, labels, Q, W, B)
-end
-
-
-function rotate_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, amount::Int) # TODO refine
+function rotate_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, amount::Int) # TODO obsolete ?
     shift = x -> pmod(x + amount, n)
 
     for i = n+1:length(labels)
@@ -478,13 +537,66 @@ function rotate_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, amount::
 end
 
 
-function rotate_collection(collection::WSCollection, amount::Int)
-    labels = deepcopy(collection.labels)
-    return rotate_collection(collection.k, collection.n, labels, amount)
+function rotate_collection!(collection::WSCollection, amount::Int)
+    n = collection.n
+    labels = collection.labels
+    Q = collection.quiver
+    W = collection.whiteCliques
+    B = collection.blackCliques
+
+    shift = x -> pmod(x + amount, n)
+    shift_frozen = (x -> x <= n ? shift(x) : x)
+
+    # shift labels
+    for i = n+1:length(labels)
+        collection.labels[i] = sort(shift.(labels[i]))
+    end
+
+    # shift edges to frozen vertices
+    Q2 = deepcopy(Q)
+
+    for i = 1:n
+        for j in outneighbors(Q, i)
+            rem_edge!(Q2, i, j)
+            add_edge!(Q2, shift(i), j)
+        end
+
+        for j in inneighbors(Q, i)
+            rem_edge!(Q2, j, i)
+            add_edge!(Q2, j, shift(i))
+        end
+    end
+    collection.quiver = Q2
+
+    # shift clique keys
+    W2 = Dict()
+    B2 = Dict()
+
+    for (K, C) in W
+        K2 = sort(shift.(K))
+        C2 = shift_frozen.(C)
+        W2[K2] = C2
+    end
+
+    for (L, C) in B
+        L2 = sort(shift.(L))
+        C2 = shift_frozen.(C)
+        B2[L2] = C2
+    end
+
+    collection.whiteCliques = W2
+    collection.blackCliques = B2
+
+    return collection
 end
 
 
-function reflect_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, axis::Int = 1) # TODO refine
+function rotate_collection(collection::WSCollection, amount::Int)
+    return rotate_collection!(deepcopy(collection), amount)
+end
+
+
+function reflect_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, axis::Int = 1) # TODO obsolete ?
     reflect = x -> pmod(1 + axis - x, n)
 
     for i = n+1:length(labels)
@@ -497,14 +609,134 @@ function reflect_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, axis::I
 end
 
 
-function reflect_collection(collection::WSCollection, axis::Int = 1)
-    labels = deepcopy(collection.labels)
-    return reflect_collection(collection.k, collection.n, labels, axis)
+function reflect_collection!(collection::WSCollection, axis::Int = 1) 
+    n = collection.n
+    k = collection.k
+    labels = collection.labels
+    Q = collection.quiver
+    W = collection.whiteCliques
+    B = collection.blackCliques
+
+    reflect = x -> pmod(2*axis - x, n)
+    reflect_frozen = (x -> x <= n ? pmod(2*axis + 1 - k - x, n) : x)
+
+    # reflect labels
+    for i = n+1:length(labels)
+        collection.labels[i] = sort(reflect.(labels[i]))
+    end
+
+    # shift edges to frozen vertices
+    Q2 = deepcopy(Q)
+
+    for i = 1:n
+        for j in outneighbors(Q, i)
+            rem_edge!(Q2, i, j)
+            add_edge!(Q2, reflect_frozen(i), j)
+        end
+
+        for j in inneighbors(Q, i)
+            rem_edge!(Q2, j, i)
+            add_edge!(Q2, j, reflect_frozen(i))
+        end
+    end
+    collection.quiver = Q2
+
+    # shift clique keys
+    W2 = Dict()
+    B2 = Dict()
+
+    for (K, C) in W
+        K2 = sort(reflect.(K))
+        C2 = reflect_frozen.(C)
+        W2[K2] = C2
+    end
+
+    for (L, C) in B
+        L2 = sort(reflect.(L))
+        C2 = reflect_frozen.(C)
+        B2[L2] = C2
+    end
+
+    collection.whiteCliques = W2
+    collection.blackCliques = B2
+
+    return collection
 end
 
 
-function complement_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) # TODO refine
+function reflect_collection(collection::WSCollection, axis::Int = 1)
+    return reflect_collection!(deepcopy(collection), axis)
+end
 
+
+function complement_collection!(collection::WSCollection) 
+    n = collection.n
+    k = collection.k
+    labels = collection.labels
+    Q = collection.quiver
+    W = collection.whiteCliques
+    B = collection.blackCliques
+
+    shift = x -> pmod(x + k, n)
+    shift_frozen = (x -> x <= n ? shift(x) : x)
+    
+    # take complements of labels
+    for i = 0:n-1 # frozen labels
+        F = [pmod(l+i, n) for l = 1:n-k]
+        labels[i+1] = sort(F)
+    end
+
+    I = [i for i in 1:n]
+    M = [i for i in n+1:length(labels)]
+
+    complement = A -> setdiff(I, A)
+    labels[M] = complement.(labels[M])
+    collection.labels = labels
+
+    # shift edges to frozen vertices
+    Q2 = deepcopy(Q)
+
+    for i = 1:n
+        for j in outneighbors(Q, i)
+            rem_edge!(Q2, i, j)
+            add_edge!(Q2, shift(i), j)
+        end
+
+        for j in inneighbors(Q, i)
+            rem_edge!(Q2, j, i)
+            add_edge!(Q2, j, shift(i))
+        end
+    end
+    collection.quiver = Q2
+
+    # take complement of clique keys, and shift frozen
+    W2 = Dict()
+    B2 = Dict()
+
+    for (K, C) in W
+        L = sort(complement(K))
+        C2 = shift_frozen.(C)
+        B2[L] = C2
+    end
+
+    for (L, C) in B
+        K = sort(complement(L))
+        C2 = shift_frozen.(C)
+        W2[K] = C2
+    end
+
+    collection.whiteCliques = W2
+    collection.blackCliques = B2
+
+    collection.k = n-k
+
+    return collection
+end
+
+
+function complement_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) # TODO obsolete ?
+
+    # complement labels
     for i = 0:n-1 # frozen labels
         F = [pmod(l+i, n) for l = 1:n-k]
         labels[i+1] = sort(F)
@@ -523,12 +755,81 @@ end
 
 
 function complement_collection(collection::WSCollection)
-    labels = deepcopy(collection.labels)
-    return complement_collection(collection.k, collection.n, labels)
+    return complement_collection!(deepcopy(collection))
 end
 
 
-function swaped_colors_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) # TODO refine
+function swaped_colors_collection!(collection::WSCollection) 
+    # swapping colors = complement + rotate by k
+
+    n = collection.n
+    k = collection.k
+    labels = collection.labels
+    Q = collection.quiver
+    W = collection.whiteCliques
+    B = collection.blackCliques
+
+    shift = x -> pmod(x + k, n)
+    shift_frozen = (x -> x <= n ? pmod(x + 2*k, n) : x)
+
+    # labels
+    for i = 0:n-1 # frozen labels
+        F = [pmod(l+i, n) for l = 1:n-k]
+        labels[i+1] = sort(F)
+    end
+
+    I = [i for i in 1:n]
+    M = [i for i in n+1:length(labels)]
+
+    complement = A -> setdiff(I, A)
+    labels[M] = complement.(labels[M])
+
+    for i = n+1:length(labels)
+        labels[i] = sort(shift.(labels[i]))
+    end
+
+    # shift edges to frozen vertices
+    Q2 = deepcopy(Q)
+
+    for i = 1:n
+        for j in outneighbors(Q, i)
+            rem_edge!(Q2, i, j)
+            add_edge!(Q2, shift_frozen(i), j)
+        end
+
+        for j in inneighbors(Q, i)
+            rem_edge!(Q2, j, i)
+            add_edge!(Q2, j, shift_frozen(i))
+        end
+    end
+    collection.quiver = Q2
+
+    # take complement of clique keys, and shift frozen
+    W2 = Dict()
+    B2 = Dict()
+
+    for (K, C) in W
+        L = sort(shift.(complement(K)))
+        C2 = shift_frozen.(C)
+        B2[L] = C2
+    end
+
+    for (L, C) in B
+        K = sort(shift.(complement(L)))
+        C2 = shift_frozen.(C)
+        W2[K] = C2
+    end
+
+    collection.whiteCliques = W2
+    collection.blackCliques = B2
+
+    collection.k = n-k
+
+    return collection
+end
+
+
+function swaped_colors_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) # TODO obsolete ?
     # swapping colors = complement + rotate by k
 
     for i = 0:n-1 # frozen labels
@@ -550,21 +851,9 @@ function swaped_colors_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) #
     Q, W, B = compute_adjacencies(n-k, n, labels)
 
     return WSCollection(n-k, n, labels, Q, W, B)
-
 end
 
 
 function swaped_colors_collection(collection::WSCollection)
-    labels = deepcopy(collection.labels)
-    return swaped_colors_collection(collection.k, collection.n, labels)
-end
-
-
-function dual_checkboard_collection(k::Int, n::Int) # TODO compute directly from labels
-    return complement_collection(n-k, n, checkboard_labels(n-k, n))
-end
-
-
-function dual_rectangle_collection(k::Int, n::Int) # TODO compute directly from labels
-    return complement_collection(n-k, n, rectangle_labels(n-k, n))
+    return swaped_colors_collection!(collection)
 end

@@ -3,8 +3,12 @@ using Test
 
 @testset "WeaklySeparatedCollections.jl" begin
 
-    #### Combinatorics ####
+    #### temporary ####
 
+
+
+
+    #### Combinatorics ####
     
     @test begin
         "is_weakly_separated, false example"
@@ -32,10 +36,34 @@ using Test
 
     
     @test begin
-        "is_weakly_separated for collections"
+        "is_weakly_separated for rectangle_labels"
+
+        labels = rectangle_labels(4, 9)
+        is_weakly_separated(9, labels)
+    end
+
+
+    @test begin
+        "is_weakly_separated for dual_checkboard_labels"
+
+        labels = dual_checkboard_labels(4, 9)
+        is_weakly_separated(9, labels)
+    end
+
+
+    @test begin
+        "is_weakly_separated for dual_rectangle_labels"
+
+        labels = dual_rectangle_labels(4, 9)
+        is_weakly_separated(9, labels)
+    end
+
+
+    @test begin
+        "is_weakly_separated for checkboard_labels"
 
         labels = checkboard_labels(4, 9)
-        is_weakly_separated(9, labels) == true
+        is_weakly_separated(9, labels)
     end
 
     
@@ -119,6 +147,26 @@ using Test
 
         rectangle_collection(4, 9)
         true
+    end
+
+    
+    @test begin
+        "dual_rectangle_collection"
+        
+        drec1 = dual_rectangle_collection(4, 9)
+        drec2 = complement_collection(rectangle_collection(5, 9))
+
+        drec1 == drec2
+    end
+
+    
+    @test begin
+        "dual_checkboard_collection"
+
+        dcheck1 = dual_checkboard_collection(4, 9)
+        dcheck2 = complement_collection(checkboard_collection(5, 9))
+
+        dcheck1 == dcheck2
     end
 
     
@@ -245,22 +293,6 @@ using Test
 
         rec = rectangle_collection(4, 9)
         swaped_colors_collection(rec)
-        true
-    end
-
-    
-    @test begin
-        "dual_rectangle_collection"
-        
-        dual_rectangle_collection(4, 9)
-        true
-    end
-
-    
-    @test begin
-        "dual_checkboard_collection"
-
-        dual_checkboard_collection(4, 9)
         true
     end
 

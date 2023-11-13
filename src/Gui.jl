@@ -939,18 +939,18 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                     mutate!(G, data[1])
                     update_displays()
                 elseif task == "complement"
-                    G = complement_collection(G)
+                    complement_collection!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "swap_colors"
-                    G = swaped_colors_collection(G)
+                    swaped_colors_collection!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "rotate"
-                    G = rotate_collection(G, -data[1])
+                    rotate_collection!(G, -data[1])
                     update_displays()
                 elseif task == "reflect"
-                    G = reflect_collection(G)
+                    reflect_collection!(G)
                     update_displays()
                 else # task is predefined or load. All handeled the same
                     G = data[1]
@@ -996,18 +996,18 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                     update_embedding_data()
                     update_displays()
                 elseif task == "complement"
-                    G = complement_collection(G)
+                    complement_collection!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "swap_colors"
-                    G = swaped_colors_collection(G)
+                    swaped_colors_collection!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "rotate"
-                    G = rotate_collection(G, data[1])
+                    rotate_collection!(G, data[1])
                     update_displays()
                 elseif task == "reflect"
-                    G = reflect_collection(G)
+                    reflect_collection!(G)
                     update_displays()
                 else # task == "load"
                     # currently_opened = data[2]
@@ -1141,7 +1141,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                 end
             end
 
-            G = rotate_collection(G, 1)
+            rotate_collection!(G, 1)
             update_displays()
             update_history_strings("rotate", [1])
         
@@ -1164,7 +1164,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                 end
             end
 
-            G = rotate_collection(G, -1)
+            rotate_collection!(G, -1)
             update_displays()
             update_history_strings("rotate", [-1])
         
@@ -1187,7 +1187,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                 end
             end
 
-            G = reflect_collection(G)
+            reflect_collection!(G)
             update_displays()
             update_history_strings("reflect", [1])
         
@@ -1209,7 +1209,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                 end
             end
 
-            G = complement_collection(G)
+            complement_collection!(G)
 
             update_embedding_data()
             update_displays()
@@ -1232,7 +1232,7 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                 end
             end
 
-            G = swaped_colors_collection(G)
+            swaped_colors_collection!(G)
 
             update_embedding_data()
             update_displays()
