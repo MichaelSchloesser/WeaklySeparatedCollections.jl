@@ -3,12 +3,12 @@ using Test
 
 @testset "WeaklySeparatedCollections.jl" begin
 
-    #### temporary ####
+    ######## temporary ########
+        
 
 
 
-
-    #### Combinatorics ####
+    ######## Combinatorics ########
     
     @test begin
         "is_weakly_separated, false example"
@@ -296,8 +296,7 @@ using Test
         true
     end
 
-    #### Plotting ####
-    
+    ######## Plotting ########
     
     @test begin # drawTiling
         G = checkboard_collection(4, 9)
@@ -341,7 +340,7 @@ using Test
         true
     end
 
-    #### Gui ####
+    ######## Gui ########
 
     # @test begin
     #     check = checkboard_collection(4, 9)

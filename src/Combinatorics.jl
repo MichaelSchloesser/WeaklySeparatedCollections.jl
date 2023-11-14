@@ -359,34 +359,22 @@ Base.:(==)(collection1::WSCollection, collection2::WSCollection) = Base.isequal(
 
 # return the wsc corresponding to the checkboard graph 
 function checkboard_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
-    labels = checkboard_labels(k, n)
-    Q, W, B = compute_adjacencies(k, n, labels) 
-
-    return WSCollection(k, n, labels, Q, W, B)
+    return WSCollection(k, n, checkboard_labels(k, n))
 end
 
 # return the wsc corresponding to the rectangle graph
 function rectangle_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
-    labels = rectangle_labels(k, n) 
-    Q, W, B = compute_adjacencies(k, n, labels) 
-
-    return WSCollection(k, n, labels, Q, W, B)
+    return WSCollection(k, n, rectangle_labels(k, n))
 end
 
 
 function dual_checkboard_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
-    labels = dual_checkboard_labels(k, n) 
-    Q, W, B = compute_adjacencies(k, n, labels) 
-
-    return WSCollection(k, n, labels, Q, W, B)
+    return WSCollection(k, n, dual_checkboard_labels(k, n))
 end
 
 
 function dual_rectangle_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
-    labels = dual_rectangle_labels(k, n)
-    Q, W, B = compute_adjacencies(k, n, labels) 
-
-    return WSCollection(k, n, labels, Q, W, B)
+    return WSCollection(k, n, dual_rectangle_labels(k, n))
 end
 
 
@@ -530,10 +518,8 @@ function rotate_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, amount::
     for i = n+1:length(labels)
         labels[i] = sort(shift.(labels[i]))
     end
-    
-    Q, W, B = compute_adjacencies(k, n, labels)
 
-    return WSCollection(k, n, labels, Q, W, B)
+    return WSCollection(k, n, labels)
 end
 
 
@@ -602,10 +588,8 @@ function reflect_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, axis::I
     for i = n+1:length(labels)
         labels[i] = sort(reflect.(labels[i]))
     end
-    
-    Q, W, B = compute_adjacencies(k, n, labels)
 
-    return WSCollection(k, n, labels, Q, W, B)
+    return WSCollection(k, n, labels)
 end
 
 
@@ -748,9 +732,7 @@ function complement_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) # TO
     complement = A -> setdiff(I, A)
     labels[M] = complement.(labels[M])
 
-    Q, W, B = compute_adjacencies(n-k, n, labels)
-
-    return WSCollection(n-k, n, labels, Q, W, B)
+    return WSCollection(n-k, n, labels)
 end
 
 
@@ -848,12 +830,113 @@ function swaped_colors_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) #
         labels[i] = sort(shift.(labels[i]))
     end
 
-    Q, W, B = compute_adjacencies(n-k, n, labels)
-
-    return WSCollection(n-k, n, labels, Q, W, B)
+    return WSCollection(n-k, n, labels)
 end
 
 
 function swaped_colors_collection(collection::WSCollection)
-    return swaped_colors_collection!(collection)
+    return swaped_colors_collection!(deepcopy(collection))
+end
+
+# extend to maximal weakly separated collection using brute force
+function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})
+    N = k*(n-k)+1
+
+    # enforce frozen labels in the first n positions
+    frozen::Vector{Vector{Int}} = Vector() 
+    for i = 0:n-1 
+        F = [pmod(l+i, n) for l = 1:k]
+        push!(frozen, sort(F))
+    end
+
+    labels = union(frozen, labels)
+
+    if length(labels) == N
+        return Vector{Vector{Int}}(labels)
+    end
+
+    k_sets = subsets(collect(1:n), k)
+
+    for v in k_sets
+        if !(v in labels) && is_weakly_separated(n, union(labels, [v]))
+            push!(labels, v)
+        end
+
+        if length(labels) == N
+            return Vector{Vector{Int}}(labels)
+        end
+    end
+
+end
+
+# extend to maximal weakly separated collection using know collection, then brute fore
+function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
+    N = k*(n-k)+1
+
+    # enforce frozen labels in the first n positions
+    frozen::Vector{Vector{Int}} = Vector() 
+    for i = 0:n-1 
+        F = [pmod(l+i, n) for l = 1:k]
+        push!(frozen, sort(F))
+    end
+
+    labels1 = union(frozen, labels1)
+
+    for v in labels2
+        if !(v in labels1) && is_weakly_separated(n, union(labels1, [v]))
+
+            push!(labels1, v)
+        end
+
+        if length(labels1) == N
+            return Vector{Vector{Int}}(labels1)
+        end
+    end
+
+    k_sets = subsets(collect(1:n), k)
+
+    for v in k_sets
+        if !(v in labels1) && is_weakly_separated(n, union(labels1, [v]))
+            push!(labels1, v)
+        end
+
+        if length(labels1) == N
+            return Vector{Vector{Int}}(labels1)
+        end
+    end
+
+end
+
+
+function extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)
+    return extend_weakly_separated!(collection.k, collection.n, labels, collection.labels)
+end
+
+
+function extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
+    return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels)))
+end
+
+
+function extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
+    return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels1), labels2))
+end
+
+
+function extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)
+    return WSCollection(collection.k, collection.n, extend_weakly_separated!(deepcopy(labels), collection))
+end
+
+
+function super_potential_labels(k::Int, n::Int)
+    labels::Vector{Vector{Int}} = Vector()
+
+    I = union(collect(1:k-1), [k+1])
+
+    for i = 0:n-1 
+        S = (x -> pmod(x+i, n)).(I)
+        push!(labels, sort(S))
+    end
+    
+    return labels
 end
