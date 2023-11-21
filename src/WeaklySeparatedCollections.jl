@@ -1,5 +1,4 @@
 
-# import Mousetrap # can be removed after mousetrap reaches version 0.3.1
 module WeaklySeparatedCollections
 
 export  is_weakly_separated, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
