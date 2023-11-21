@@ -1,12 +1,15 @@
+module Plotting
 
-# TODO get rid of RGBA.Colors and take a Vector of floats instead
+using WeaklySeparatedCollections, Luxor
+using Colors, Graphs
 
+pmod = WeaklySeparatedCollections.pmod
 LPoint = Luxor.Point
 const scale_factor = 2.4
 
 norm = P -> sqrt(P.x^2 + P.y^2)
 
-function drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+function WeaklySeparatedCollections.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
     highlightMutables::Bool = true, scale::Float64 = 0.0) 
 
@@ -107,7 +110,7 @@ function drawTiling(collection::WSCollection, title::String, width::Int = 500, h
 end
 
 
-function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
     scale::Float64 = 0.0) 
 
@@ -241,7 +244,7 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
 end
 
 
-function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
     highlightMutables::Bool = false, scale::Float64 = 0.0) 
 
@@ -416,7 +419,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
 end
 
 
-function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
     scale::Float64 = 0.0) 
 
@@ -574,4 +577,8 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
         end
         
     finish()
+end
+
+__init__() = println("WeaklySeparatedCollections: plotting extension was loaded")
+
 end

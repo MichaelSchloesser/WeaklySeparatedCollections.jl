@@ -1,8 +1,18 @@
+module Gui
+
+using WeaklySeparatedCollections, Mousetrap
+
+using Luxor
+using Scratch
+using JLD2
+using FileIO
 
 bin_path = ""
 
-function visualizer(collection::WSCollection = rectangle_collection(4, 9))
+function WeaklySeparatedCollections.visualizer(collection::WSCollection = rectangle_collection(4, 9))
+    scale_factor = 2.4
     LPoint = Luxor.Point
+    norm = P -> sqrt(P.x^2 + P.y^2)
 
     main() do app::Application
         
@@ -775,13 +785,13 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
             set_initial_filter!(file_chooser, filter)
         
             on_accept!(file_chooser) do self::FileChooser, files::Vector{FileDescriptor}
-                currently_opened = get_path(files[1])
-                D = FileIO.load(currently_opened)
+                chosen_path = get_path(files[1])
+                D = FileIO.load(chosen_path)
                 
                 Q, W, B = compute_adjacencies(D["k"], D["n"], D["labels"])
                 G2 = WSCollection(D["k"], D["n"], D["labels"], Q, W, B)
 
-                push!(undo_list, ("load", [G, currently_opened]))
+                push!(undo_list, ("load", [G, chosen_path]))
                 if length(redo_list) > 0
                     task, data = pop!(redo_list)
                     if task != "load" || !isequal(data[1], G) || !isequal(data[2], G2)
@@ -789,12 +799,11 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                     end
                 end
 
-                update_history_strings("load", [G, currently_opened])
+                update_history_strings("load", [G, chosen_path])
 
                 G = G2
                 update_embedding_data()
                 update_displays()
-                
                 
                 return nothing
             end
@@ -807,35 +816,24 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
         add_action!(file_submenu, "Load...", load_collection)
         
 
-        # save = Action("save.action", app) do x
-
-        #     set_mouse_input_blocked!(true)
-
-        #     if currently_opened == ""
-        #         activate!(save_as)
-        #     else
-        #         D = Dict("k" => G.k, "n" => G.n, "labels" => G.labels)
-        #         FileIO.save(currently_opened, D)
-        #     end
-
-        #     set_mouse_input_blocked!(false)
-        #     return nothing
-        # end
-        # add_shortcut!(save, "<Control>s")
-        # add_action!(file_submenu, "Save", save)
-        
-
         save_as = Action("save_as.action", app) do x
 
             set_mouse_input_blocked!(true)
 
-            chosen_path = save_file(filterlist = "jld2")
+            file_chooser = FileChooser(FILE_CHOOSER_ACTION_SAVE)
+            filter = FileFilter("*.jld2")
+            add_allowed_suffix!(filter, "jld2")
+            set_initial_filter!(file_chooser, filter)
 
-            if !isnothing(chosen_path) && chosen_path != ""
+            on_accept!(file_chooser) do self::FileChooser, files::Vector{FileDescriptor}
+                chosen_path = get_path(files[1])
+
                 D = Dict("k" => G.k, "n" => G.n, "labels" => G.labels)
                 FileIO.save(chosen_path, D)
-                # currently_opened = chosen_path
+                
+                return nothing
             end
+            present!(file_chooser)
 
             set_mouse_input_blocked!(false)
             return nothing
@@ -858,8 +856,24 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
 
             set_mouse_input_blocked!(true)
 
-            chosen_path = save_file(filterlist = "pdf;svg;eps;png")
-            if !isnothing(chosen_path) && chosen_path != ""
+            file_chooser = FileChooser(FILE_CHOOSER_ACTION_SAVE)
+            filter1 = FileFilter("*.pdf")
+            add_allowed_suffix!(filter1, "pdf")
+            filter2 = FileFilter("*.png")
+            add_allowed_suffix!(filter2, "png")
+            filter3 = FileFilter("*.svg")
+            add_allowed_suffix!(filter2, "svg")
+            filter4 = FileFilter("*.eps")
+            add_allowed_suffix!(filter2, "eps")
+
+            set_initial_filter!(file_chooser, filter1)
+            add_filter!(file_chooser, filter2)
+            add_filter!(file_chooser, filter3)
+            add_filter!(file_chooser, filter4)
+
+
+            on_accept!(file_chooser) do self::FileChooser, files::Vector{FileDescriptor}
+                chosen_path = get_path(files[1])
                 
                 w, h = parse(Int64, get_text(export_width_entry)) , parse(Int64, get_text(export_height_entry))
                 export_adjust_angle = get_is_active(export_adjust_angle_check) 
@@ -875,8 +889,9 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                         drawPLG_poly(G, chosen_path, w, h, adjustAngle = export_adjust_angle, drawLabels = draw_face_labels)
                     end
                 end
-
+                return nothing
             end
+            present!(file_chooser)
 
             set_is_modal!(export_window, false)
             close!(export_window)
@@ -1010,7 +1025,6 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                     reflect_collection!(G)
                     update_displays()
                 else # task == "load"
-                    # currently_opened = data[2]
                     D = FileIO.load(data[2])
 
                     Q, W, B = compute_adjacencies(D["k"], D["n"], D["labels"])
@@ -1500,6 +1514,8 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
 end
 
 function __init__()
+    println("WeaklySeparatedCollections: gui extension was loaded")
     global bin_path = @get_scratch!("bin")
 end
 
+end
