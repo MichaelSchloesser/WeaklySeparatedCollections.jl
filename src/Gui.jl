@@ -805,37 +805,26 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
         end
         add_shortcut!(load_collection, "<Control>l")
         add_action!(file_submenu, "Load...", load_collection)
-        
 
-        # save = Action("save.action", app) do x
-
-        #     set_mouse_input_blocked!(true)
-
-        #     if currently_opened == ""
-        #         activate!(save_as)
-        #     else
-        #         D = Dict("k" => G.k, "n" => G.n, "labels" => G.labels)
-        #         FileIO.save(currently_opened, D)
-        #     end
-
-        #     set_mouse_input_blocked!(false)
-        #     return nothing
-        # end
-        # add_shortcut!(save, "<Control>s")
-        # add_action!(file_submenu, "Save", save)
-        
 
         save_as = Action("save_as.action", app) do x
 
             set_mouse_input_blocked!(true)
 
-            chosen_path = save_file(filterlist = "jld2")
+            file_chooser = FileChooser(FILE_CHOOSER_ACTION_SAVE)
+            filter = FileFilter("*.jld2")
+            add_allowed_suffix!(filter, "jld2")
+            set_initial_filter!(file_chooser, filter)
 
-            if !isnothing(chosen_path) && chosen_path != ""
+            on_accept!(file_chooser) do self::FileChooser, files::Vector{FileDescriptor}
+                chosen_path = get_path(files[1])
+
                 D = Dict("k" => G.k, "n" => G.n, "labels" => G.labels)
                 FileIO.save(chosen_path, D)
-                # currently_opened = chosen_path
+                
+                return nothing
             end
+            present!(file_chooser)
 
             set_mouse_input_blocked!(false)
             return nothing
@@ -858,8 +847,24 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
 
             set_mouse_input_blocked!(true)
 
-            chosen_path = save_file(filterlist = "pdf;svg;eps;png")
-            if !isnothing(chosen_path) && chosen_path != ""
+            file_chooser = FileChooser(FILE_CHOOSER_ACTION_SAVE)
+            filter1 = FileFilter("*.pdf")
+            add_allowed_suffix!(filter1, "pdf")
+            filter2 = FileFilter("*.png")
+            add_allowed_suffix!(filter2, "png")
+            filter3 = FileFilter("*.svg")
+            add_allowed_suffix!(filter2, "svg")
+            filter4 = FileFilter("*.eps")
+            add_allowed_suffix!(filter2, "eps")
+
+            set_initial_filter!(file_chooser, filter1)
+            add_filter!(file_chooser, filter2)
+            add_filter!(file_chooser, filter3)
+            add_filter!(file_chooser, filter4)
+
+
+            on_accept!(file_chooser) do self::FileChooser, files::Vector{FileDescriptor}
+                chosen_path = get_path(files[1])
                 
                 w, h = parse(Int64, get_text(export_width_entry)) , parse(Int64, get_text(export_height_entry))
                 export_adjust_angle = get_is_active(export_adjust_angle_check) 
@@ -875,8 +880,9 @@ function visualizer(collection::WSCollection = rectangle_collection(4, 9))
                         drawPLG_poly(G, chosen_path, w, h, adjustAngle = export_adjust_angle, drawLabels = draw_face_labels)
                     end
                 end
-
+                return nothing
             end
+            present!(file_chooser)
 
             set_is_modal!(export_window, false)
             close!(export_window)

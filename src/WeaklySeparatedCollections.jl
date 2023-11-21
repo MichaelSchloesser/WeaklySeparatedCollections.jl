@@ -1,5 +1,4 @@
 
-import Mousetrap # can be removed after mousetrap reaches version 0.3.1
 module WeaklySeparatedCollections
 
 export  is_weakly_separated, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
@@ -13,14 +12,15 @@ export  drawTiling, drawPLG_straight, drawPLG_smooth, drawPLG_poly
 export  visualizer
 
 using Graphs
+using IterTools
+
 using Luxor
 using Colors
-using Mousetrap
-using NativeFileDialog
+
 using JLD2
 using FileIO
 using Scratch
-using IterTools
+using Mousetrap
 
 include("Combinatorics.jl")
 include("Plotting.jl")  
