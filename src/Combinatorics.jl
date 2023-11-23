@@ -1,11 +1,15 @@
 
-# a mod b, but returns value in [1,b]
+# return a mod b as element in {1, ..., b}
 function pmod(a::Int, b::Int) 
     c = a % b
     return c > 0 ?  c : c+b
 end
 
-# tests if two vectors v and w are weakly separated
+@doc raw"""
+    is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
+
+Test if two vectors `v` and `w` viewed as subsets of `{1 , ..., n }` are weakly separated.
+"""
 function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int}) 
     x = setdiff(v, w)
     y = setdiff(w, v)
@@ -47,7 +51,11 @@ function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
     return false
 end
 
-# tests if the vectors in labels are pairwise weakly separated
+@doc raw"""
+    is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
+
+Test if the vectors contained in `labels` are pairwise weakly separated.
+"""
 function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     len = length(labels)
     for i = 1:len-1
@@ -61,7 +69,11 @@ function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     return true
 end
 
-# returns the labels of the rectangle graph. Frozen labels first.
+@doc raw"""
+    rectangle_labels(k::Int, n::Int)
+
+Return the labels of the rectangle graph as a vector. The frozen labels are in positions `1` to `n`.
+"""
 function rectangle_labels(k::Int, n::Int)
     labels = Vector() 
 
