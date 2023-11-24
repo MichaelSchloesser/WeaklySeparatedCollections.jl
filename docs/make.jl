@@ -2,7 +2,10 @@ using Documenter, WeaklySeparatedCollections
 
 makedocs(;
     modules = [WeaklySeparatedCollections],
-    pages = ["Home" => "index.md"],
+    pages = [
+        "Installation" => "index.md"
+        "User guide" => "usage.md"
+    ],
     sitename = "WeaklySeparatedCollections.jl",
     format = Documenter.HTML(;
         repolink = "https://github.com/MichaelSchloesser/WeaklySeparatedCollections.jl",

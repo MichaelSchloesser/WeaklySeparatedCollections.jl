@@ -9,7 +9,7 @@ using FileIO
 
 bin_path = ""
 
-function WeaklySeparatedCollections.visualizer(collection::WSCollection = rectangle_collection(4, 9))
+function WeaklySeparatedCollections.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
     scale_factor = 2.4
     LPoint = Luxor.Point
     norm = P -> sqrt(P.x^2 + P.y^2)

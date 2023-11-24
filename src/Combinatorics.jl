@@ -376,16 +376,17 @@ The 2-cells are colored black or white and contained in `blackCliques` and `whit
 Optionally the 2-cells can be set to `missing`, to save memory.
 
 # Attributes
-    k::Int
-    n::Int
-    labels::Vector{Vector{Int}}
-    quiver::SimpleDiGraph{Int}
-    whiteCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} } }
-    blackCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} } }
+- `k::Int`
+- `n::Int`
+- `labels::Vector{Vector{Int}}`
+- `quiver::SimpleDiGraph{Int}`
+- `whiteCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} }}`
+- `blackCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} }}`
 
 # Constructors
     WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
-    WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, computeCliques::Bool = true)
+    WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, 
+                                                              computeCliques::Bool = true)
 """
 mutable struct WSCollection
     k::Int
@@ -987,7 +988,8 @@ end
 
 # extend to maximal weakly separated collection using know collection, then brute fore
 @doc raw"""
-    extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
+    extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
+                                             labels2::Vector{Vector{Int}})
 
 Extend `labels1` to contain the labels of a maximal weakly separated collection.
 Use elements of `labels2` if possible.
@@ -1049,7 +1051,8 @@ function extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
 end
 
 @doc raw"""
-    extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
+    extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
+                                         labels2::Vector{Vector{Int}})
 
 Return a maximal weakly separated collection containing all elements of `labels1`.
 Use elements of `labels2` if possible.
