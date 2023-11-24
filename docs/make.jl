@@ -3,7 +3,7 @@ using Documenter, WeaklySeparatedCollections
 makedocs(;
     modules = [WeaklySeparatedCollections],
     pages = [
-        "Installation" => "index.md"
+        "Home" => "index.md"
         "User guide" => "usage.md"
     ],
     sitename = "WeaklySeparatedCollections.jl",
