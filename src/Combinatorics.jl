@@ -72,7 +72,8 @@ end
 @doc raw"""
     rectangle_labels(k::Int, n::Int)
 
-Return the labels of the rectangle graph as a vector. The frozen labels are in positions `1` to `n`.
+Return the labels of the rectangle graph as a vector. 
+The frozen labels are in positions `1` to `n`.
 """
 function rectangle_labels(k::Int, n::Int)
     labels = Vector() 
@@ -93,7 +94,12 @@ function rectangle_labels(k::Int, n::Int)
     return Vector{Vector{Int}}(labels)
 end
 
-# returns the labels of the checkboard graph. Frozen labels first.
+@doc raw"""
+    checkboard_labels(k::Int, n::Int)
+
+Return the labels of the checkboard graph as a vector. 
+The frozen labels are in positions `1` to `n`.
+"""
 function checkboard_labels(k::Int, n::Int) 
     sigma = (x, y) -> pmod(x+y, n)
 
@@ -116,7 +122,12 @@ function checkboard_labels(k::Int, n::Int)
     return Vector{Vector{Int}}(labels)
 end
 
+@doc raw"""
+    dual_rectangle_labels(k::Int, n::Int)
 
+Return the labels of the dual-rectangle graph as a vector. 
+The frozen labels are in positions `1` to `n`.
+"""
 function dual_rectangle_labels(k::Int, n::Int) 
     labels = Vector() 
 
@@ -136,7 +147,12 @@ function dual_rectangle_labels(k::Int, n::Int)
     return Vector{Vector{Int}}(labels)
 end
 
+@doc raw"""
+    dual_checkboard_labels(k::Int, n::Int)
 
+Return the labels of the dual-checkboard graph as a vector. 
+The frozen labels are in positions `1` to `n`.
+"""
 function dual_checkboard_labels(k::Int, n::Int) 
     labels =  Vector() 
     sigma = (x, y) -> pmod(x+y, n)
@@ -158,8 +174,13 @@ function dual_checkboard_labels(k::Int, n::Int)
     return Vector{Vector{Int}}(labels)
 end
 
-# returns the non trivial white and black cliques
-function compute_cliques(k::Int, labels::Vector{Vector{Int}})
+@doc raw"""
+    compute_cliques(k::Int, labels::Vector{Vector{Int}})
+
+Return the non trivial black and white cliques of the weakly separated collection 
+whose elements are given by `labels`.
+"""
+function compute_cliques(k::Int, labels::Vector{Vector{Int}}) # TODO parameter k is unnessesary
     N = length(labels)
     W = Dict()
     B = Dict()
@@ -210,9 +231,13 @@ function compute_cliques(k::Int, labels::Vector{Vector{Int}})
     return W, B        
 end
 
-# returns the non trivial white and black cliques. Uses known quiver to speed up the computation
+@doc raw"""
+    compute_cliques(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
+
+Return the non trivial black and white cliques of the weakly separated collection 
+whose elements are given by `labels` and whose adjacencies are encoded in `quiver`.
+"""
 function compute_cliques(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
-    N = length(labels)
     W = Dict()
     B = Dict()
 
@@ -255,7 +280,12 @@ function compute_cliques(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}
     return W, B
 end
 
-# returns a graph encoding the adjacency between labels as well as face boundaries
+@doc raw"""
+    compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}}) 
+
+Compute the adjacency graph and face boundaries of the weakly separated collection 
+with elements given by `labels`.
+"""
 function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}}) 
     N = length(labels)
     W, B = compute_cliques(k, labels)
@@ -303,7 +333,12 @@ function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}})
     return Q, W, B
 end
 
-# returns face boundaries using known adjacencies
+@doc raw"""
+    compute_boundaries(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
+
+Compute the face boundaries of the weakly separated collection with elements given 
+by `labels` and adjacency graph `quiver`.
+"""
 function compute_boundaries(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
     N = length(labels)
     W, B = compute_cliques(labels, quiver)
@@ -330,7 +365,28 @@ function compute_boundaries(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{I
     return W, B
 end
 
-# struct for weakly separated collections
+@doc raw"""
+    WSCollection
+
+An abstract 2-dimensional cell complex living inside the matriod of `k-sets` in `{1, ..., n}`. 
+Its vertices are labelled by elements of `labels` while `quiver` encodes adjacencies 
+between the vertices. 
+The 2-cells are colored black or white and contained in `blackCliques` and `whiteCliques`.
+
+Optionally the 2-cells can be set to `missing`, to save memory.
+
+# Attributes
+    k::Int
+    n::Int
+    labels::Vector{Vector{Int}}
+    quiver::SimpleDiGraph{Int}
+    whiteCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} } }
+    blackCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} } }
+
+# Constructors
+    WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
+    WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, computeCliques::Bool = true)
+"""
 mutable struct WSCollection
     k::Int
     n::Int
@@ -340,7 +396,14 @@ mutable struct WSCollection
     blackCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} } }
 end
 
-# WSCollection from labels only
+@doc raw"""
+    WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
+
+Constructor of WSCollection. Adjacencies between its vertices as well as 2-cells are 
+computed using only a set of vertex `labels`.
+
+If `computeCliques` is set to false, the 2-cells will be set to `missing`.
+"""
 function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
     Q, W, B = compute_adjacencies(k, n, labels)
 
@@ -351,7 +414,15 @@ function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeClique
     end
 end
 
-# WSCollection from labels and quiver
+@doc raw"""
+    WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, 
+    computeCliques::Bool = true)
+
+Constructor of WSCollection. The 2-cells are computed from vertex `labels` as well as the
+their adjacencies encoded in `quiver`. Faster than just using labels most of the time.
+
+If `computeCliques` is `false` the black and white 2-cells are set to `missing` instead.
+"""
 function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, computeCliques::Bool = true)
     if !computeCliques
         return WSCollection(k, n, labels, quiver, missing, missing)
@@ -361,45 +432,86 @@ function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::Simpl
     end
 end
 
-# overload Base.isequal
+@doc raw"""
+    isequal(collection1::WSCollection, collection2::WSCollection)
+
+Return true if the vertices of `collection1` and `collection2` share the same labels.
+The order of labels in each collection does not matter.
+"""
 function Base.isequal(collection1::WSCollection, collection2::WSCollection) # two WSC's are equal if der sets of labels equal.
     return issetequal(collection1.labels, collection2.labels)
 end
 
-# overload Base.:(==)
+@doc raw"""
+    (==)(collection1::WSCollection, collection2::WSCollection)
+
+Return true if the vertices of `collection1` and `collection2` share the same labels.
+The order of labels in each collection does not matter.
+"""
 Base.:(==)(collection1::WSCollection, collection2::WSCollection) = Base.isequal(collection1, collection2)
 
-# return the wsc corresponding to the checkboard graph 
+@doc raw"""
+    checkboard_collection(k::Int, n::Int)
+
+Return the weakly separated collection corresponding to the checkboard graph.
+""" 
 function checkboard_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
     return WSCollection(k, n, checkboard_labels(k, n))
 end
 
-# return the wsc corresponding to the rectangle graph
+@doc raw"""
+    rectangle_collection(k::Int, n::Int)
+
+Return the weakly separated collection corresponding to the rectangle graph.
+""" 
 function rectangle_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
     return WSCollection(k, n, rectangle_labels(k, n))
 end
 
+@doc raw"""
+    dual_checkboard_collection(k::Int, n::Int)
 
+Return the weakly separated collection corresponding to the dual-checkboard graph.
+""" 
 function dual_checkboard_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
     return WSCollection(k, n, dual_checkboard_labels(k, n))
 end
 
+@doc raw"""
+    dual_rectangle_collection(k::Int, n::Int)
 
+Return the weakly separated collection corresponding to the dual-rectangle graph.
+""" 
 function dual_rectangle_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
     return WSCollection(k, n, dual_rectangle_labels(k, n))
 end
 
+@doc raw"""
+    is_frozen(collection::WSCollection, i::Int)
 
+Return true if the vertex `i` of `collection` is frozen.
+"""
 function is_frozen(collection::WSCollection, i::Int) 
     return i <= collection.n
 end
 
+@doc raw"""
+    is_mutable(collection::WSCollection, i::Int) 
 
+Return true if the vertex `i` of `collection` is mutable. This is the case if
+it is not frozen and is of degree 4.
+"""
 function is_mutable(collection::WSCollection, i::Int) 
     return !is_frozen(collection, i) && Graphs.degree(collection.quiver, [i])[1] == 4 
 end
 
+@doc raw"""
+    mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
 
+Mutate the `collection` in direction `i` if `i` is a mutable vertex of `collection`.
+
+If `mutateCliques` is set to false, the 2-cells are set to missing.
+"""
 function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
 
     if !is_mutable(collection, i)
@@ -497,17 +609,27 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
         updateCliques([c])
         updateCliques([a,b,c])
         updateCliques([a,c,d])
+    else
+        collection.whiteCliques, collection.blackCliques = missing, missing
     end
 
     return collection
 end
 
+@doc raw"""
+    mutate(collection::WSCollection, i::Int, mutateCliques::Bool = true)
 
+Version of `mutate!` that does not modify its arguments.
+"""
 function mutate(collection::WSCollection, i::Int, mutateCliques::Bool = true)
     return mutate!( deepcopy(collection), i, mutateCliques)
 end
 
-# for convenience we may mutate using labels
+@doc raw"""
+    mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
+
+Mutate the `collection` by addressing a vertex with its label.
+"""
 function mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true) 
     i = findfirst(x -> x == label, collection.labels)
 
@@ -518,23 +640,20 @@ function mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bo
     return mutate!(collection, i, mutateCliques)
 end
 
+@doc raw"""
+    mutate(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
 
+Mutate the `collection` by addressing a vertex with its label, without modifying arguments.
+"""
 function mutate(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
     return mutate!( deepcopy(collection), label, mutateCliques)
 end
 
+@doc raw"""
+    rotate_collection!(collection::WSCollection, amount::Int)
 
-function rotate_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, amount::Int) # TODO obsolete ?
-    shift = x -> pmod(x + amount, n)
-
-    for i = n+1:length(labels)
-        labels[i] = sort(shift.(labels[i]))
-    end
-
-    return WSCollection(k, n, labels)
-end
-
-
+Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation. 
+"""
 function rotate_collection!(collection::WSCollection, amount::Int)
     n = collection.n
     labels = collection.labels
@@ -588,23 +707,21 @@ function rotate_collection!(collection::WSCollection, amount::Int)
     return collection
 end
 
+@doc raw"""
+    rotate_collection(collection::WSCollection, amount::Int)
 
+Version of `rotate_collection!` that does not modify its argument. 
+"""
 function rotate_collection(collection::WSCollection, amount::Int)
     return rotate_collection!(deepcopy(collection), amount)
 end
 
+@doc raw"""
+    reflect_collection!(collection::WSCollection, axis::Int = 1) 
 
-function reflect_collection(k::Int, n::Int, labels::Vector{Vector{Int}}, axis::Int = 1) # TODO obsolete ?
-    reflect = x -> pmod(1 + axis - x, n)
-
-    for i = n+1:length(labels)
-        labels[i] = sort(reflect.(labels[i]))
-    end
-
-    return WSCollection(k, n, labels)
-end
-
-
+Reflect `collection` by letting the permutation `x ↦ 2*axis -x` interpreted modulo 
+`n = collection.n` act on the labels of `collection`. 
+"""
 function reflect_collection!(collection::WSCollection, axis::Int = 1) 
     n = collection.n
     k = collection.k
@@ -659,12 +776,20 @@ function reflect_collection!(collection::WSCollection, axis::Int = 1)
     return collection
 end
 
+@doc raw"""
+    reflect_collection(collection::WSCollection, axis::Int = 1) 
 
+Version of `reflect_collection!` that does not modify its argument.
+"""
 function reflect_collection(collection::WSCollection, axis::Int = 1)
     return reflect_collection!(deepcopy(collection), axis)
 end
 
+@doc raw"""
+    complement_collection!(collection::WSCollection) 
 
+Return the collection whose labels are complementary to those of `collection`.
+"""
 function complement_collection!(collection::WSCollection) 
     n = collection.n
     k = collection.k
@@ -729,30 +854,23 @@ function complement_collection!(collection::WSCollection)
     return collection
 end
 
+@doc raw"""
+    complement_collection(collection::WSCollection) 
 
-function complement_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) # TODO obsolete ?
-
-    # complement labels
-    for i = 0:n-1 # frozen labels
-        F = [pmod(l+i, n) for l = 1:n-k]
-        labels[i+1] = sort(F)
-    end
-
-    I = [i for i in 1:n]
-    M = [i for i in n+1:length(labels)]
-
-    complement = A -> setdiff(I, A)
-    labels[M] = complement.(labels[M])
-
-    return WSCollection(n-k, n, labels)
-end
-
-
+Version of `complement_collection!` that does not modify its argument.
+"""
 function complement_collection(collection::WSCollection)
     return complement_collection!(deepcopy(collection))
 end
 
+@doc raw"""
+    swaped_colors_collection!(collection::WSCollection) 
 
+Return the weakly separated collection whose corresponding plabic graph is obtained
+from the one of `collection` by swapping the colors black and white.
+
+This is the same as taking complements and rotating by `collection.k`.
+"""
 function swaped_colors_collection!(collection::WSCollection) 
     # swapping colors = complement + rotate by k
 
@@ -822,35 +940,21 @@ function swaped_colors_collection!(collection::WSCollection)
     return collection
 end
 
+@doc raw"""
+    swaped_colors_collection(collection::WSCollection) 
 
-function swaped_colors_collection(k::Int, n::Int, labels::Vector{Vector{Int}}) # TODO obsolete ?
-    # swapping colors = complement + rotate by k
-
-    for i = 0:n-1 # frozen labels
-        F = [pmod(l+i, n) for l = 1:n-k]
-        labels[i+1] = sort(F)
-    end
-
-    I = [i for i in 1:n]
-    M = [i for i in n+1:length(labels)]
-
-    complement = A -> setdiff(I, A)
-    labels[M] = complement.(labels[M])
-    shift = x -> pmod(x + k, n)
-
-    for i = n+1:length(labels)
-        labels[i] = sort(shift.(labels[i]))
-    end
-
-    return WSCollection(n-k, n, labels)
-end
-
-
+Version of `swaped_colors_collection!` that does not modify its argument.
+"""
 function swaped_colors_collection(collection::WSCollection)
     return swaped_colors_collection!(deepcopy(collection))
 end
 
 # extend to maximal weakly separated collection using brute force
+@doc raw"""
+    extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})  
+
+Extend `labels` to contain the labels of a maximal weakly separated collection.
+"""
 function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})
     N = k*(n-k)+1
 
@@ -882,6 +986,12 @@ function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})
 end
 
 # extend to maximal weakly separated collection using know collection, then brute fore
+@doc raw"""
+    extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
+
+Extend `labels1` to contain the labels of a maximal weakly separated collection.
+Use elements of `labels2` if possible.
+"""
 function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
     N = k*(n-k)+1
 
@@ -919,27 +1029,46 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
 
 end
 
+@doc raw"""
+    extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)
 
+Extend `labels` to contain the labels of a maximal weakly separated collection.
+Use labels of `collection` if possible.
+"""
 function extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)
     return extend_weakly_separated!(collection.k, collection.n, labels, collection.labels)
 end
 
+@doc raw"""
+    extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
 
+Return a maximal weakly separated collection containing all elements of `labels`.
+"""
 function extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
     return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels)))
 end
 
+@doc raw"""
+    extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
 
+Return a maximal weakly separated collection containing all elements of `labels1`.
+Use elements of `labels2` if possible.
+"""
 function extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
     return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels1), labels2))
 end
 
+@doc raw"""
+    extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)
 
+Return a maximal weakly separated collection containing all elements of `labels`.
+Use labels of `collection` if possible.
+"""
 function extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)
     return WSCollection(collection.k, collection.n, extend_weakly_separated!(deepcopy(labels), collection))
 end
 
-
+# TODO
 function super_potential_labels(k::Int, n::Int)
     labels::Vector{Vector{Int}} = Vector()
 
