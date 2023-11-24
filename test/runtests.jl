@@ -1,6 +1,7 @@
 using WeaklySeparatedCollections
 using Test
 
+
 @testset "WeaklySeparatedCollections.jl" begin
 
     ######## temporary ########
@@ -297,6 +298,8 @@ using Test
     end
 
     ######## Plotting ########
+
+    using Luxor
     
     @test begin # drawTiling
         G = checkboard_collection(4, 9)
@@ -341,6 +344,8 @@ using Test
     end
 
     ######## Gui ########
+
+    # using Mousetrap
 
     # @test begin
     #     check = checkboard_collection(4, 9)
