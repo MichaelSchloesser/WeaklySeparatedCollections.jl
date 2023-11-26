@@ -878,9 +878,9 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             filter2 = FileFilter("*.png")
             add_allowed_suffix!(filter2, "png")
             filter3 = FileFilter("*.svg")
-            add_allowed_suffix!(filter2, "svg")
+            add_allowed_suffix!(filter3, "svg")
             filter4 = FileFilter("*.eps")
-            add_allowed_suffix!(filter2, "eps")
+            add_allowed_suffix!(filter4, "eps")
 
             set_initial_filter!(file_chooser, filter1)
             add_filter!(file_chooser, filter2)
@@ -890,6 +890,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
             on_accept!(file_chooser) do self::FileChooser, files::Vector{FileDescriptor}
                 chosen_path = get_path(files[1])
+                println(chosen_path)
                 
                 w, h = parse(Int64, get_text(export_width_entry)) , parse(Int64, get_text(export_height_entry))
                 export_adjust_angle = get_is_active(export_adjust_angle_check) 
