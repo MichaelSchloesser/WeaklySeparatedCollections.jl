@@ -482,12 +482,12 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_child!(display_row, hbox(image_display_left, image_display_right))
         set_margin!(display_row, 10)
 
-        currently_selected_label = Label("currently selected: nothing")
-        set_size_request!(currently_selected_label, Vector2f(0, 20))
-        set_margin_bottom!(currently_selected_label, 10)
+        # currently_selected_label = Label("currently selected: nothing")
+        # set_size_request!(currently_selected_label, Vector2f(0, 20))
+        # set_margin_bottom!(currently_selected_label, 10)
         
         paned = Paned(ORIENTATION_VERTICAL)
-        set_start_child!(paned,  vbox(display_row, currently_selected_label))
+        set_start_child!(paned, display_row)
         set_end_child!(paned, history_notebook)
         set_start_child_shrinkable!(paned, false)
         set_end_child_shrinkable!(paned, true)
@@ -671,16 +671,16 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
             if get_current_button(self) == BUTTON_ID_BUTTON_03 # select label
                 
-                is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && is_mutable(G, p)
-                close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
+                # is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && is_mutable(G, p)
+                # close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
 
-                if length(close_mutable) > 0 # show nearest close mutable label
+                # if length(close_mutable) > 0 # show nearest close mutable label
 
-                    i = argmin(p -> norm(tau(p) - LPoint(x, y)), close_mutable)
-                    set_text!(currently_selected_label, "currently selected: $(G.labels[i])")
-                else
-                    set_text!(currently_selected_label, "currently selected: nothing")
-                end
+                #     i = argmin(p -> norm(tau(p) - LPoint(x, y)), close_mutable)
+                #     set_text!(currently_selected_label, "currently selected: $(G.labels[i])")
+                # else
+                #     set_text!(currently_selected_label, "currently selected: nothing")
+                # end
 
             elseif get_current_button(self) == BUTTON_ID_BUTTON_01 # mutate label
                 
@@ -737,14 +737,14 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             x, y = (x-w/2)*resolution/w, (y-h/2)*resolution/h
 
             if get_current_button(self) == BUTTON_ID_BUTTON_03 # select label
-                for i = G.n+1:length(G.labels)
-                    if is_surounding_mutable(i)
-                        set_text!(currently_selected_label, "currently selected: $(G.labels[i])")
-                        break
-                    else
-                        set_text!(currently_selected_label, "currently selected: nothing")
-                    end
-                end
+                # for i = G.n+1:length(G.labels)
+                #     if is_surounding_mutable(i)
+                #         set_text!(currently_selected_label, "currently selected: $(G.labels[i])")
+                #         break
+                #     else
+                #         set_text!(currently_selected_label, "currently selected: nothing")
+                #     end
+                # end
 
             elseif get_current_button(self) == BUTTON_ID_BUTTON_01 # mutate label
                 set_mouse_input_blocked!(true)
@@ -1323,12 +1323,12 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 set_is_visible!(image_display_left, false)
                 set_ratio!(display_row, 1.0)
 
-                if !get_is_visible(image_display_right)
-                    set_is_visible!(currently_selected_label, false)
-                end
+                # if !get_is_visible(image_display_right)
+                #     set_is_visible!(currently_selected_label, false)
+                # end
             else
                 set_is_visible!(image_display_left, true)
-                set_is_visible!(currently_selected_label, true)
+                # set_is_visible!(currently_selected_label, true)
 
                 if get_is_visible(image_display_right)
                     set_ratio!(display_row, 2.0)
@@ -1347,12 +1347,12 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 set_is_visible!(image_display_right, false)
                 set_ratio!(display_row, 1.0)
 
-                if !get_is_visible(image_display_left)
-                    set_is_visible!(currently_selected_label, false)
-                end
+                # if !get_is_visible(image_display_left)
+                #     set_is_visible!(currently_selected_label, false)
+                # end
             else
                 set_is_visible!(image_display_right, true)
-                set_is_visible!(currently_selected_label, true)
+                # set_is_visible!(currently_selected_label, true)
 
                 if get_is_visible(image_display_left)
                     set_ratio!(display_row, 2.0)
