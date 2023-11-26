@@ -188,14 +188,14 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_title!(export_window, "Export")
 
         export_figure_label = Label("Figure:")
-        set_size_request!(export_figure_label, Vector2f(80, 0))
+        set_size_request!(export_figure_label, Vector2f(120, 0))
         export_figure_dropdown = DropDown()
         set_size_request!(export_figure_dropdown, Vector2f(115, 0))
         figure_dropdown_item_1 = push_back!(export_figure_dropdown, "Plabic Tiling")
         figure_dropdown_item_2 = push_back!(export_figure_dropdown, "Plabic Graph")
 
         export_resolution_label = Label("Resolution:")
-        set_size_request!(export_resolution_label, Vector2f(80, 0))
+        set_size_request!(export_resolution_label, Vector2f(120, 0))
         export_width_entry = Entry()
         set_max_width_chars!(export_width_entry, 5)
         set_text!(export_width_entry, "$resolution")
@@ -203,6 +203,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         export_width_entry_clamp = ClampFrame(55, ORIENTATION_HORIZONTAL)
         set_child!(export_width_entry_clamp, export_width_entry)
         set_margin_top!(export_width_entry_clamp, 5)
+        set_margin_end!(export_width_entry_clamp, 5)
         
         export_height_entry = Entry()
         set_max_width_chars!(export_width_entry, 5)
@@ -213,7 +214,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_margin_top!(export_height_entry_clamp, 5)
 
         export_background_label = Label("Background:")
-        set_size_request!(export_background_label, Vector2f(80, 0))
+        set_size_request!(export_background_label, Vector2f(120, 0))
         export_background_entry = Entry()
         set_max_width_chars!(export_background_entry, 20)
         set_text!(export_background_entry, "lightblue4")
@@ -504,7 +505,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         
         id_01 = push_back!(history_notebook, history_viewport, Label("History"))
         id_02 = push_back!(history_notebook, undo_redo_viewport, Label("Undos/Redos"))
-        goto_page!(history_notebook, 2) 
+        goto_page!(history_notebook, 2)
 
         ############## main window ##############
 
