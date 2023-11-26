@@ -5,6 +5,7 @@ makedocs(;
     pages = [
         "Home" => "index.md"
         "User guide" => "usage.md"
+        "References" => "reference.md"
     ],
     sitename = "WeaklySeparatedCollections.jl",
     format = Documenter.HTML(;
