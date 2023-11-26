@@ -435,7 +435,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         ############## history ##############
 
         history_notebook = Notebook()
-        # set_expand!(history_notebook, true)
+        set_expand!(history_notebook, true)
         set_has_border!(history_notebook, false)
 
         history_label = Label()
@@ -469,8 +469,13 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_expand!(history_clear_button, false)
         set_margin!(history_clear_button, 10)
 
-        id_01 = push_back!(history_notebook, vbox(history_label), Label("History"))
-        id_02 = push_back!(history_notebook, vbox(undo_label, redo_label), Label("Undos/Redos"))
+        history_vbox = vbox(history_label)
+        set_expand!(history_vbox, false)
+        undo_redo_vbox = vbox(undo_label, redo_label)
+        set_expand!(undo_redo_vbox, false)
+
+        id_01 = push_back!(history_notebook, history_vbox, Label("History"))
+        id_02 = push_back!(history_notebook, undo_redo_vbox, Label("Undos/Redos"))
         goto_page!(history_notebook, 2) 
 
         ############## main window ##############
