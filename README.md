@@ -1,7 +1,5 @@
 # WeaklySeparatedCollections
 
-TODO: include some icon
-
 In its core, this package implements the combinatorics of weakly separated collections.
 It also provides optional tools for plotting as well an intuitive graphical user interface.
 
