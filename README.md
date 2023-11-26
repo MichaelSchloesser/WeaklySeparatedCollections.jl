@@ -72,7 +72,7 @@ using Mousetrap
 
 ## Documentaion
 
-A full Documentaion is available [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/). This includes TODO
+A full Documentaion is available [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/). This includes a brief introduction to the required mathematical background, as well as a description of all functions and types.
 
 ---
 
