@@ -1,7 +1,5 @@
 # WeaklySeparatedCollections
 
-TODO: include some icon
-
 In its core, this package implements the combinatorics of weakly separated collections.
 It also provides optional tools for plotting as well an intuitive graphical user interface.
 
@@ -21,7 +19,6 @@ It also provides optional tools for plotting as well an intuitive graphical user
 This package is divided into severaral parts. The base package implements only the combinatorics while several optional extensions can be loaded to enable additional features such as plotting.
 
 ### Base package
-TODO: mention julia version requirements (should be >= 1.9 so that extensions work)
 
 To install the package execute the following in the Julia REPL:
 
@@ -37,7 +34,7 @@ using WeaklySeparatedCollections
 ```
 
 ### Extensions
-To enable extensions additional packages need to be installed and loaded at runtime.
+To enable extensions Julia v1.9 or newer, as well as some additional packages need to be installed.
 
 #### Plotting
 To use this feature, [Luxor](https://github.com/JuliaGraphics/Luxor.jl) needs to be installed. In the Julia REPL simply execute:
