@@ -30,7 +30,7 @@ This construction will be called an (abstract) $\textbf{plabic tiling}$, and we 
 TODO for the mathematical details.
 
 Intuitively a plabic tiling is a tiling of a convex $n$-gon into convex polygons, colored either black or white, and with vertices labelled by the elements of the underlying WSC.
-Plabic tilings are in bijective correspondance with WSC's that are maximal with respect to inclusion
+Plabic tilings are in bijective correspondance with WSC's that are maximal with respect to inclusion.
 
 ### Plabic Graphs
 
@@ -156,7 +156,7 @@ drawPLG_poly
 ## Graphical user interface
 The graphical user interface requires both an installation of `Luxor` as well as `Mousetrap`. See [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/#Extensions) for details.
 
-While plotting WSC's enables us to visualize WSC's, it lacks interactivity. This is where the built in gui application come in handy. To start it we use
+While plotting WSC's enables us to visualize them, the resulting images lack interactivity. This is where the built in gui application comes in handy. To start it we use
 
 ```@docs
 visualizer!
