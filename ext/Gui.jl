@@ -542,7 +542,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             end
 
             w = get_allocated_size(display_row).x
-
             set_maximum_size!(history_clamp, w)
             set_maximum_size!(undo_redo_clamp, w)
 

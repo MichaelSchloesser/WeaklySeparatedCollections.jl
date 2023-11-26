@@ -1,8 +1,28 @@
 # User guide
 
+## Mathematical background
+
+### Weakly separated Collections
+
+For any integer $n \geq 1$ we use the notation $[n]:= \{1, 2, \ldots, n\}$. 
+
+Let $I, J$ be $k$-subsets of $[n]$, then we call $I$ and $J$ \textbf{weakly separated} if we cannot find elements $a, c \in I \setminus J$ and $b, d \in J \setminus I$ such that $(a, b, c, d)$ is strictly cyclically ordered. In this case we write $I \parallel J$. 
+		
+A subset $\mathcal{C} \subseteq$ Pot$(k,n)$ is called a \textbf{weakly separated collection} (abbreviated by wsc) if its elements are pairwise weakly separated.
+
+Intuitively two $k$-subsets are weakly separated if after can arranging $I \setminus J$ and $J \setminus I$ clockwise on a circle, they can be separated by a line.
+
+### Plabic Tilings
+
+
+
+
+### Plabic Graphs
+
+
 ## Combinatorics
 
-Hier könnte eine eloquente Einleitung stehen.
+In this section we will learn how to use the combinatorial part of WeaklySeparatedCollections.
 
 ```@docs
 is_weakly_separated
