@@ -22,12 +22,12 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         
         # display data 
         size = 500
-        resolution = 500
-        plg_drawmode = "smooth"
+        resolution = 1000
+        plg_drawmode = "straight"
         draw_vertex_labels = true
         draw_face_labels = true
         highlight_mutables = false
-        adjust_angle = false    
+        adjust_angle = true    
 
         # theme and colors
         theme = "dark"
