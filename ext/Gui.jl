@@ -203,7 +203,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         export_width_entry_clamp = ClampFrame(55, ORIENTATION_HORIZONTAL)
         set_child!(export_width_entry_clamp, export_width_entry)
         set_margin_top!(export_width_entry_clamp, 5)
-        set_margin_end!(export_width_entry_clamp, 5)
         
         export_height_entry = Entry()
         set_max_width_chars!(export_width_entry, 5)
@@ -212,6 +211,16 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         export_height_entry_clamp = ClampFrame(55, ORIENTATION_HORIZONTAL)
         set_child!(export_height_entry_clamp, export_height_entry)
         set_margin_top!(export_height_entry_clamp, 5)
+
+        export_background_label = Label("Background:")
+        set_size_request!(export_background_label, Vector2f(80, 0))
+        export_background_entry = Entry()
+        set_max_width_chars!(export_background_entry, 20)
+        set_text!(export_background_entry, "lightblue4")
+        
+        export_background_entry_clamp = ClampFrame(115, ORIENTATION_HORIZONTAL)
+        set_child!(export_background_entry_clamp, export_background_entry)
+        set_margin_top!(export_background_entry_clamp, 5)
 
         export_adjust_angle_label = Label("Adjust drawing angle:")
         set_size_request!(export_adjust_angle_label, Vector2f(120, 0))
@@ -223,6 +232,17 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             set_state!(export_adjust_angle_check, CHECK_BUTTON_STATE_INACTIVE)
         end
         set_margin_vertical!(export_adjust_angle_check, 5)
+
+        export_draw_labels_label = Label("Draw labels:")
+        set_size_request!(export_draw_labels_label, Vector2f(120, 0))
+
+        export_draw_labels_check = CheckButton() # TODO could use a tooltip
+        if draw_vertex_labels
+            set_state!(export_draw_labels_check, CHECK_BUTTON_STATE_ACTIVE)
+        else
+            set_state!(export_draw_labels_check, CHECK_BUTTON_STATE_INACTIVE)
+        end
+        set_margin_vertical!(export_draw_labels_check, 5)
 
         export_ok_button = Button()
         set_child!(export_ok_button, Label("Ok"))
@@ -241,7 +261,9 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         export_window_content = vbox(
             hbox(export_figure_label, export_figure_dropdown),
             hbox(export_resolution_label, export_width_entry_clamp, export_height_entry_clamp),
+            hbox(export_background_label, export_background_entry_clamp),
             hbox(export_adjust_angle_label, export_adjust_angle_check),
+            hbox(export_draw_labels_label, export_draw_labels_check),
             export_buttons
         )
         set_margin!(export_window_content, 10)
@@ -287,7 +309,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         predefined_buttons = hbox(predefined_ok_button, predefined_cancel_button)
         set_horizontal_alignment!(predefined_buttons, ALIGNMENT_END)
 
-        predefined_window_content = vbox(  
+        predefined_window_content = vbox(
             predefined_dropdown,
             hbox(predefined_label_n, predefined_spin_n), 
             hbox(predefined_label_k, predefined_spin_k),
@@ -893,18 +915,44 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 println(chosen_path)
                 
                 w, h = parse(Int64, get_text(export_width_entry)) , parse(Int64, get_text(export_height_entry))
-                export_adjust_angle = get_is_active(export_adjust_angle_check) 
+                export_adjust_angle = get_is_active(export_adjust_angle_check)
+                export_draw_labels = get_is_active(export_draw_labels_check)
+                export_background_color = get_text(export_background_entry)
 
-                if get_selected(export_figure_dropdown) == figure_dropdown_item_1
-                    drawTiling(G, chosen_path, w, h, adjustAngle = export_adjust_angle, highlightMutables = false, drawLabels = draw_vertex_labels)
-                else
-                    if plg_drawmode == "smooth"
-                        drawPLG_smooth(G, chosen_path, w, h, adjustAngle = export_adjust_angle, drawLabels = draw_face_labels)
-                    elseif plg_drawmode == "straight"
-                        drawPLG_straight(G, chosen_path, w, h, adjustAngle = export_adjust_angle, drawLabels = draw_face_labels)
+                try
+                    if get_selected(export_figure_dropdown) == figure_dropdown_item_1
+                        drawTiling(G, chosen_path, w, h, backgroundColor = export_background_color, 
+                                    adjustAngle = export_adjust_angle, highlightMutables = false, drawLabels = export_draw_labels)
                     else
-                        drawPLG_poly(G, chosen_path, w, h, adjustAngle = export_adjust_angle, drawLabels = draw_face_labels)
+                        if plg_drawmode == "smooth"
+                            drawPLG_smooth(G, chosen_path, w, h, backgroundColor = export_background_color, 
+                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
+                        elseif plg_drawmode == "straight"
+                            drawPLG_straight(G, chosen_path, w, h, backgroundColor = export_background_color, 
+                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
+                        else
+                            drawPLG_poly(G, chosen_path, w, h, backgroundColor = export_background_color, 
+                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
+                        end
                     end
+
+                catch e
+                    if get_selected(export_figure_dropdown) == figure_dropdown_item_1
+                        drawTiling(G, chosen_path, w, h,
+                                    adjustAngle = export_adjust_angle, highlightMutables = false, drawLabels = export_draw_labels)
+                    else
+                        if plg_drawmode == "smooth"
+                            drawPLG_smooth(G, chosen_path, w, h,
+                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
+                        elseif plg_drawmode == "straight"
+                            drawPLG_straight(G, chosen_path, w, h,
+                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
+                        else
+                            drawPLG_poly(G, chosen_path, w, h,
+                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
+                        end
+                    end
+
                 end
                 return nothing
             end
