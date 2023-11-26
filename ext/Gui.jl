@@ -469,13 +469,14 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_expand!(history_clear_button, false)
         set_margin!(history_clear_button, 10)
 
-        history_vbox = vbox(history_label)
-        set_expand!(history_vbox, false)
-        undo_redo_vbox = vbox(undo_label, redo_label)
-        set_expand!(undo_redo_vbox, false)
-
-        id_01 = push_back!(history_notebook, history_vbox, Label("History"))
-        id_02 = push_back!(history_notebook, undo_redo_vbox, Label("Undos/Redos"))
+        history_clamp = ClampFrame(10, ORIENTATION_HORIZONTAL)
+        set_child!(history_clamp, vbox(history_label))
+        
+        undo_redo_clamp = ClampFrame(10, ORIENTATION_HORIZONTAL)
+        set_child!(undo_redo_clamp, vbox(undo_label, redo_label))
+        
+        id_01 = push_back!(history_notebook, history_clamp, Label("History"))
+        id_02 = push_back!(history_notebook, undo_redo_clamp, Label("Undos/Redos"))
         goto_page!(history_notebook, 2) 
 
         ############## main window ##############
@@ -534,6 +535,9 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                     return "($task: k=$(data[2]), n=$(data[3]))"
                 end
             end
+
+            set_maximum_size!(history_clamp, get_allocated_size(display_row))
+            set_maximum_size!(undo_redo_clamp, get_allocated_size(display_row))
 
             # history
             history = history * task_to_string(task, data) * "  "
