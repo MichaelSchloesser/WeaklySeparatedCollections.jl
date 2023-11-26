@@ -1,8 +1,6 @@
 # WeaklySeparatedCollections
 
-![ci](https://github.com/MichaelSchloesser/WeaklySeparatedCollections/actions/workflows/ci.yml/badge.svg)
-
-
+[![CI](https://github.com/MichaelSchloesser/WeaklySeparatedCollections.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/MichaelSchloesser/WeaklySeparatedCollections.jl/actions/workflows/ci.yml)
 
 In its core, this package implements the combinatorics of weakly separated collections.
 It also provides optional tools for plotting as well an intuitive graphical user interface.
