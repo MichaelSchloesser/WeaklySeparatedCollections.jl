@@ -435,7 +435,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         ############## history ##############
 
         history_notebook = Notebook()
-        set_expand!(history_notebook, true)
+        # set_expand!(history_notebook, true)
         set_has_border!(history_notebook, false)
 
         history_label = Label()
@@ -768,10 +768,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 set_mouse_input_blocked!(false)
 
             end
-            
-            println("x = $x, y = $y, w = $w, h = $h")
-            println("ratio = $(get_ratio(display_row))")
-
 
             return nothing
         end
