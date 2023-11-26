@@ -536,8 +536,8 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 end
             end
 
-            set_maximum_size!(history_clamp, get_allocated_size(display_row))
-            set_maximum_size!(undo_redo_clamp, get_allocated_size(display_row))
+            set_maximum_size!(history_clamp, get_allocated_size(display_row).x)
+            set_maximum_size!(undo_redo_clamp, get_allocated_size(display_row).x)
 
             # history
             history = history * task_to_string(task, data) * "  "
