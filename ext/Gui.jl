@@ -768,6 +768,10 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 set_mouse_input_blocked!(false)
 
             end
+            
+            println("x = $x, y = $y, w = $w, h = $h")
+            println("ratio = $(get_ratio(display_row))")
+
 
             return nothing
         end
@@ -1299,19 +1303,19 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         end
         load_view_settings()
 
+        # TODO remove because its dangerous for users
+        # view_menubar = Action("view_menubar.action", app) do x  
+        #     if get_is_visible(menubar)
+        #         set_is_visible!(menubar, false)
+        #     else
+        #         set_is_visible!(menubar, true)
+        #     end
 
-        view_menubar = Action("view_menubar.action", app) do x 
-            if get_is_visible(menubar)
-                set_is_visible!(menubar, false)
-            else
-                set_is_visible!(menubar, true)
-            end
-
-            save_view_settings()
-            return nothing
-        end
-        add_shortcut!(view_menubar, "F9")
-        add_action!(view_submenu, "Menubar", view_menubar)
+        #     save_view_settings()
+        #     return nothing
+        # end
+        # add_shortcut!(view_menubar, "F9")
+        # add_action!(view_submenu, "Menubar", view_menubar)
 
 
         view_display_left = Action("view_display_left.action", app) do x 
