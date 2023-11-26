@@ -456,6 +456,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
         redo_label = Label()
         set_margin!(redo_label, 10)
+        set_margin_top!(redo_label, 0)
         set_horizontal_alignment!(redo_label, ALIGNMENT_START)
         set_vertical_alignment!(redo_label, ALIGNMENT_START)
         set_justify_mode!(redo_label, JUSTIFY_MODE_LEFT)
@@ -471,12 +472,16 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
         history_clamp = ClampFrame(10, ORIENTATION_HORIZONTAL)
         set_child!(history_clamp, vbox(history_label))
+        history_viewport = Viewport()
+        set_child!(history_viewport, history_clamp)
         
         undo_redo_clamp = ClampFrame(10, ORIENTATION_HORIZONTAL)
         set_child!(undo_redo_clamp, vbox(undo_label, redo_label))
+        undo_redo_viewport = Viewport()
+        set_child!(undo_redo_viewport, undo_redo_clamp)
         
-        id_01 = push_back!(history_notebook, history_clamp, Label("History"))
-        id_02 = push_back!(history_notebook, undo_redo_clamp, Label("Undos/Redos"))
+        id_01 = push_back!(history_notebook, history_viewport, Label("History"))
+        id_02 = push_back!(history_notebook, undo_redo_viewport, Label("Undos/Redos"))
         goto_page!(history_notebook, 2) 
 
         ############## main window ##############
@@ -536,8 +541,10 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 end
             end
 
-            set_maximum_size!(history_clamp, get_allocated_size(display_row).x)
-            set_maximum_size!(undo_redo_clamp, get_allocated_size(display_row).x)
+            w = get_allocated_size(display_row).x
+
+            set_maximum_size!(history_clamp, w)
+            set_maximum_size!(undo_redo_clamp, w)
 
             # history
             history = history * task_to_string(task, data) * "  "
