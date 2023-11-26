@@ -913,7 +913,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
             on_accept!(file_chooser) do self::FileChooser, files::Vector{FileDescriptor}
                 chosen_path = get_path(files[1])
-                println(chosen_path)
                 
                 w, h = parse(Int64, get_text(export_width_entry)) , parse(Int64, get_text(export_height_entry))
                 export_adjust_angle = get_is_active(export_adjust_angle_check)
