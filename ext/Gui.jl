@@ -3,6 +3,7 @@ module Gui
 using WeaklySeparatedCollections, Mousetrap
 
 using Luxor
+using Graphs
 using Scratch
 using JLD2
 using FileIO
