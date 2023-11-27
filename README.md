@@ -98,7 +98,8 @@ Save images as png, svg, pdf or eps file:
 
 ```julia
 H = checkboard_collection(3, 6)
-drawPLG_straight(H, "title.png"; drawLabels = true) # will save the image as title.png (by defalut without background)
+# will save the image as title.png (by defalut without background)
+drawPLG_straight(H, "title.png"; drawLabels = true)
 ```
 ![](docs/src/assets/example_3.png)
 
