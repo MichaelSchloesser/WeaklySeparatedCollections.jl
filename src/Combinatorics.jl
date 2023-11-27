@@ -9,6 +9,22 @@ end
     is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
 
 Test if two vectors `v` and `w` viewed as subsets of `{1 , ..., n }` are weakly separated.
+
+# Examples
+
+```julia-repl
+julia> v = [1,2,3,5,6,9]
+julia> w = [1,2,4,5,7,8]
+julia> is_weakly_separated(9, v, w)
+true
+```
+
+```julia-repl
+julia> v = [1,2,3,5,6,9]
+julia> w = [1,2,3,5,7,8]
+julia> is_weakly_separated(9, v, w)
+false
+```
 """
 function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int}) 
     x = setdiff(v, w)
@@ -55,6 +71,16 @@ end
     is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
 
 Test if the vectors contained in `labels` are pairwise weakly separated.
+
+# Examples
+
+```julia-repl
+julia> u = [1,2,3,4,5,6]
+julia> v = [1,2,3,5,6,9]
+julia> w = [1,2,3,5,7,8]
+julia> is_weakly_separated(9, [u, v, w])
+true
+```
 """
 function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     len = length(labels)
@@ -387,6 +413,13 @@ Optionally the 2-cells can be set to `missing`, to save memory.
     WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
     WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, 
                                                               computeCliques::Bool = true)
+
+# Examples
+
+```julia-repl
+julia> labels = rectangle_labels(4, 9)
+julia> WSCollection(4, 9, labels);
+```
 """
 mutable struct WSCollection
     k::Int
@@ -491,6 +524,17 @@ end
     is_frozen(collection::WSCollection, i::Int)
 
 Return true if the vertex `i` of `collection` is frozen.
+
+# Examples
+
+````julia-repl
+julia> H = rectangle_collection(4, 9)
+julia> is_frozen(H, 5)
+true
+
+julia> is_frozen(H, 11)
+false
+```
 """
 function is_frozen(collection::WSCollection, i::Int) 
     return i <= collection.n
@@ -501,6 +545,17 @@ end
 
 Return true if the vertex `i` of `collection` is mutable. This is the case if
 it is not frozen and is of degree 4.
+
+# Examples
+
+````julia-repl
+julia> H = rectangle_collection(4, 9)
+julia> is_mutable(H, 11)
+false
+
+julia> is_frozen(H, 10)
+true
+```
 """
 function is_mutable(collection::WSCollection, i::Int) 
     return !is_frozen(collection, i) && Graphs.degree(collection.quiver, [i])[1] == 4 
@@ -512,6 +567,14 @@ end
 Mutate the `collection` in direction `i` if `i` is a mutable vertex of `collection`.
 
 If `mutateCliques` is set to false, the 2-cells are set to missing.
+
+
+# Examples
+
+````julia-repl
+julia> H = rectangle_collection(4, 9)
+julia> mutate!(H, 10)
+```
 """
 function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
 
@@ -630,6 +693,20 @@ end
     mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
 
 Mutate the `collection` by addressing a vertex with its label.
+
+# Examples
+
+````julia-repl
+julia> H = rectangle_collection(4, 9)
+julia> H.labels[10]
+4-element Vector{Int64}:
+ 2
+ 7
+ 8
+ 9
+
+julia> mutate!(H, [2,7,8,9])
+```
 """
 function mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true) 
     i = findfirst(x -> x == label, collection.labels)
@@ -653,7 +730,14 @@ end
 @doc raw"""
     rotate_collection!(collection::WSCollection, amount::Int)
 
-Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation. 
+Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation.
+
+# Examples
+
+```julia-repl
+julia> H = rectangle_collection(4, 9)
+julia> rotate_collection!(H, 2)
+```
 """
 function rotate_collection!(collection::WSCollection, amount::Int)
     n = collection.n
@@ -721,7 +805,14 @@ end
     reflect_collection!(collection::WSCollection, axis::Int = 1) 
 
 Reflect `collection` by letting the permutation `x ↦ 2*axis -x` interpreted modulo 
-`n = collection.n` act on the labels of `collection`. 
+`n = collection.n` act on the labels of `collection`.
+
+# Examples
+
+```julia-repl
+julia> H = rectangle_collection(4, 9)
+julia> rotate_collection!(H, 1)
+```
 """
 function reflect_collection!(collection::WSCollection, axis::Int = 1) 
     n = collection.n
@@ -790,6 +881,13 @@ end
     complement_collection!(collection::WSCollection) 
 
 Return the collection whose labels are complementary to those of `collection`.
+
+# Examples
+
+```julia-repl
+julia> H = rectangle_collection(4, 9)
+julia> complement_collection!(H)
+```
 """
 function complement_collection!(collection::WSCollection) 
     n = collection.n
@@ -871,6 +969,13 @@ Return the weakly separated collection whose corresponding plabic graph is obtai
 from the one of `collection` by swapping the colors black and white.
 
 This is the same as taking complements and rotating by `collection.k`.
+
+# Examples
+
+```julia-repl
+julia> H = rectangle_collection(4, 9)
+julia> swaped_colors_collection!(H)
+```
 """
 function swaped_colors_collection!(collection::WSCollection) 
     # swapping colors = complement + rotate by k
@@ -955,6 +1060,13 @@ end
     extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})  
 
 Extend `labels` to contain the labels of a maximal weakly separated collection.
+
+# Examples
+
+```julia-repl
+julia> labels = [[1,3,5,7], [1,3,5,9]]
+julia> extend_weakly_separated!(4, 9, labels)
+```
 """
 function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})
     N = k*(n-k)+1
@@ -986,13 +1098,21 @@ function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})
 
 end
 
-# extend to maximal weakly separated collection using know collection, then brute fore
+# extend to maximal weakly separated collection using know labels, then brute fore
 @doc raw"""
     extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
                                              labels2::Vector{Vector{Int}})
 
 Extend `labels1` to contain the labels of a maximal weakly separated collection.
 Use elements of `labels2` if possible.
+
+# Examples
+
+```julia-repl
+julia> labels1 = [[1,3,5,7], [1,3,5,9]]
+julia> labels2 = checkboard_labels(4, 9)
+julia> extend_weakly_separated!(4, 9, labels1, labels2)
+```
 """
 function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
     N = k*(n-k)+1
@@ -1036,6 +1156,14 @@ end
 
 Extend `labels` to contain the labels of a maximal weakly separated collection.
 Use labels of `collection` if possible.
+
+# Examples
+
+```julia-repl
+julia> labels = [[1,3,5,7], [1,3,5,9]]
+julia> H = checkboard_collection(4, 9)
+julia> extend_weakly_separated!(labels, H)
+```
 """
 function extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)
     return extend_weakly_separated!(collection.k, collection.n, labels, collection.labels)
@@ -1045,6 +1173,13 @@ end
     extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
 
 Return a maximal weakly separated collection containing all elements of `labels`.
+
+# Examples
+
+```julia-repl
+julia> labels = [[1,3,5,7], [1,3,5,9]]
+julia> extend_to_collection(4, 9, labels)
+```
 """
 function extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
     return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels)))
@@ -1056,6 +1191,14 @@ end
 
 Return a maximal weakly separated collection containing all elements of `labels1`.
 Use elements of `labels2` if possible.
+
+# Examples
+
+```julia-repl
+julia> labels1 = [[1,3,5,7], [1,3,5,9]]
+julia> labels2 = checkboard_labels(4, 9)
+julia> extend_to_collection(4, 9, labels1, labels2)
+```
 """
 function extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
     return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels1), labels2))
@@ -1066,6 +1209,14 @@ end
 
 Return a maximal weakly separated collection containing all elements of `labels`.
 Use labels of `collection` if possible.
+
+# Examples
+
+```julia-repl
+julia> labels = [[1,3,5,7], [1,3,5,9]]
+julia> H = checkboard_collection(4, 9)
+julia> extend_to_collection(labels, H)
+```
 """
 function extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)
     return WSCollection(collection.k, collection.n, extend_weakly_separated!(deepcopy(labels), collection))
