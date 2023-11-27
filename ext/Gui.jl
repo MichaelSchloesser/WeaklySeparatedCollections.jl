@@ -1579,7 +1579,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 end
 
 function __init__()
-    println("WeaklySeparatedCollections: gui extension was loaded")
     global bin_path = @get_scratch!("bin")
 end
 
