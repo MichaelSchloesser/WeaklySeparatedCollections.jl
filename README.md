@@ -80,8 +80,41 @@ A full Documentaion is available [here](https://michaelschloesser.github.io/Weak
 
 ## Showcase
 
-TODO
+Easily load predefined weakly separated collections and plott them for example in a jupyter sheet:
 
-  
+```julia
+H = rectangle_collection(3, 6)
+drawTiling(H) # plotts H as plabic tiling
+```
+![](docs/src/assets/example_1.png)
 
+```julia
+H = rectangle_collection(3, 6)
+drawPLG_straight(H; drawLabels = true) # plotts H as plabic graph with straight edges
+```
+![](docs/src/assets/example_2.png)
 
+Save images as png, svg, pdf or eps file:
+
+```julia
+H = checkboard_collection(3, 6)
+drawPLG_straight(H, "title.png"; drawLabels = true) # will save the image as title.png (by defalut without background)
+```
+![](docs/src/assets/example_3.png)
+
+Easily mutate collections:
+```julia
+H = rectangle_collection(3, 6)
+mutate!(H, [3,5,6]) # mutate at label 356
+drawPLG_straight(H, drawLabels = true) # plott result
+```
+![](docs/src/assets/example_4.png)
+
+Visualize, mutate by clicking, save and load collections (and much more) using the graphical user interface:
+
+```julia
+H = rectangle_collection(4, 9)
+visualizer!(H)
+```
+
+![](docs/src/assets/example_5.png)
