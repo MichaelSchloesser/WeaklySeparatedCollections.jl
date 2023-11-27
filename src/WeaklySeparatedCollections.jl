@@ -23,15 +23,15 @@ Draw the plabic tiling of the provided weakly separated `collection` and save it
 image file of specified size. 
 Both the name as well as the resulting file type of the image are controlled via `title`.
 
+Draw without saving the image using
+    drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500) 
+
 # Keyword Arguments
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`
 - `drawLabels::Bool = true`
 - `adjustAngle::Bool = false`
 - `highlightMutables::Bool = true`
 - `scale::Float64 = 0.0`
-
-# Examples
-
 """
 function drawTiling end
 
@@ -42,15 +42,15 @@ Draw the plabic graph of the provided weakly separated `collection` and save it 
 image file of specified size. All inner edges are drawn as straight line.
 Both the name as well as the resulting file type of the image are controlled via `title`.
 
+Draw without saving the image using
+    drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500) 
+
 # Keyword Arguments
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`
 - `drawLabels::Bool = true`
 - `adjustAngle::Bool = false`
 - `highlightMutables::Bool = true`
 - `scale::Float64 = 0.0`
-
-# Examples
-
 """
 function drawPLG_straight end
 
@@ -61,32 +61,32 @@ Draw the plabic graph of the provided weakly separated `collection` and save it 
 image file of specified size. All inner edges are drawn as smooth curves.
 Both the name as well as the resulting file type of the image are controlled via `title`.
 
+Draw without saving the image using
+    drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500)
+
 # Keyword Arguments
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`
 - `drawLabels::Bool = true`
 - `adjustAngle::Bool = false`
 - `scale::Float64 = 0.0`
-
-# Examples
-
 """
 function drawPLG_smooth end
 
 @doc raw"""
-    drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500)
+    drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500)
 
 Draw the plabic graph of the provided weakly separated `collection` and save it as an 
 image file of specified size. All inner edges are drawn as polygonal curves.
 Both the name as well as the resulting file type of the image are controlled via `title`.
 
+Draw without saving the image using
+    drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500)
+
 # Keyword Arguments
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`
 - `drawLabels::Bool = true`
 - `adjustAngle::Bool = false`
 - `scale::Float64 = 0.0`
-
-# Examples
-
 """
 function drawPLG_poly end
 

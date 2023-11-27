@@ -7,7 +7,7 @@ makedocs(;
         "User guide" => "usage.md"
         "References" => "reference.md"
     ],
-    sitename = "WeaklySeparatedCollections",
+    sitename = "",
     format = Documenter.HTML(;
         repolink = "https://github.com/MichaelSchloesser/WeaklySeparatedCollections.jl",
         assets = ["assets/favicon.ico"],
