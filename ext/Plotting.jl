@@ -587,7 +587,7 @@ end
 ########################################################################
 
 function WeaklySeparatedCollections.drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, adjustAngle::Bool = false, 
     highlightMutables::Bool = true, scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -687,7 +687,7 @@ end
 
 
 function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
     scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -821,7 +821,7 @@ end
 
 
 function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
     highlightMutables::Bool = false, scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
@@ -996,7 +996,7 @@ end
 
 
 function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
     scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
