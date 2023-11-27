@@ -1,4 +1,4 @@
-# WeaklySeparatedCollections
+![](docs/src/assets/banner_1.png)
 
 [![CI](https://github.com/MichaelSchloesser/WeaklySeparatedCollections.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/MichaelSchloesser/WeaklySeparatedCollections.jl/actions/workflows/ci.yml)
 
