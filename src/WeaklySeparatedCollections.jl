@@ -23,8 +23,8 @@ Draw the plabic tiling of the provided weakly separated `collection` and save it
 image file of specified size. 
 Both the name as well as the resulting file type of the image are controlled via `title`.
 
-Draw without saving the image using
-    drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500) 
+Inside a Jupyter sheet drawing without saving an image is possible by omitting the title argument i.e. via
+`drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500)`.
 
 # Keyword Arguments
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`
@@ -42,8 +42,8 @@ Draw the plabic graph of the provided weakly separated `collection` and save it 
 image file of specified size. All inner edges are drawn as straight line.
 Both the name as well as the resulting file type of the image are controlled via `title`.
 
-Draw without saving the image using
-    drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500) 
+Inside a Jupyter sheet drawing without saving an image is possible by omitting the title argument i.e. via
+`drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500)`. 
 
 # Keyword Arguments
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`
@@ -61,8 +61,8 @@ Draw the plabic graph of the provided weakly separated `collection` and save it 
 image file of specified size. All inner edges are drawn as smooth curves.
 Both the name as well as the resulting file type of the image are controlled via `title`.
 
-Draw without saving the image using
-    drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500)
+Inside a Jupyter sheet drawing without saving an image is possible by omitting the title argument i.e. via
+`drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500)`. 
 
 # Keyword Arguments
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`
@@ -79,8 +79,8 @@ Draw the plabic graph of the provided weakly separated `collection` and save it 
 image file of specified size. All inner edges are drawn as polygonal curves.
 Both the name as well as the resulting file type of the image are controlled via `title`.
 
-Draw without saving the image using
-    drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500)
+Inside a Jupyter sheet drawing without saving an image is possible by omitting the title argument i.e. via
+`drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500)`. 
 
 # Keyword Arguments
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`

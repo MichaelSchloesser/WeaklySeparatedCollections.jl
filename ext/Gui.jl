@@ -188,14 +188,14 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_title!(export_window, "Export")
 
         export_figure_label = Label("Figure:")
-        set_size_request!(export_figure_label, Vector2f(120, 0))
+        set_size_request!(export_figure_label, Vector2f(170, 0))
         export_figure_dropdown = DropDown()
         set_size_request!(export_figure_dropdown, Vector2f(115, 0))
         figure_dropdown_item_1 = push_back!(export_figure_dropdown, "Plabic Tiling")
         figure_dropdown_item_2 = push_back!(export_figure_dropdown, "Plabic Graph")
 
         export_resolution_label = Label("Resolution:")
-        set_size_request!(export_resolution_label, Vector2f(120, 0))
+        set_size_request!(export_resolution_label, Vector2f(170, 0))
         export_width_entry = Entry()
         set_max_width_chars!(export_width_entry, 5)
         set_text!(export_width_entry, "$resolution")
@@ -214,7 +214,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_margin_top!(export_height_entry_clamp, 5)
 
         export_background_label = Label("Background:")
-        set_size_request!(export_background_label, Vector2f(120, 0))
+        set_size_request!(export_background_label, Vector2f(170, 0))
         export_background_entry = Entry()
         set_max_width_chars!(export_background_entry, 20)
         set_text!(export_background_entry, "lightblue4")
@@ -224,7 +224,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_margin_top!(export_background_entry_clamp, 5)
 
         export_adjust_angle_label = Label("Adjust drawing angle:")
-        set_size_request!(export_adjust_angle_label, Vector2f(120, 0))
+        set_size_request!(export_adjust_angle_label, Vector2f(170, 0))
 
         export_adjust_angle_check = CheckButton() # TODO could use a tooltip
         if adjust_angle
@@ -235,7 +235,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_margin_vertical!(export_adjust_angle_check, 5)
 
         export_draw_labels_label = Label("Draw labels:")
-        set_size_request!(export_draw_labels_label, Vector2f(120, 0))
+        set_size_request!(export_draw_labels_label, Vector2f(170, 0))
 
         export_draw_labels_check = CheckButton() # TODO could use a tooltip
         if draw_vertex_labels
@@ -334,21 +334,21 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_title!(settings_window, "Settings")
 
         display_size_label = Label("Display size:")
-        set_size_request!(display_size_label, Vector2f(140, 0))
+        set_size_request!(display_size_label, Vector2f(190, 0))
         display_resolution_label = Label("Display resolution:")
-        set_size_request!(display_resolution_label, Vector2f(140, 0))
+        set_size_request!(display_resolution_label, Vector2f(190, 0))
         plg_drawmode_label = Label("Plg draw mode:")
-        set_size_request!(plg_drawmode_label, Vector2f(140, 0))
+        set_size_request!(plg_drawmode_label, Vector2f(190, 0))
         draw_vertex_labels_label = Label("Draw vertex labels:")
-        set_size_request!(draw_vertex_labels_label, Vector2f(140, 0))
+        set_size_request!(draw_vertex_labels_label, Vector2f(190, 0))
         draw_face_labels_label = Label("Draw face labels:")
-        set_size_request!(draw_face_labels_label, Vector2f(140, 0))
+        set_size_request!(draw_face_labels_label, Vector2f(190, 0))
         highlight_mutables_label = Label("Highlight mutable faces:")
-        set_size_request!(highlight_mutables_label, Vector2f(140, 0))
+        set_size_request!(highlight_mutables_label, Vector2f(190, 0))
         adjust_angle_label = Label("Adjust drawing angle:")
-        set_size_request!(adjust_angle_label, Vector2f(140, 0))
+        set_size_request!(adjust_angle_label, Vector2f(190, 0))
         theme_label = Label("Theme:")
-        set_size_request!(theme_label, Vector2f(140, 0))
+        set_size_request!(theme_label, Vector2f(190, 0))
 
         display_size_entry = Entry()
         set_max_width_chars!(display_size_entry, 5)
@@ -1457,6 +1457,11 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             set_mouse_input_blocked!(true)
 
             size = parse(Int64, get_text(display_size_entry))
+
+            if size > 700 # TODO limit size in some other way, obvious to the user.
+                size = 700
+            end
+
             set_size_request!(image_display_left, Vector2f(size, size))
             set_size_request!(image_display_right, Vector2f(size, size))
             resolution = parse(Int64, get_text(display_resolution_entry))

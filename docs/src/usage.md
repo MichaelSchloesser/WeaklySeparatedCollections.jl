@@ -154,6 +154,8 @@ drawPLG_poly
 ```
 
 ## Graphical user interface
+This section is work in progress.
+
 The graphical user interface requires both an installation of `Luxor` as well as `Mousetrap`. See [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/#Extensions) for details.
 
 While plotting WSC's enables us to visualize them, the resulting images lack interactivity. This is where the built in gui application comes in handy. To start it we use
@@ -161,3 +163,14 @@ While plotting WSC's enables us to visualize them, the resulting images lack int
 ```@docs
 visualizer!
 ```
+
+TODO:
+
+### settings
+explain the non obvious options (or all) here.
+
+- `adjust drawing angle`: If checked, the embeddings of the plabic graph (and tiling) will be rotated such that the boundary vertex `1` is drawn at a more consistant position.
+
+### file: saving, loading, export
+
+### edit
