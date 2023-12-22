@@ -1509,9 +1509,9 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             label_direction_item = get_selected(label_direction_dropdown)
 
             if label_direction_item == label_direction_dropdown_item_1
-                plg_drawmode = "left"
+                label_direction = "left"
             elseif label_direction_item == label_direction_dropdown_item_2
-                plg_drawmode = "right"
+                label_direction = "right"
             end
 
             draw_vertex_labels = get_is_active(draw_vertex_labels_check)
