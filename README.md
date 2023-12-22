@@ -76,7 +76,7 @@ using Mousetrap
 
 The stable Documentaion is available [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/). This includes a brief introduction to the required mathematical background, as well as a description of all functions and types.
 
-The developer documentatiion can be found [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/dev/).
+The developer documentation can be found [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/dev/).
 
 ---
 
