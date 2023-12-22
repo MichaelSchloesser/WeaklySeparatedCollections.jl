@@ -63,7 +63,7 @@ function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
             return true
         end
     end
-    # if we get here, a, b, c, d have been found so v and w are not ws
+    # if we get here, a, b, c, d have been found so v and w are not weakly separated
     return false
 end
 
@@ -906,8 +906,8 @@ function complement_collection!(collection::WSCollection)
         labels[i+1] = sort(F)
     end
 
-    I = [i for i in 1:n]
-    M = [i for i in n+1:length(labels)]
+    I = collect(1:n)
+    M = collect(n+1:length(labels))
 
     complement = A -> setdiff(I, A)
     labels[M] = complement.(labels[M])
@@ -996,8 +996,8 @@ function swaped_colors_collection!(collection::WSCollection)
         labels[i+1] = sort(F)
     end
 
-    I = [i for i in 1:n]
-    M = [i for i in n+1:length(labels)]
+    I = collect(1:n)
+    M = collect(n+1:length(labels))
 
     complement = A -> setdiff(I, A)
     labels[M] = complement.(labels[M])

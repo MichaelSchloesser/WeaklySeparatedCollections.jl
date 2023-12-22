@@ -14,7 +14,7 @@ norm = P -> sqrt(P.x^2 + P.y^2)
 
 function WeaklySeparatedCollections.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
-    highlightMutables::Bool = true, scale::Float64 = 0.0) 
+    highlightMutables::Bool = true, labelDirection = "left", scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -68,13 +68,18 @@ function WeaklySeparatedCollections.drawTiling(collection::WSCollection, title::
         # draw vertices + labels
         if drawLabels
             fontsize( div(s,6))
-            for i = 1:length(labels)
+            for i in eachindex(labels)
                 pos = tau(i)
 
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                I = collect(1:n)
+
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
+
                 len = length(label)
 
                 if is_mutable(collection, i) && highlightMutables
@@ -115,7 +120,7 @@ end
 
 function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    scale::Float64 = 0.0) 
+    labelDirection = "left", scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -197,8 +202,11 @@ function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, title
             fontsize( div(s,6))
             for i = 1:n
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_all = collect(all_neighbors(collection.quiver, i))
@@ -222,8 +230,11 @@ function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, title
 
             for i = n+1:length(labels)
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_out = collect(outneighbors(collection.quiver, i))
@@ -249,7 +260,7 @@ end
 
 function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    highlightMutables::Bool = false, scale::Float64 = 0.0) 
+    highlightMutables::Bool = false, labelDirection = "left", scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -371,8 +382,11 @@ function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, t
             fontsize( div(s,6))
             for i = 1:n
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_all = collect(all_neighbors(collection.quiver, i))
@@ -396,8 +410,11 @@ function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, t
 
             for i = n+1:length(labels)
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_out = collect(outneighbors(collection.quiver, i))
@@ -424,7 +441,7 @@ end
 
 function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    scale::Float64 = 0.0) 
+    labelDirection = "left", scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -532,8 +549,11 @@ function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, tit
             fontsize( div(s,6))
             for i = 1:n
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_all = collect(all_neighbors(collection.quiver, i))
@@ -557,8 +577,11 @@ function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, tit
 
             for i = n+1:length(labels)
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_out = collect(outneighbors(collection.quiver, i))
@@ -588,7 +611,7 @@ end
 
 function WeaklySeparatedCollections.drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, adjustAngle::Bool = false, 
-    highlightMutables::Bool = true, scale::Float64 = 0.0) 
+    highlightMutables::Bool = true, labelDirection = "left", scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -641,13 +664,17 @@ function WeaklySeparatedCollections.drawTiling(collection::WSCollection, width::
         # draw vertices + labels
         if drawLabels
             fontsize( div(s,6))
-            for i = 1:length(labels)
+            for i in eachindex(labels)
                 pos = tau(i)
 
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
+
                 len = length(label)
 
                 if is_mutable(collection, i) && highlightMutables
@@ -662,7 +689,7 @@ function WeaklySeparatedCollections.drawTiling(collection::WSCollection, width::
                 text(label, pos, halign=:center, valign=:middle)
             end
         else
-            for i = 1:length(labels)
+            for i in eachindex(labels)
                 pos = tau(i)
 
                 if is_mutable(collection, i) && highlightMutables
@@ -677,7 +704,6 @@ function WeaklySeparatedCollections.drawTiling(collection::WSCollection, width::
                     circle(pos, s/16, :stroke)
                 end
 
-                
             end
         end
 
@@ -688,7 +714,7 @@ end
 
 function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    scale::Float64 = 0.0) 
+    labelDirection = "left", scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -770,8 +796,11 @@ function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, width
             fontsize( div(s,6))
             for i = 1:n
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_all = collect(all_neighbors(collection.quiver, i))
@@ -795,8 +824,11 @@ function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, width
 
             for i = n+1:length(labels)
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_out = collect(outneighbors(collection.quiver, i))
@@ -822,7 +854,7 @@ end
 
 function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    highlightMutables::Bool = false, scale::Float64 = 0.0) 
+    highlightMutables::Bool = false, labelDirection = "left", scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -944,8 +976,11 @@ function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, w
             fontsize( div(s,6))
             for i = 1:n
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_all = collect(all_neighbors(collection.quiver, i))
@@ -969,8 +1004,11 @@ function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, w
 
             for i = n+1:length(labels)
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_out = collect(outneighbors(collection.quiver, i))
@@ -997,7 +1035,7 @@ end
 
 function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    scale::Float64 = 0.0) 
+    labelDirection = "left", scale::Float64 = 0.0) 
 
     if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
         error("cliques needed for drawing are missing!")
@@ -1105,8 +1143,11 @@ function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, wid
             fontsize( div(s,6))
             for i = 1:n
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_all = collect(all_neighbors(collection.quiver, i))
@@ -1130,8 +1171,11 @@ function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, wid
 
             for i = n+1:length(labels)
                 label = ""
-                for j in labels[i]
-                    label *= "$j"
+                
+                if labelDirection == "left"
+                    label = join(labels[i])
+                elseif labelDirection == "right"
+                    label = join( setdiff(collect(1:n), labels[i]))
                 end
 
                 N_out = collect(outneighbors(collection.quiver, i))

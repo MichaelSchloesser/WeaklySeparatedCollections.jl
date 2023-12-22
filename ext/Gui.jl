@@ -28,7 +28,8 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         draw_vertex_labels = true
         draw_face_labels = true
         highlight_mutables = false
-        adjust_angle = true    
+        adjust_angle = true
+        label_direction = "left"
 
         # theme and colors
         theme = "dark"
@@ -55,6 +56,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 "draw_face_labels" => draw_face_labels,
                 "highlight_mutables" => highlight_mutables,
                 "adjust_angle" => adjust_angle,
+                "label_direction" => label_direction,
                 "theme" => theme
                 )
                 FileIO.save(bin_path * "config.jld2", D)
@@ -70,6 +72,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
             try
                 highlight_mutables = D["highlight_mutables"]
+                label_direction = D["label_direction"]
             catch e
             end
             
@@ -147,17 +150,24 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         
         function update_displays()
             drawTiling(G, bin_path*"display.png", resolution, resolution, 
-            backgroundColor = "lightblue4", drawLabels = draw_vertex_labels, adjustAngle = adjust_angle)
+            backgroundColor = "lightblue4", drawLabels = draw_vertex_labels, adjustAngle = adjust_angle, 
+            labelDirection = label_direction)
 
             if plg_drawmode == "smooth"
                 drawPLG_smooth(G, bin_path*"display2.png", resolution, resolution, 
-                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle)
+                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle, 
+                labelDirection = label_direction)
+
             elseif plg_drawmode == "straight"
                 drawPLG_straight(G, bin_path*"display2.png", resolution, resolution, 
-                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle, highlightMutables = highlight_mutables)
+                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle, 
+                highlightMutables = highlight_mutables, labelDirection = label_direction)
+
             else
                 drawPLG_poly(G, bin_path*"display2.png", resolution, resolution, 
-                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle)
+                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle, 
+                labelDirection = label_direction)
+
             end
 
             create_from_file!(image_display_left, bin_path * "display.png")
@@ -268,7 +278,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             export_buttons
         )
         set_margin!(export_window_content, 10)
-
         set_child!(export_window, export_window_content)
 
         ############## predefined window ##############
@@ -335,18 +344,28 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
         display_size_label = Label("Display size:")
         set_size_request!(display_size_label, Vector2f(190, 0))
+
         display_resolution_label = Label("Display resolution:")
         set_size_request!(display_resolution_label, Vector2f(190, 0))
+
         plg_drawmode_label = Label("Plg draw mode:")
         set_size_request!(plg_drawmode_label, Vector2f(190, 0))
+
+        label_direction_label = Label("Label direction:")
+        set_size_request!(label_direction_label, Vector2f(190, 0))
+
         draw_vertex_labels_label = Label("Draw vertex labels:")
         set_size_request!(draw_vertex_labels_label, Vector2f(190, 0))
+
         draw_face_labels_label = Label("Draw face labels:")
         set_size_request!(draw_face_labels_label, Vector2f(190, 0))
+
         highlight_mutables_label = Label("Highlight mutable faces:")
         set_size_request!(highlight_mutables_label, Vector2f(190, 0))
+
         adjust_angle_label = Label("Adjust drawing angle:")
         set_size_request!(adjust_angle_label, Vector2f(190, 0))
+
         theme_label = Label("Theme:")
         set_size_request!(theme_label, Vector2f(190, 0))
 
@@ -375,6 +394,17 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             set_selected!(plg_drawmode_dropdown, plg_drawmode_dropdown_item_2)
         else
             set_selected!(plg_drawmode_dropdown, plg_drawmode_dropdown_item_3)
+        end
+
+        label_direction_dropdown = DropDown()
+        label_direction_dropdown_item_1 = push_back!(label_direction_dropdown, "left")
+        label_direction_dropdown_item_2 = push_back!(label_direction_dropdown, "right")
+        set_size_request!(label_direction_dropdown, Vector2f(110, 0))
+        set_margin_top!(label_direction_dropdown, 5)
+        if label_direction == "left"
+            set_selected!(label_direction_dropdown, label_direction_dropdown_item_1)
+        elseif label_direction == "right"
+            set_selected!(label_direction_dropdown, label_direction_dropdown_item_2)
         end
 
         draw_vertex_labels_check = CheckButton()
@@ -442,6 +472,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             hbox(display_size_label, display_size_clamp),
             hbox(display_resolution_label, display_resolution_clamp),
             hbox(plg_drawmode_label, plg_drawmode_dropdown),
+            hbox(label_direction_label, label_direction_dropdown),
             hbox(draw_vertex_labels_label, draw_vertex_labels_check),
             hbox(draw_face_labels_label, draw_face_labels_check),
             hbox(highlight_mutables_label, highlight_mutables_check),
@@ -1399,7 +1430,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             return nothing
         end
         add_shortcut!(view_display_left, "F8")
-        add_action!(view_submenu, "WS-collection", view_display_left)
+        add_action!(view_submenu, "Plabic tiling", view_display_left)
 
 
         view_display_right = Action("view_display_right.action", app) do x 
@@ -1475,6 +1506,14 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 plg_drawmode = "polygonal"
             end
 
+            label_direction_item = get_selected(label_direction_dropdown)
+
+            if label_direction_item == label_direction_dropdown_item_1
+                plg_drawmode = "left"
+            elseif label_direction_item == label_direction_dropdown_item_2
+                plg_drawmode = "right"
+            end
+
             draw_vertex_labels = get_is_active(draw_vertex_labels_check)
             draw_face_labels = get_is_active(draw_face_labels_check)
             highlight_mutables = get_is_active(highlight_mutables_check)
@@ -1494,6 +1533,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 "size" => size,
                 "resolution" => resolution,
                 "plg_drawmode" => plg_drawmode,
+                "label_direction" => label_direction,
                 "draw_vertex_labels" => draw_vertex_labels,
                 "draw_face_labels" => draw_face_labels,
                 "highlight_mutables" => highlight_mutables,
