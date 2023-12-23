@@ -485,6 +485,34 @@ The order of labels in each collection does not matter.
 Base.:(==)(collection1::WSCollection, collection2::WSCollection) = Base.isequal(collection1, collection2)
 
 @doc raw"""
+    in(label::Vector{Int}, collection::WSCollection)
+
+Return true `label` is occurs as label of `collection`.
+"""
+Base.in(label::Vector{Int}, collection::WSCollection) = label in collection.labels
+
+@doc raw"""
+    getindex(collection::WSCollection, i::Int)
+
+Return the element at index `i` in `collection.labels`.
+"""
+Base.getindex(collection::WSCollection, i::Int) = getindex(collection.labels, i)
+
+@doc raw"""
+    setindex!(collection::WSCollection, i::Int)
+
+Set the element at index `i` in `collection.labels` to `x`.
+"""
+Base.setindex!(collection::WSCollection, x::Vector{Int}, i::Int) = setindex!(collection.labels, x, i)
+
+@doc raw"""
+    length(collection::WSCollection)
+
+Return the length of `collection.labels`.
+"""
+Base.length(collection::WSCollection) = length(collection.labels)
+
+@doc raw"""
     checkboard_collection(k::Int, n::Int)
 
 Return the weakly separated collection corresponding to the checkboard graph.
@@ -559,6 +587,15 @@ true
 """
 function is_mutable(collection::WSCollection, i::Int) 
     return !is_frozen(collection, i) && Graphs.degree(collection.quiver, [i])[1] == 4 
+end
+
+@doc raw"""
+    is_mutable(collection::WSCollection, i::Int) 
+
+Return all mutable vertices of `collection`.
+"""
+function get_mutables(collection::WSCollection)
+    return filter( x -> is_mutable(collection, x), collection.n+1:length(collection))
 end
 
 @doc raw"""
