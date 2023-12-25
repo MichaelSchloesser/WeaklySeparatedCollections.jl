@@ -117,7 +117,7 @@ using Test
 
         labels = checkboard_labels(4, 9)
         WSCollection(4, 9, labels)
-        WSCollection(4, 9, labels, false)
+        WSCollection(4, 9, labels; computeCliques =  false)
 
         true
     end
@@ -129,7 +129,7 @@ using Test
         labels = checkboard_collection(4, 9).labels
         quiver = checkboard_collection(4, 9).quiver
         WSCollection(4, 9, labels, quiver)
-        WSCollection(4, 9, labels, quiver, false)
+        WSCollection(4, 9, labels, quiver; computeCliques =  false)
 
         true
     end

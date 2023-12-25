@@ -486,6 +486,21 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
         set_child!(settings_window, settings_window_content)
 
+        ############## undo redo ##############
+
+        undo_button = Button()
+        set_child!(undo_button, Label("Undo"))
+        set_size_request!(undo_button, Vector2f(60, 0))
+        set_expand!(undo_button, false)
+        set_margin!(undo_button, 10)
+
+        redo_button = Button()
+        set_child!(redo_button, Label("Redo"))
+        set_size_request!(redo_button, Vector2f(60, 0))
+        set_expand!(redo_button, false)
+        set_margin!(redo_button, 10)
+        set_margin_start!(redo_button, 0)
+
         ############## history ##############
 
         history_notebook = Notebook()
@@ -560,7 +575,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         main_window_content = vbox(
                 menubar,
                 paned,
-                hbox(settings_button, MySeparator(0.0), history_clear_button)
+                hbox(settings_button, MySeparator(0.0), undo_button, redo_button, MySeparator(0.0), history_clear_button)
         )
         set_expand!(main_window_content, true)
         
@@ -1077,6 +1092,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         end
         add_shortcut!(undo, "<Control>z")
         add_action!(edit_submenu, "Undo", undo)
+        set_action!(undo_button, undo)
 
 
         redo = Action("redo.action", app) do x
@@ -1138,6 +1154,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         end
         add_shortcut!(redo, "<Control>y")
         add_action!(edit_submenu, "Redo", redo)
+        set_action!(redo_button, redo)
 
         # predefined window
         open_predefined_window = Action("open_predefined_window.action", app) do x    
@@ -1384,7 +1401,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             set_is_visible!(image_display_left, D["display_left_visible"])
             set_is_visible!(image_display_right, D["display_right_visible"])
             set_is_visible!(history_notebook, D["history_visible"])
-            set_is_visible!(history_clear_button, D["history_visible"])
+            set_can_respond_to_input!(history_clear_button, D["history_visible"])
 
             if get_is_visible(image_display_left) && get_is_visible(image_display_right)
                 set_ratio!(display_row, 2.0)
@@ -1460,10 +1477,12 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         view_history = Action("view_history.action", app) do x
             if get_is_visible(history_notebook)
                 set_is_visible!(history_notebook, false)
-                set_is_visible!(history_clear_button, false)
+                set_can_respond_to_input!(history_clear_button, false)
+                # set_opacity!(history_clear_button, 0.2)
             else
                 set_is_visible!(history_notebook, true)
-                set_is_visible!(history_clear_button, true)
+                set_can_respond_to_input!(history_clear_button, true)
+                # set_opacity!(history_clear_button, 1.0)
             end
 
             save_view_settings()

@@ -487,15 +487,15 @@ function WSCollection(collection::WSCollection; computeCliques::Bool = true)
     end
 end
 
-@doc raw"""
-    isequal(collection1::WSCollection, collection2::WSCollection)
+# @doc raw"""
+#     isequal(collection1::WSCollection, collection2::WSCollection)
 
-Return true if the vertices of `collection1` and `collection2` share the same labels.
-The order of labels in each collection does not matter.
-"""
-function Base.isequal(collection1::WSCollection, collection2::WSCollection) # two WSC's are equal if der sets of labels equal.
-    return issetequal(collection1.labels, collection2.labels)
-end
+# Return true if the vertices of `collection1` and `collection2` share the same labels.
+# The order of labels in each collection does not matter.
+# """
+# function Base.isequal(collection1::WSCollection, collection2::WSCollection) 
+#     return issetequal(collection1.labels, collection2.labels)
+# end
 
 @doc raw"""
     (==)(collection1::WSCollection, collection2::WSCollection)
@@ -503,7 +503,9 @@ end
 Return true if the vertices of `collection1` and `collection2` share the same labels.
 The order of labels in each collection does not matter.
 """
-Base.:(==)(collection1::WSCollection, collection2::WSCollection) = Base.isequal(collection1, collection2)
+function Base.:(==)(collection1::WSCollection, collection2::WSCollection)
+    return issetequal(collection1.labels, collection2.labels)
+end
 
 
 Base.hash(collection::WSCollection) = hash(Set(collection.labels))
@@ -536,6 +538,10 @@ Base.setindex!(collection::WSCollection, x::Vector{Int}, i::Int) = setindex!(col
 Return the length of `collection.labels`.
 """
 Base.length(collection::WSCollection) = length(collection.labels)
+
+function cliques_missing(collection::WSCollection)
+    return ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+end
 
 function Base.show(io::IO, collection::WSCollection)
     s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels: \n"

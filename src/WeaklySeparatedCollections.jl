@@ -2,7 +2,7 @@
 module WeaklySeparatedCollections
 
 export  is_weakly_separated, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
-        WSCollection, isequal, hash, in, getindex, setindex!, length, is_frozen, is_mutable, get_mutables, mutate!, mutate, 
+        WSCollection, hash, in, getindex, setindex!, length, cliques_missing, is_frozen, is_mutable, get_mutables, mutate!, mutate, 
         checkboard_collection, rectangle_collection, 
         dual_checkboard_collection, dual_rectangle_collection, rotate_collection!, reflect_collection!, complement_collection!, 
         swaped_colors_collection!, rotate_collection, reflect_collection, complement_collection, swaped_colors_collection, 
