@@ -438,7 +438,7 @@ computed using only a set of vertex `labels`.
 
 If `computeCliques` is set to false, the 2-cells will be set to `missing`.
 """
-function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
+function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
     Q, W, B = compute_adjacencies(k, n, labels)
 
     if computeCliques
@@ -457,12 +457,33 @@ their adjacencies encoded in `quiver`. Faster than just using labels most of the
 
 If `computeCliques` is `false` the black and white 2-cells are set to `missing` instead.
 """
-function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, computeCliques::Bool = true)
+function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}; computeCliques::Bool = true)
     if !computeCliques
         return WSCollection(k, n, labels, quiver, missing, missing)
     else
         W, B = compute_boundaries(labels, quiver)
         return WSCollection(k, n, labels, quiver, W, B)
+    end
+end
+
+@doc raw"""
+    WSCollection(collection::WSCollection; computeCliques::Bool = true)
+
+Constructor of WSCollection. Computes 2-cells of `collection` if the are missing, 
+othererwise returns a deepcopy of `collection`.
+
+If `computeCliques` is `false` the black and white 2-cells are set to `missing` instead.
+"""
+function WSCollection(collection::WSCollection; computeCliques::Bool = true)
+    if !computeCliques
+        return WSCollection(collection.k, collection.n, collection.labels, collection.quiver, missing, missing)
+    else
+        if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+            W, B = compute_boundaries(collection.labels, collection.quiver)
+            return WSCollection(collection.k, collection.n, collection.labels, collection.quiver, W, B)
+        else
+            return deepcopy(collection)
+        end
     end
 end
 
@@ -483,6 +504,10 @@ Return true if the vertices of `collection1` and `collection2` share the same la
 The order of labels in each collection does not matter.
 """
 Base.:(==)(collection1::WSCollection, collection2::WSCollection) = Base.isequal(collection1, collection2)
+
+
+Base.hash(collection::WSCollection) = hash(Set(collection.labels))
+
 
 @doc raw"""
     in(label::Vector{Int}, collection::WSCollection)
@@ -511,6 +536,15 @@ Base.setindex!(collection::WSCollection, x::Vector{Int}, i::Int) = setindex!(col
 Return the length of `collection.labels`.
 """
 Base.length(collection::WSCollection) = length(collection.labels)
+
+function Base.show(io::IO, collection::WSCollection)
+    s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels: \n"
+
+    for l in collection.labels
+        s *= "$l\n"
+    end
+    print(io, s)
+end
 
 @doc raw"""
     checkboard_collection(k::Int, n::Int)
@@ -1259,11 +1293,11 @@ function extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollect
     return WSCollection(collection.k, collection.n, extend_weakly_separated!(deepcopy(labels), collection))
 end
 
-# TODO
+
 function super_potential_labels(k::Int, n::Int)
     labels::Vector{Vector{Int}} = Vector()
 
-    I = union(collect(1:k-1), [k+1])
+    I = union([1], collect(3:k+1))
 
     for i = 0:n-1 
         S = (x -> pmod(x+i, n)).(I)
