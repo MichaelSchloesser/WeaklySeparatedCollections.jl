@@ -1303,7 +1303,7 @@ end
 function super_potential_labels(k::Int, n::Int)
     labels::Vector{Vector{Int}} = Vector()
 
-    I = union([1], collect(3:k+1))
+    I = push!(collect(2:k), n)
 
     for i = 0:n-1 
         S = (x -> pmod(x+i, n)).(I)
