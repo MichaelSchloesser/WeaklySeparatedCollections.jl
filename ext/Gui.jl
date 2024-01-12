@@ -125,8 +125,12 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         #     }
         # """) 
 
+        ############## Main window ##############
 
-        # convenience functions
+        main_window = Window(app)
+        set_title!(main_window, "WSC-Visualizer")
+
+        ############## convenience functions ##############
         function MySeparator(opacity::AbstractFloat)
             sep = Separator()
             set_opacity!(sep, opacity)
@@ -564,10 +568,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         id_02 = push_back!(history_notebook, undo_redo_viewport, Label("Undos/Redos"))
         goto_page!(history_notebook, 2)
 
-        ############## main window ##############
-
-        main_window = Window(app)
-        set_title!(main_window, "WSC-Visualizer")
+        ############## main window content ##############
         
         display_row = AspectFrame(2.0)
         set_child!(display_row, hbox(image_display_left, image_display_right))
