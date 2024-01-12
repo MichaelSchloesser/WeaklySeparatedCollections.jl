@@ -543,6 +543,22 @@ function cliques_missing(collection::WSCollection)
     return ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
 end
 
+
+function Base.intersect(collection1::WSCollection, collection2::WSCollection)
+    return intersect(collection1.labels, collection2.labels)
+end
+
+
+function Base.setdiff(collection1::WSCollection, collection2::WSCollection)
+    return setdiff(collection1.labels, collection2.labels)
+end
+
+
+function Base.union(collection1::WSCollection, collection2::WSCollection)
+    return union(collection1.labels, collection2.labels)
+end
+
+
 function Base.show(io::IO, collection::WSCollection)
     s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels: \n"
 
