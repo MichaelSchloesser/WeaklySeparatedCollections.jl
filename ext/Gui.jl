@@ -10,6 +10,11 @@ using FileIO
 
 bin_path = ""
 
+# TODO kill this as soon as a new Moustrap version is available
+function Mousetrap.set_transient_for!(self::Window, other::Window) 
+    Mousetrap.detail.set_transient_for!(self._internal, other._internal)
+end
+
 function WeaklySeparatedCollections.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
     scale_factor = 2.4
     LPoint = Luxor.Point
@@ -195,6 +200,8 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         export_window = Window(app)
         set_layout!(get_header_bar(export_window), ":close")
         set_hide_on_close!(export_window, true)
+        set_transient_for!(export_window, main_window)
+        set_is_modal!(export_window, true)
         set_title!(export_window, "Export")
 
         export_figure_label = Label("Figure:")
@@ -285,6 +292,8 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         predefined_window = Window(app)
         set_layout!(get_header_bar(predefined_window), ":close")
         set_hide_on_close!(predefined_window, true)
+        set_transient_for!(predefined_window, main_window)
+        set_is_modal!(predefined_window, true)
         set_title!(predefined_window, "Predefined")
     
         predefined_dropdown = DropDown()
@@ -340,6 +349,8 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         settings_window = Window(app)
         set_layout!(get_header_bar(settings_window), ":close")
         set_hide_on_close!(settings_window, true)
+        set_transient_for!(settings_window, main_window)
+        set_is_modal!(settings_window, true)
         set_title!(settings_window, "Settings")
 
         display_size_label = Label("Display size:")
@@ -928,7 +939,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
 
         open_export_window = Action("open_export_window.action", app) do x    
-            set_is_modal!(export_window, true)
             present!(export_window)
 
             return nothing
@@ -1003,8 +1013,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 return nothing
             end
             present!(file_chooser)
-
-            set_is_modal!(export_window, false)
             close!(export_window)
 
             set_mouse_input_blocked!(false)
@@ -1014,7 +1022,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
 
         export_cancel = Action("export_cancel.action", app) do x 
-            set_is_modal!(export_window, false)
             close!(export_window)
             
             return nothing
@@ -1158,7 +1165,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
         # predefined window
         open_predefined_window = Action("open_predefined_window.action", app) do x    
-            set_is_modal!(predefined_window, true)
             present!(predefined_window)
 
             return nothing
@@ -1237,7 +1243,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             update_embedding_data()
             update_displays()
 
-            set_is_modal!(predefined_window, false)
             close!(predefined_window)
 
             set_mouse_input_blocked!(false)
@@ -1247,7 +1252,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
 
         predefined_cancel = Action("predefined_cancel.action", app) do x 
-            set_is_modal!(predefined_window, false)
             close!(predefined_window)
 
             return nothing
@@ -1494,7 +1498,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         ############## settings ##############
 
         open_settings_window = Action("open_settings_window.action", app) do x 
-            set_is_modal!(settings_window, true)
             present!(settings_window)
 
             return nothing
@@ -1564,7 +1567,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             update_embedding_data()
             update_displays()
 
-            set_is_modal!(settings_window, false)
             close!(settings_window)
 
             set_mouse_input_blocked!(false)
@@ -1574,7 +1576,6 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
 
         settings_cancel = Action("settings_cancel.action", app) do x 
-            set_is_modal!(settings_window, false)
             close!(settings_window)
             
             return nothing
