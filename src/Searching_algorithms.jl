@@ -190,9 +190,7 @@ function min_label_dist_change_experimental(old_label, new_label, h_value, missi
     return h_value + minimum( x -> estimate(x, new_label), missing_labels) - minimum( x -> estimate(x, old_label), missing_labels) 
 end
 
-
 ################## informed searching ##################
-
 
 function Astar(root::WSCollection, target::WSCollection; heuristic::HEURISTIC = NUMBER_WRONG_LABELS, limitSearchSpace::Bool = true)
 
