@@ -1,17 +1,20 @@
 
 module WeaklySeparatedCollections
 
-export  is_weakly_separated, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
+export  is_weakly_separated, checkboard_label, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
         WSCollection, hash, in, getindex, setindex!, length, cliques_missing, intersect, setdiff, union, is_frozen, is_mutable, get_mutables, mutate!, mutate, 
         checkboard_collection, rectangle_collection, 
         dual_checkboard_collection, dual_rectangle_collection, rotate_collection!, reflect_collection!, complement_collection!, 
         swaped_colors_collection!, rotate_collection, reflect_collection, complement_collection, swaped_colors_collection, 
         extend_weakly_separated!, extend_to_collection, compute_cliques, compute_adjacencies, compute_boundaries, super_potential_labels,
-        BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, Astar, find_label
+        BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, HEURISTIC, Astar, find_label
 
 export  drawTiling, drawPLG_straight, drawPLG_smooth, drawPLG_poly
         
 export  visualizer!
+
+export  Seed, grid_Seed, extended_checkboard_seed, get_superpotential_terms, checkboard_potential_terms,
+        dihedral_perm_group, cyclic_perm_group, standard_form, get_orbit, get_stabilizer
 
 using Graphs
 using IterTools
@@ -100,5 +103,32 @@ function drawPLG_poly end
 Start the graphical user interface to visualize the provided `collection`.
 """
 function visualizer! end
+
+# TODO somehow restrict type of variables
+mutable struct Seed 
+    n_frozen::Int
+    variables
+    quiver::SimpleDiGraph{Int}
+end
+
+function Seed end
+
+function grid_Seed end
+
+function extended_checkboard_seed end
+
+function get_superpotential_terms end
+
+function checkboard_potential_terms end
+
+function dihedral_perm_group end
+
+function cyclic_perm_group end
+
+function standard_form end
+
+function get_orbit end
+
+function get_stabilizer end
 
 end

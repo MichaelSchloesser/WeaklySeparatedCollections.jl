@@ -15,17 +15,20 @@ Scratch = "6c6a2e73-6563-6170-7368-637461726353"
 [weakdeps]
 Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
 Mousetrap = "5deeb4b9-6e04-4da7-8b7f-c77fb1eae65e"
+Oscar = "f1435218-dba5-11e9-1e4d-f1a5fab5fc13"
 
 [extensions]
 Gui = ["Luxor", "Mousetrap"]
 Plotting = "Luxor"
+OscarExt = "Oscar"
 
 [compat]
 julia = "1"
 
 [extras]
 Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
+Oscar = "f1435218-dba5-11e9-1e4d-f1a5fab5fc13"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Luxor"]
+test = ["Test", "Luxor", "Oscar"]

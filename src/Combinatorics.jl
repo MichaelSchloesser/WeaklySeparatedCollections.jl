@@ -95,6 +95,17 @@ function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     return true
 end
 
+# TODO do this for the other graphs
+function checkboard_label(k, n, i, j)
+    sigma = (x, y) -> pmod(x+y, n)
+
+    sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
+    L = sigma_ij.(collect(i+1:i+j))
+    R = sigma_ij.(collect(n-k+j+1:n))
+    return sort(union(L, R))
+end
+
+
 @doc raw"""
     rectangle_labels(k::Int, n::Int)
 
@@ -1313,6 +1324,30 @@ julia> extend_to_collection(labels, H)
 """
 function extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)
     return WSCollection(collection.k, collection.n, extend_weakly_separated!(deepcopy(labels), collection))
+end
+
+
+# mutating the checkboard graph with this sequence rotates it clockwise
+function checkboard_rotation_sequence(k::Int, n::Int) 
+    seq = []
+
+    for i in 1:n-k-1
+        for j in 1:k-1
+            if ((i+j) % 2 != 0)
+                push!(seq, n + (k-1)*(i-1) + j)
+            end
+        end
+    end
+
+    for i in 1:n-k-1
+        for j in 1:k-1
+            if ((i+j) % 2 == 0)
+                push!(seq, n + (k-1)*(i-1) + j)
+            end
+        end
+    end
+
+    return seq
 end
 
 

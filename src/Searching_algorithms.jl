@@ -170,7 +170,6 @@ end
 
 # assumption: dont need to mutate correct labels -> consider missing labels only
 function min_label_dist_experimental(collection::WSCollection, target::WSCollection)
-    n = target.n
     wrong_labels = setdiff(collection, target)
     missing_labels = setdiff(target, collection)
 
@@ -188,6 +187,14 @@ function min_label_dist_change_experimental(old_label, new_label, h_value, missi
     estimate = (w, x) -> Int(ceil(diff_len(w, x)/2))
 
     return h_value + minimum( x -> estimate(x, new_label), missing_labels) - minimum( x -> estimate(x, old_label), missing_labels) 
+end
+
+@enum HEURISTIC begin
+    NUMBER_WRONG_LABELS
+    MIN_LABEL_DIST
+    MIN_LABEL_DIST_EXPERIMENTAL
+    # MATCHING_DIST
+    # MATCHING_DIST_EXPERIMENTAL
 end
 
 ################## informed searching ##################

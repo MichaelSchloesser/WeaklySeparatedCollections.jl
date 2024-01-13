@@ -10,8 +10,8 @@ using FileIO
 
 bin_path = ""
 
-# TODO kill this as soon as a new Moustrap version is available
-function Mousetrap.set_transient_for!(self::Window, other::Window) 
+# TODO exchange this with set_transient_for! as soon as a Moustrap is updated
+function temporary_set_transient_for!(self::Window, other::Window) 
     Mousetrap.detail.set_transient_for!(self._internal, other._internal)
 end
 
@@ -205,7 +205,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         export_window = Window(app)
         set_layout!(get_header_bar(export_window), ":close")
         set_hide_on_close!(export_window, true)
-        set_transient_for!(export_window, main_window)
+        temporary_set_transient_for!(export_window, main_window)
         set_is_modal!(export_window, true)
         set_title!(export_window, "Export")
 
@@ -297,7 +297,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         predefined_window = Window(app)
         set_layout!(get_header_bar(predefined_window), ":close")
         set_hide_on_close!(predefined_window, true)
-        set_transient_for!(predefined_window, main_window)
+        temporary_set_transient_for!(predefined_window, main_window)
         set_is_modal!(predefined_window, true)
         set_title!(predefined_window, "Predefined")
     
@@ -354,7 +354,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         settings_window = Window(app)
         set_layout!(get_header_bar(settings_window), ":close")
         set_hide_on_close!(settings_window, true)
-        set_transient_for!(settings_window, main_window)
+        temporary_set_transient_for!(settings_window, main_window)
         set_is_modal!(settings_window, true)
         set_title!(settings_window, "Settings")
 
