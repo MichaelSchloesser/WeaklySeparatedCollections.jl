@@ -111,6 +111,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         ###                                      GUI                                     ###
         ####################################################################################
 
+        # TODO
         # css classes do not work properly jet
 
         # add_css!("""
@@ -467,7 +468,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
         # TODO
         # color_chooser does not work 
-        # colors of background, white, black (via color selector)
+        # colors of background, white, black vertices
 
         settings_ok_button = Button()
         set_margin_top!(settings_ok_button, 10)
@@ -574,6 +575,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_child!(display_row, hbox(image_display_left, image_display_right))
         set_margin!(display_row, 10)
 
+        # TODO
         # currently_selected_label = Label("currently selected: nothing")
         # set_size_request!(currently_selected_label, Vector2f(0, 20))
         # set_margin_bottom!(currently_selected_label, 10)
@@ -689,6 +691,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             set_signal_click_pressed_blocked!(click_controller_right, bool)
         end
 
+        # TODO
         # currently selected label
         # function on_motion_left(::MotionEventController, x::AbstractFloat, 
         #                         y::AbstractFloat, data::Widget)
@@ -767,6 +770,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
 
             if get_current_button(self) == BUTTON_ID_BUTTON_03 # select label
                 
+                # TODO
                 # is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && is_mutable(G, p)
                 # close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
 
@@ -833,6 +837,8 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             x, y = (x-w/2)*resolution/w, (y-h/2)*resolution/h
 
             if get_current_button(self) == BUTTON_ID_BUTTON_03 # select label
+
+                # TODO
                 # for i = G.n+1:length(G.labels)
                 #     if is_surounding_mutable(i)
                 #         set_text!(currently_selected_label, "currently selected: $(G.labels[i])")
@@ -1416,32 +1422,13 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         end
         load_view_settings()
 
-        # TODO remove because its dangerous for users
-        # view_menubar = Action("view_menubar.action", app) do x  
-        #     if get_is_visible(menubar)
-        #         set_is_visible!(menubar, false)
-        #     else
-        #         set_is_visible!(menubar, true)
-        #     end
-
-        #     save_view_settings()
-        #     return nothing
-        # end
-        # add_shortcut!(view_menubar, "F9")
-        # add_action!(view_submenu, "Menubar", view_menubar)
-
 
         view_display_left = Action("view_display_left.action", app) do x 
             if get_is_visible(image_display_left)
                 set_is_visible!(image_display_left, false)
                 set_ratio!(display_row, 1.0)
-
-                # if !get_is_visible(image_display_right)
-                #     set_is_visible!(currently_selected_label, false)
-                # end
             else
                 set_is_visible!(image_display_left, true)
-                # set_is_visible!(currently_selected_label, true)
 
                 if get_is_visible(image_display_right)
                     set_ratio!(display_row, 2.0)
@@ -1459,14 +1446,8 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             if get_is_visible(image_display_right)
                 set_is_visible!(image_display_right, false)
                 set_ratio!(display_row, 1.0)
-
-                # if !get_is_visible(image_display_left)
-                #     set_is_visible!(currently_selected_label, false)
-                # end
             else
                 set_is_visible!(image_display_right, true)
-                # set_is_visible!(currently_selected_label, true)
-
                 if get_is_visible(image_display_left)
                     set_ratio!(display_row, 2.0)
                 end
@@ -1483,11 +1464,9 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             if get_is_visible(history_notebook)
                 set_is_visible!(history_notebook, false)
                 set_can_respond_to_input!(history_clear_button, false)
-                # set_opacity!(history_clear_button, 0.2)
             else
                 set_is_visible!(history_notebook, true)
                 set_can_respond_to_input!(history_clear_button, true)
-                # set_opacity!(history_clear_button, 1.0)
             end
 
             save_view_settings()
