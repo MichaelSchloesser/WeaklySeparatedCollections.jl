@@ -165,7 +165,7 @@ function WeaklySeparatedCollections.get_superpotential_terms(collection::WSColle
         denom_index += 1
     end
 
-    return terms
+    return circshift(terms, -k+1)
 end
 
 
@@ -190,6 +190,7 @@ function WeaklySeparatedCollections.checkboard_potential_terms(k, n)
         push!(terms, term)
     end
 
+    # TODO sort terms to have terms = [p_J1, ... , p_Jn]
     return terms
 end
 

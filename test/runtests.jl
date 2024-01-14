@@ -155,7 +155,7 @@ using Test
         "dual_rectangle_collection"
         
         drec1 = dual_rectangle_collection(4, 9)
-        drec2 = complement_collection(rectangle_collection(5, 9))
+        drec2 = complement(rectangle_collection(5, 9))
 
         drec1 == drec2
     end
@@ -165,7 +165,7 @@ using Test
         "dual_checkboard_collection"
 
         dcheck1 = dual_checkboard_collection(4, 9)
-        dcheck2 = complement_collection(checkboard_collection(5, 9))
+        dcheck2 = complement(checkboard_collection(5, 9))
 
         dcheck1 == dcheck2
     end
@@ -261,39 +261,39 @@ using Test
 
     
     @test begin
-        "rotate_collection"
+        "rotate"
 
         rec = rectangle_collection(4, 9)
-        rotate_collection(rec, 1)
-        rotate_collection(rec, 5)
+        rotate(rec, 1)
+        rotate(rec, 5)
         true
     end
 
     
     @test begin
-        "reflect_collection"
+        "reflect"
 
         rec = rectangle_collection(4, 9)
-        reflect_collection(rec, 1)
-        reflect_collection(rec, 4)
+        reflect(rec, 1)
+        reflect(rec, 4)
         true
     end
 
     
     @test begin
-        "complement_collection"
+        "complement"
 
         rec = rectangle_collection(4, 9)
-        complement_collection(rec)
+        complement(rec)
         true
     end
 
     
     @test begin 
-        "swaped_colors_collection"
+        "swap_colors"
 
         rec = rectangle_collection(4, 9)
-        swaped_colors_collection(rec)
+        swap_colors(rec)
         true
     end
 
