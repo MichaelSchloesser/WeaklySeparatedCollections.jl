@@ -1,25 +1,15 @@
 
-# TODO this code is horrible, refactor all of it
-
 module Plotting
 
 using WeaklySeparatedCollections, Luxor
 using Colors, Graphs
 
 pmod = WeaklySeparatedCollections.pmod
+norm = P -> sqrt(P.x^2 + P.y^2)
 LPoint = Luxor.Point
 const scale_factor = 2.4
 
-norm = P -> sqrt(P.x^2 + P.y^2)
-
-function WeaklySeparatedCollections.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
-    highlightMutables::Bool = true, labelDirection = "left", scale::Float64 = 0.0) 
-
-    if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
-        error("cliques needed for drawing are missing!")
-    end
-
+function embedding_data(collection::WSCollection, width::Int, height::Int, adjustAngle::Bool)
     n = collection.n
     k = collection.k
     labels = collection.labels
@@ -27,26 +17,35 @@ function WeaklySeparatedCollections.drawTiling(collection::WSCollection, title::
     B = collection.blackCliques
     
     s = 1
-    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
-    tau = i -> s*sum( v[labels[i]] )
+    reference_polygon = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
+    tau = i -> s*sum( reference_polygon[labels[i]] )
 
-    if scale == 0.0 # autoselect scale such that plabic tiling fits into window
-        r = norm(sum(v[1:k]))
-        s = min(width, height)/(scale_factor*r) 
-    else
-        s = scale
-    end
+    # autoselect scale such that plabic tiling fits into window
+    r = norm(sum(reference_polygon[1:k]))
+    s = min(width, height)/(scale_factor*r) 
 
     angle = 0
     if adjustAngle
-        angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
+        angle = acos( -sum(reference_polygon[1:k]).y/norm(sum(reference_polygon[1:k])) ) - (k-1)*2*pi/n
+        reference_polygon = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
     end
+
+    return n, k, labels, W, B, r, s, reference_polygon, tau
+end
+
+function WeaklySeparatedCollections.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
+    highlightMutables::Bool = true, labelDirection = "left") 
+
+    if cliques_missing(collection)
+        error("cliques needed for drawing are missing!")
+    end
+
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
 
     Drawing(width, height, title)
         origin()
 
-        # also nice: "lightblue4"
         if backgroundColor != ""
             background(backgroundColor)
         end
@@ -72,7 +71,6 @@ function WeaklySeparatedCollections.drawTiling(collection::WSCollection, title::
                 pos = tau(i)
 
                 label = ""
-                I = collect(1:n)
 
                 if labelDirection == "left"
                     label = join(labels[i])
@@ -118,48 +116,30 @@ function WeaklySeparatedCollections.drawTiling(collection::WSCollection, title::
 end
 
 
-function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    labelDirection = "left", scale::Float64 = 0.0) 
+    labelDirection = "left")
 
-    if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+    if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n = collection.n
-    k = collection.k
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
-    
-    s = 1
-    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
-    tau = i -> s*sum( v[labels[i]] )
-
-    if scale == 0.0 # autoselect scale 
-        r = norm(sum(v[1:k]))
-        s = min(width, height)/(scale_factor*r) 
-    else
-        s = scale
-    end
-
-    angle = 0
-    if adjustAngle
-        angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
-    end
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
 
     Drawing(width, height, title)
         origin()
         
-        # also nice: "lightblue4"
         if backgroundColor != ""
             background(backgroundColor)
         end
         
+        # outer edges and boundary vertices
         fontsize( div(r*s, 10))
-        for i = 1:n # outer edges and boundary vertices
-            p1, p2 = tau(i), tau(pmod(i+1, n))
+        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
+
+        for i = 1:n 
+            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
             r2 = norm(p1 + p2)
             line((p1 + p2)/2, r*s*(p1 + p2)/r2, :stroke)
             
@@ -200,6 +180,8 @@ function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, title
         # draw face labels.
         if drawLabels
             fontsize( div(s,6))
+
+            # frozen labels
             for i = 1:n
                 label = ""
 
@@ -228,6 +210,7 @@ function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, title
                 text(label, c, halign=:center, valign=:middle)
             end
 
+            # non frozen labels
             for i = n+1:length(labels)
                 label = ""
                 
@@ -258,52 +241,34 @@ function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, title
 end
 
 
-function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    highlightMutables::Bool = false, labelDirection = "left", scale::Float64 = 0.0) 
+    highlightMutables::Bool = false, labelDirection = "left") 
 
-    if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+    if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n = collection.n
-    k = collection.k
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
-
-    s = 1
-    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
-    tau = i -> s*sum( v[labels[i]] )
-
-    if scale == 0.0 # autoselect scale 
-        r = norm(sum(v[1:k]))
-        s = min(width, height)/(scale_factor*r) 
-    else
-        s = scale
-    end
-
-    angle = 0
-    if adjustAngle
-        angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
-    end
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
     
     Drawing(width, height, title)
         origin()
         
-        # also nice: "lightblue4"
         if backgroundColor != ""
             background(backgroundColor)
         end
-
-        fontsize( div(r*s,10))
-        for i = 1:n # outer edges and boundary vertices
-            l1, l2 = labels[i], labels[pmod(i+1, n)]
-            p1, p2 = tau(i), tau(pmod(i+1, n))
+        
+        # outer edges and boundary vertices
+        fontsize( div(r*s, 10))
+        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
+        
+        for i = 1:n 
+            l1, l2 = frozen_label(i), frozen_label(pmod(i+1, n))
+            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
             r2 = norm(p1 + p2)
 
-            adj = intersect(l1, l2) # TODO unessesary complicated. fix it
+            adj = intersect(l1, l2)
             if haskey(W, adj)
                 w = W[adj]
                 len_w = length(w)
@@ -439,69 +404,51 @@ function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, t
 end
 
 
-function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    labelDirection = "left", scale::Float64 = 0.0) 
+    labelDirection = "left") 
 
-    if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+    if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n = collection.n
-    k = collection.k
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
-
-    s = 1
-    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
-    tau = i -> s*sum( v[labels[i]] )
-
-    if scale == 0.0 # autoselect scale 
-        r = norm(sum(v[1:k]))
-        s = min(width, height)/(scale_factor*r) 
-    else
-        s = scale
-    end
-
-    angle = 0
-    if adjustAngle
-        angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
-    end
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
     
     Drawing(width, height, title)
         origin()
         
-        # also nice: "lightblue4"
         if backgroundColor != ""
             background(backgroundColor)
         end
 
-        fontsize( div(r*s,10))
-        for i = 1:n # outer edges and boundary vertices
-            l1, l2 = labels[i], labels[pmod(i+1, n)]
-            p1, p2 = tau(i), tau(pmod(i+1, n))
+        # outer edges and boundary vertices
+        fontsize( div(r*s, 10))
+        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
+
+        for i = 1:n 
+            l1, l2 = frozen_label(i), frozen_label(pmod(i+1, n))
+            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
             p3 = midpoint(p1, p2)
             r2 = norm(p1 + p2)
 
-            adj = intersect(l1, l2) # TODO unessesary complicated. fix it
+            adj = intersect(l1, l2) 
             if haskey(W, adj)
                 w = W[adj]
                 len_w = length(w)
                 p4 = sum(tau.(w))/len_w
 
                 move(r*s*(p1 + p2)/r2)
-                curve(r*s*(p1 + p2)/r2, p3, p4) # TODO not quite the correct bezier curve. works for now
+                curve(r*s*(p1 + p2)/r2, p3, p4) 
                 strokepath()
             else
-                adj = sort(union(l1, l2)) # TODO unessesary complicated. fix it
+                adj = sort(union(l1, l2)) 
                 b = B[adj]
                 len_b = length(b)
                 p4 = sum(tau.(b))/len_b
 
                 move(r*s*(p1 + p2)/r2)
-                curve(r*s*(p1 + p2)/r2, p3, p4) # TODO not quite the correct bezier curve. works for now
+                curve(r*s*(p1 + p2)/r2, p3, p4) 
                 strokepath()
             end
             
@@ -525,7 +472,7 @@ function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, tit
                     p3 = sum(tau.(b))/len_b
 
                     move(p1)
-                    curve(p1, p2, p3) # TODO not quite the correct bezier curve. works for now
+                    curve(p1, p2, p3) 
                     strokepath()
                 end
             end
@@ -605,40 +552,46 @@ function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, tit
     finish()
 end
 
+
+function WeaklySeparatedCollections.drawPLG(collection::WSCollection, title::String, width::Int = 500, height::Int = 500;
+    drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
+    adjustAngle::Bool = false, highlightMutables::Bool = false, labelDirection = "left")
+
+    if drawmode == "straight"
+
+        drawPLG_straight(collection, title, width, height; backgroundColor, drawLabels, adjustAngle, 
+        highlightMutables, labelDirection)
+
+    elseif drawmode == "smooth"
+
+        drawPLG_smooth(collection, title, width, height; backgroundColor, drawLabels, adjustAngle, labelDirection = "left")
+
+    elseif drawmode == "polygonal"
+
+        drawPLG_poly(collection, title, width, height; backgroundColor, drawLabels, adjustAngle, 
+        labelDirection = "left")
+
+    else 
+        error("invalid drawmode: $drawmode")
+    end
+
+end
+
+
 ########################################################################
 #####          Versions that dont save the image as file           #####
 ########################################################################
 
+
 function WeaklySeparatedCollections.drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, adjustAngle::Bool = false, 
-    highlightMutables::Bool = true, labelDirection = "left", scale::Float64 = 0.0) 
+    highlightMutables::Bool = true, labelDirection = "left") 
 
-    if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+    if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n = collection.n
-    k = collection.k
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
-    
-    s = 1
-    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
-    tau = i -> s*sum( v[labels[i]] )
-
-    if scale == 0.0 # autoselect scale such that plabic tiling fits into window
-        r = norm(sum(v[1:k]))
-        s = min(width, height)/(scale_factor*r) 
-    else
-        s = scale
-    end
-
-    angle = 0
-    if adjustAngle
-        angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
-    end
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
 
     @draw begin
         origin()
@@ -712,48 +665,30 @@ function WeaklySeparatedCollections.drawTiling(collection::WSCollection, width::
 end
 
 
-function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500; 
+function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    labelDirection = "left", scale::Float64 = 0.0) 
+    labelDirection = "left") 
 
-    if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+    if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n = collection.n
-    k = collection.k
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
-    
-    s = 1
-    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
-    tau = i -> s*sum( v[labels[i]] )
-
-    if scale == 0.0 # autoselect scale 
-        r = norm(sum(v[1:k]))
-        s = min(width, height)/(scale_factor*r) 
-    else
-        s = scale
-    end
-
-    angle = 0
-    if adjustAngle
-        angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
-    end
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
 
     @draw begin
         origin()
         
-        # also nice: "lightblue4"
         if backgroundColor != ""
             background(backgroundColor)
         end
         
+        # outer edges and boundary vertices
         fontsize( div(r*s, 10))
-        for i = 1:n # outer edges and boundary vertices
-            p1, p2 = tau(i), tau(pmod(i+1, n))
+        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
+
+        for i = 1:n
+            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
             r2 = norm(p1 + p2)
             line((p1 + p2)/2, r*s*(p1 + p2)/r2, :stroke)
             
@@ -852,52 +787,34 @@ function WeaklySeparatedCollections.drawPLG_poly(collection::WSCollection, width
 end
 
 
-function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500; 
+function drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    highlightMutables::Bool = false, labelDirection = "left", scale::Float64 = 0.0) 
+    highlightMutables::Bool = false, labelDirection = "left") 
 
-    if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+    if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n = collection.n
-    k = collection.k
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
-
-    s = 1
-    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
-    tau = i -> s*sum( v[labels[i]] )
-
-    if scale == 0.0 # autoselect scale 
-        r = norm(sum(v[1:k]))
-        s = min(width, height)/(scale_factor*r) 
-    else
-        s = scale
-    end
-
-    angle = 0
-    if adjustAngle
-        angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
-    end
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
     
     @draw begin
         origin()
         
-        # also nice: "lightblue4"
         if backgroundColor != ""
             background(backgroundColor)
         end
 
-        fontsize( div(r*s,10))
-        for i = 1:n # outer edges and boundary vertices
-            l1, l2 = labels[i], labels[pmod(i+1, n)]
-            p1, p2 = tau(i), tau(pmod(i+1, n))
+        # outer edges and boundary vertices
+        fontsize( div(r*s, 10))
+        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
+
+        for i = 1:n 
+            l1, l2 = frozen_label(i), frozen_label(pmod(i+1, n))
+            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
             r2 = norm(p1 + p2)
 
-            adj = intersect(l1, l2) # TODO unessesary complicated. fix it
+            adj = intersect(l1, l2)
             if haskey(W, adj)
                 w = W[adj]
                 len_w = length(w)
@@ -1033,69 +950,51 @@ function WeaklySeparatedCollections.drawPLG_straight(collection::WSCollection, w
 end
 
 
-function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500; 
+function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
-    labelDirection = "left", scale::Float64 = 0.0) 
+    labelDirection = "left") 
 
-    if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+    if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n = collection.n
-    k = collection.k
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
-
-    s = 1
-    v = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
-    tau = i -> s*sum( v[labels[i]] )
-
-    if scale == 0.0 # autoselect scale 
-        r = norm(sum(v[1:k]))
-        s = min(width, height)/(scale_factor*r) 
-    else
-        s = scale
-    end
-
-    angle = 0
-    if adjustAngle
-        angle = acos( -sum(v[1:k]).y/norm(sum(v[1:k])) ) - (k-1)*2*pi/n
-        v = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
-    end
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
     
     @draw begin
         origin()
         
-        # also nice: "lightblue4"
         if backgroundColor != ""
             background(backgroundColor)
         end
 
-        fontsize( div(r*s,10))
-        for i = 1:n # outer edges and boundary vertices
-            l1, l2 = labels[i], labels[pmod(i+1, n)]
-            p1, p2 = tau(i), tau(pmod(i+1, n))
+        # outer edges and boundary vertices
+        fontsize( div(r*s, 10))
+        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
+
+        for i = 1:n 
+            l1, l2 = frozen_label(i), frozen_label(pmod(i+1, n))
+            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
             p3 = midpoint(p1, p2)
             r2 = norm(p1 + p2)
 
-            adj = intersect(l1, l2) # TODO unessesary complicated. fix it
+            adj = intersect(l1, l2) 
             if haskey(W, adj)
                 w = W[adj]
                 len_w = length(w)
                 p4 = sum(tau.(w))/len_w
 
                 move(r*s*(p1 + p2)/r2)
-                curve(r*s*(p1 + p2)/r2, p3, p4) # TODO not quite the correct bezier curve. works for now
+                curve(r*s*(p1 + p2)/r2, p3, p4) 
                 strokepath()
             else
-                adj = sort(union(l1, l2)) # TODO unessesary complicated. fix it
+                adj = sort(union(l1, l2)) 
                 b = B[adj]
                 len_b = length(b)
                 p4 = sum(tau.(b))/len_b
 
                 move(r*s*(p1 + p2)/r2)
-                curve(r*s*(p1 + p2)/r2, p3, p4) # TODO not quite the correct bezier curve. works for now
+                curve(r*s*(p1 + p2)/r2, p3, p4) 
                 strokepath()
             end
             
@@ -1119,7 +1018,7 @@ function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, wid
                     p3 = sum(tau.(b))/len_b
 
                     move(p1)
-                    curve(p1, p2, p3) # TODO not quite the correct bezier curve. works for now
+                    curve(p1, p2, p3) 
                     strokepath()
                 end
             end
@@ -1197,6 +1096,30 @@ function WeaklySeparatedCollections.drawPLG_smooth(collection::WSCollection, wid
         end
         
     end width height
+end
+
+function WeaklySeparatedCollections.drawPLG(collection::WSCollection, width::Int = 500, height::Int = 500;
+    drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
+    adjustAngle::Bool = false, highlightMutables::Bool = false, labelDirection = "left")
+
+    if drawmode == "straight"
+
+        drawPLG_straight(collection, width, height; backgroundColor, drawLabels, adjustAngle, 
+        highlightMutables, labelDirection)
+
+    elseif drawmode == "smooth"
+
+        drawPLG_smooth(collection, width, height; backgroundColor, drawLabels, adjustAngle, labelDirection = "left")
+
+    elseif drawmode == "polygonal"
+
+        drawPLG_poly(collection, width, height; backgroundColor, drawLabels, adjustAngle, 
+        labelDirection = "left")
+
+    else 
+        error("invalid drawmode: $drawmode")
+    end
+
 end
 
 end

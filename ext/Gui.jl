@@ -111,8 +111,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         ###                                      GUI                                     ###
         ####################################################################################
 
-        # TODO
-        # css classes do not work properly jet
+        # TODO css classes do not work properly jet
 
         # add_css!("""
         #     .sharp-corners {
@@ -132,6 +131,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         set_title!(main_window, "WSC-Visualizer")
 
         ############## convenience functions ##############
+
         function MySeparator(opacity::AbstractFloat)
             sep = Separator()
             set_opacity!(sep, opacity)
@@ -163,22 +163,9 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             backgroundColor = "lightblue4", drawLabels = draw_vertex_labels, adjustAngle = adjust_angle, 
             labelDirection = label_direction)
 
-            if plg_drawmode == "smooth"
-                drawPLG_smooth(G, bin_path*"display2.png", resolution, resolution, 
-                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle, 
-                labelDirection = label_direction)
-
-            elseif plg_drawmode == "straight"
-                drawPLG_straight(G, bin_path*"display2.png", resolution, resolution, 
-                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle, 
-                highlightMutables = highlight_mutables, labelDirection = label_direction)
-
-            else
-                drawPLG_poly(G, bin_path*"display2.png", resolution, resolution, 
-                backgroundColor = "lightblue4", drawLabels = draw_face_labels, adjustAngle = adjust_angle, 
-                labelDirection = label_direction)
-
-            end
+            drawPLG(G, bin_path*"display2.png", resolution, resolution, 
+            drawmode = plg_drawmode, backgroundColor = "lightblue4", drawLabels = draw_face_labels, 
+            adjustAngle = adjust_angle, highlightMutables = highlight_mutables, labelDirection = label_direction)
 
             create_from_file!(image_display_left, bin_path * "display.png")
             create_from_file!(image_display_right, bin_path * "display2.png")
@@ -364,7 +351,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
         display_resolution_label = Label("Display resolution:")
         set_size_request!(display_resolution_label, Vector2f(190, 0))
 
-        plg_drawmode_label = Label("Plg draw mode:")
+        plg_drawmode_label = Label("Draw mode:")
         set_size_request!(plg_drawmode_label, Vector2f(190, 0))
 
         label_direction_label = Label("Label direction:")
@@ -977,46 +964,23 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
             on_accept!(file_chooser) do self::FileChooser, files::Vector{FileDescriptor}
                 chosen_path = get_path(files[1])
                 
+                # TODO more export_check 
                 w, h = parse(Int64, get_text(export_width_entry)) , parse(Int64, get_text(export_height_entry))
                 export_adjust_angle = get_is_active(export_adjust_angle_check)
                 export_draw_labels = get_is_active(export_draw_labels_check)
                 export_background_color = get_text(export_background_entry)
 
-                try
-                    if get_selected(export_figure_dropdown) == figure_dropdown_item_1
-                        drawTiling(G, chosen_path, w, h, backgroundColor = export_background_color, 
-                                    adjustAngle = export_adjust_angle, highlightMutables = false, drawLabels = export_draw_labels)
-                    else
-                        if plg_drawmode == "smooth"
-                            drawPLG_smooth(G, chosen_path, w, h, backgroundColor = export_background_color, 
-                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
-                        elseif plg_drawmode == "straight"
-                            drawPLG_straight(G, chosen_path, w, h, backgroundColor = export_background_color, 
-                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
-                        else
-                            drawPLG_poly(G, chosen_path, w, h, backgroundColor = export_background_color, 
-                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
-                        end
-                    end
-
-                catch e
-                    if get_selected(export_figure_dropdown) == figure_dropdown_item_1
-                        drawTiling(G, chosen_path, w, h,
-                                    adjustAngle = export_adjust_angle, highlightMutables = false, drawLabels = export_draw_labels)
-                    else
-                        if plg_drawmode == "smooth"
-                            drawPLG_smooth(G, chosen_path, w, h,
-                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
-                        elseif plg_drawmode == "straight"
-                            drawPLG_straight(G, chosen_path, w, h,
-                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
-                        else
-                            drawPLG_poly(G, chosen_path, w, h,
-                                    adjustAngle = export_adjust_angle, drawLabels = export_draw_labels)
-                        end
-                    end
-
+                if get_selected(export_figure_dropdown) == figure_dropdown_item_1
+                    drawTiling(G, chosen_path, w, h, backgroundColor = export_background_color, 
+                                adjustAngle = export_adjust_angle, highlightMutables = false, drawLabels = export_draw_labels,
+                                labelDirection = label_direction)
+                else
+                    # TODO more export_check 
+                    drawPLG(G, chosen_path, w, h, backgroundColor = export_background_color, drawmode = plg_drawmode,
+                                adjustAngle = export_adjust_angle, drawLabels = export_draw_labels, 
+                                highlightMutables = false, labelDirection = label_direction)
                 end
+
                 return nothing
             end
             present!(file_chooser)
@@ -1079,18 +1043,18 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                     mutate!(G, data[1])
                     update_displays()
                 elseif task == "complement"
-                    complement_collection!(G)
+                    complement!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "swap_colors"
-                    swaped_colors_collection!(G)
+                    swap_colors!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "rotate"
-                    rotate_collection!(G, -data[1])
+                    rotate!(G, -data[1])
                     update_displays()
                 elseif task == "reflect"
-                    reflect_collection!(G)
+                    reflect!(G)
                     update_displays()
                 else # task is predefined or load. All handeled the same
                     G = data[1]
@@ -1137,18 +1101,18 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                     update_embedding_data()
                     update_displays()
                 elseif task == "complement"
-                    complement_collection!(G)
+                    complement!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "swap_colors"
-                    swaped_colors_collection!(G)
+                    swap_colors!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "rotate"
-                    rotate_collection!(G, data[1])
+                    rotate!(G, data[1])
                     update_displays()
                 elseif task == "reflect"
-                    reflect_collection!(G)
+                    reflect!(G)
                     update_displays()
                 else # task == "load"
                     D = FileIO.load(data[2])
@@ -1279,7 +1243,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 end
             end
 
-            rotate_collection!(G, 1)
+            rotate!(G, 1)
             update_displays()
             update_history_strings("rotate", [1])
         
@@ -1302,7 +1266,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 end
             end
 
-            rotate_collection!(G, -1)
+            rotate!(G, -1)
             update_displays()
             update_history_strings("rotate", [-1])
         
@@ -1325,7 +1289,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 end
             end
 
-            reflect_collection!(G)
+            reflect!(G)
             update_displays()
             update_history_strings("reflect", [1])
         
@@ -1347,7 +1311,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 end
             end
 
-            complement_collection!(G)
+            complement!(G)
 
             update_embedding_data()
             update_displays()
@@ -1370,7 +1334,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 end
             end
 
-            swaped_colors_collection!(G)
+            swap_colors!(G)
 
             update_embedding_data()
             update_displays()

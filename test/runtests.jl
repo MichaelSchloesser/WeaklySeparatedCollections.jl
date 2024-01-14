@@ -72,7 +72,7 @@ using Test
         "compute_cliques from labels"
 
         labels = checkboard_labels(4, 9)
-        compute_cliques(4, labels)
+        WeaklySeparatedCollections.compute_cliques(4, labels)
         true
     end
 
@@ -81,7 +81,7 @@ using Test
         "compute_adjacencies from labels"
 
         labels = checkboard_labels(4, 9)
-        compute_adjacencies(4, 9, labels)
+        WeaklySeparatedCollections.compute_adjacencies(4, 9, labels)
         true
     end
 
@@ -92,8 +92,8 @@ using Test
         check = checkboard_collection(4, 9)
         labels = check.labels
         quiver = check.quiver
-        W, B = compute_cliques(labels, quiver)
-        W2, B2 = compute_cliques(4, labels)
+        W, B = WeaklySeparatedCollections.compute_cliques(labels, quiver)
+        W2, B2 = WeaklySeparatedCollections.compute_cliques(4, labels)
 
         (W == W2) && (B == B2) 
     end
@@ -106,8 +106,8 @@ using Test
         labels = check.labels
         quiver = check.quiver
 
-        W, B = compute_boundaries(labels, quiver)
-        _, W2, B2 = compute_adjacencies(4, 9, labels)
+        W, B = WeaklySeparatedCollections.compute_boundaries(labels, quiver)
+        _, W2, B2 = WeaklySeparatedCollections.compute_adjacencies(4, 9, labels)
         (W == W2) && (B == B2)
     end
 

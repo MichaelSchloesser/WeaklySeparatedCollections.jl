@@ -32,7 +32,7 @@ function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
     i = 1
     
     # the following trys to finds a < b < c < d contradicting the the ws of v and w
-    while(!(i in x) && !(i in y) )
+    while !(i in x) && !(i in y) 
         i += 1
         if(i+3 > n)
             return true
@@ -40,24 +40,24 @@ function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
     end
             
     if(i in y)
-        (x,y) = (y,x)
+        (x, y) = (y, x)
     end
     
-    while(!(i in y))
+    while !(i in y)
         i += 1
         if(i+2 > n)
             return true
         end
     end
     
-    while(!(i in x))
+    while !(i in x) 
         i += 1
         if(i+1 > n)
             return true
         end
     end
     
-    while(!(i in y))
+    while !(i in y) 
         i += 1
         if(i > n)
             return true
@@ -95,13 +95,39 @@ function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     return true
 end
 
-# TODO do this for the other graphs
+# TODO add types
+
+function frozen_label(k, n, i) 
+    sort([pmod(l+i-1, n) for l = 1:k]) 
+end
+
+function rectangle_label(k, n, i, j)
+    L = collect(i+1:i+j)
+    R = collect(n-k+j+1:n)
+    return union(L, R)
+end
+
 function checkboard_label(k, n, i, j)
     sigma = (x, y) -> pmod(x+y, n)
 
     sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
     L = sigma_ij.(collect(i+1:i+j))
     R = sigma_ij.(collect(n-k+j+1:n))
+    return sort(union(L, R))
+end
+
+function dual_rectangle_label(k, n, i, j)
+    L = collect(1:i)
+    R = collect(i+j+1:k+j)
+    return union(L, R)
+end
+
+function dual_checkboard_label(k, n, i, j)
+    sigma = (x, y) -> pmod(x+y, n)
+
+    sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
+    L = sigma_ij.( collect(1:i))
+    R = sigma_ij.( collect(i+j+1:k+j))
     return sort(union(L, R))
 end
 
@@ -115,16 +141,13 @@ The frozen labels are in positions `1` to `n`.
 function rectangle_labels(k::Int, n::Int)
     labels = Vector() 
 
-    for i = 0:n-1 # frozen labels
-        F = [pmod(l+i, n) for l = 1:k]
-        push!(labels, sort(F))
+    for i = 1:n # frozen labels
+        push!(labels, frozen_label(k, n, i))
     end
 
     for i = 1:n-k-1 # mutable labels
         for j = 1:k-1
-            L = collect(i+1:i+j)
-            R = collect(n-k+j+1:n)
-            push!(labels, union(L, R))
+            push!(labels, rectangle_label(k, n, i, j))
         end
     end
 
@@ -138,21 +161,15 @@ Return the labels of the checkboard graph as a vector.
 The frozen labels are in positions `1` to `n`.
 """
 function checkboard_labels(k::Int, n::Int) 
-    sigma = (x, y) -> pmod(x+y, n)
-
     labels = Vector() 
 
-    for i = 0:n-1 # frozen labels
-        F = [pmod(l+i, n) for l = 1:k] 
-        push!(labels, sort(F))
+    for i = 1:n # frozen labels
+        push!(labels, frozen_label(k, n, i))
     end
 
     for i = 1:n-k-1 # mutable labels
         for j = 1:k-1
-            sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
-            L = sigma_ij.(collect(i+1:i+j))
-            R = sigma_ij.(collect(n-k+j+1:n))
-            push!(labels, sort(union(L, R)))
+            push!(labels, checkboard_label(k, n, i, j))
         end
     end
 
@@ -168,16 +185,13 @@ The frozen labels are in positions `1` to `n`.
 function dual_rectangle_labels(k::Int, n::Int) 
     labels = Vector() 
 
-    for i = 0:n-1 # frozen labels
-        F = [pmod(l+i, n) for l = 1:k]
-        push!(labels, sort(F))
+    for i = 1:n # frozen labels
+        push!(labels, frozen_label(k, n, i))
     end
 
     for i = 1:k-1 # mutable labels
         for j = 1:n-k-1
-            L = collect(1:i)
-            R = collect(i+j+1:k+j)
-            push!(labels, union(L, R))
+            push!(labels, dual_rectangle_label(k, n, i, j))
         end
     end
 
@@ -192,19 +206,14 @@ The frozen labels are in positions `1` to `n`.
 """
 function dual_checkboard_labels(k::Int, n::Int) 
     labels =  Vector() 
-    sigma = (x, y) -> pmod(x+y, n)
 
-    for i = 0:n-1 # frozen labels
-        F = [pmod(l+i, n) for l = 1:k] 
-        push!(labels, sort(F))
+    for i = 1:n # frozen labels
+        push!(labels, frozen_label(k, n, i))
     end
 
     for i = 1:k-1 # mutable labels
         for j = 1:n-k-1
-            sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
-            L = sigma_ij.( collect(1:i))
-            R = sigma_ij.( collect(i+j+1:k+j))
-            push!(labels, sort(union(L, R)))
+            push!(labels, dual_checkboard_label(k, n, i, j))
         end
     end
 
@@ -537,6 +546,13 @@ Return the element at index `i` in `collection.labels`.
 Base.getindex(collection::WSCollection, i::Int) = getindex(collection.labels, i)
 
 @doc raw"""
+    getindex(collection::WSCollection, v::Vector{Int})
+
+Return the element at index `i` in `collection.labels`.
+"""
+Base.getindex(collection::WSCollection, v::Vector{Int}) = getindex(collection.labels, v)
+
+@doc raw"""
     setindex!(collection::WSCollection, i::Int)
 
 Set the element at index `i` in `collection.labels` to `x`.
@@ -569,12 +585,15 @@ function Base.union(collection1::WSCollection, collection2::WSCollection)
     return union(collection1.labels, collection2.labels)
 end
 
+# TODO different printing depending on io
+function Base.show(io::IO, collection::WSCollection, full::Bool = false)
+    s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels"
 
-function Base.show(io::IO, collection::WSCollection)
-    s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels: \n"
-
-    for l in collection.labels
-        s *= "$l\n"
+    if full
+        s *= ": \n"
+        for l in collection.labels
+            s *= "$l\n"
+        end
     end
     print(io, s)
 end
@@ -622,7 +641,7 @@ Return true if the vertex `i` of `collection` is frozen.
 
 # Examples
 
-````julia-repl
+```julia-repl
 julia> H = rectangle_collection(4, 9)
 julia> is_frozen(H, 5)
 true
@@ -643,7 +662,7 @@ it is not frozen and is of degree 4.
 
 # Examples
 
-````julia-repl
+```julia-repl
 julia> H = rectangle_collection(4, 9)
 julia> is_mutable(H, 11)
 false
@@ -675,7 +694,7 @@ If `mutateCliques` is set to false, the 2-cells are set to missing.
 
 # Examples
 
-````julia-repl
+```julia-repl
 julia> H = rectangle_collection(4, 9)
 julia> mutate!(H, 10)
 ```
@@ -692,7 +711,7 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
     N_in = collect(inneighbors(G, i))
     N_out = collect(outneighbors(G, i))
 
-    N_out_labels = collection.labels[N_out]
+    N_out_labels = collection[N_out]
     
     I = intersect(N_out_labels[1], N_out_labels[2])
     Iabcd = union(N_out_labels[1], N_out_labels[2])
@@ -702,7 +721,7 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
         (a, b, c, d) = (b, c, d, a) 
     end
     
-    collection.labels[i] = sort(union(I, [b,d])) # exchange Iac for Ibd
+    collection[i] = sort(union(I, [b,d])) # exchange Iac for Ibd
 
     # mutate quiver
     for j in N_in # add/remove edges according to quiver mutation
@@ -726,7 +745,7 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
         add_edge!(G, l, i)
     end
 
-    collection.quiver = G 
+    collection.quiver = G
 
     # update cliques if mutateCliques = true and cliques are not missing
     function updateCliques(array)
@@ -772,7 +791,7 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
         collection.whiteCliques, collection.blackCliques = length(array) == 1 ? (X, Y) : (Y, X)
     end
 
-    if mutateCliques && !ismissing(collection.whiteCliques) && !ismissing(collection.blackCliques)
+    if mutateCliques && !cliques_missing(collection)
         updateCliques([a])
         updateCliques([c])
         updateCliques([a,b,c])
@@ -800,7 +819,7 @@ Mutate the `collection` by addressing a vertex with its label.
 
 # Examples
 
-````julia-repl
+```julia-repl
 julia> H = rectangle_collection(4, 9)
 julia> H.labels[10]
 4-element Vector{Int64}:
@@ -843,36 +862,18 @@ julia> H = rectangle_collection(4, 9)
 julia> rotate_collection!(H, 2)
 ```
 """
-function rotate_collection!(collection::WSCollection, amount::Int)
+function rotate!(collection::WSCollection, amount::Int)
     n = collection.n
     labels = collection.labels
-    Q = collection.quiver
     W = collection.whiteCliques
     B = collection.blackCliques
 
     shift = x -> pmod(x + amount, n)
-    shift_frozen = (x -> x <= n ? shift(x) : x)
 
     # shift labels
-    for i = n+1:length(labels)
+    for i = 1:length(labels)
         collection.labels[i] = sort(shift.(labels[i]))
     end
-
-    # shift edges to frozen vertices
-    Q2 = deepcopy(Q)
-
-    for i = 1:n
-        for j in outneighbors(Q, i)
-            rem_edge!(Q2, i, j)
-            add_edge!(Q2, shift(i), j)
-        end
-
-        for j in inneighbors(Q, i)
-            rem_edge!(Q2, j, i)
-            add_edge!(Q2, j, shift(i))
-        end
-    end
-    collection.quiver = Q2
 
     # shift clique keys
     W2 = Dict()
@@ -880,14 +881,12 @@ function rotate_collection!(collection::WSCollection, amount::Int)
 
     for (K, C) in W
         K2 = sort(shift.(K))
-        C2 = shift_frozen.(C)
-        W2[K2] = C2
+        W2[K2] = C
     end
 
     for (L, C) in B
         L2 = sort(shift.(L))
-        C2 = shift_frozen.(C)
-        B2[L2] = C2
+        B2[L2] = C
     end
 
     collection.whiteCliques = W2
@@ -901,8 +900,8 @@ end
 
 Version of `rotate_collection!` that does not modify its argument. 
 """
-function rotate_collection(collection::WSCollection, amount::Int)
-    return rotate_collection!(deepcopy(collection), amount)
+function rotate(collection::WSCollection, amount::Int)
+    return rotate!(deepcopy(collection), amount)
 end
 
 @doc raw"""
@@ -918,52 +917,31 @@ julia> H = rectangle_collection(4, 9)
 julia> rotate_collection!(H, 1)
 ```
 """
-function reflect_collection!(collection::WSCollection, axis::Int = 1) 
+function reflect!(collection::WSCollection, axis::Int = 1) 
     n = collection.n
-    k = collection.k
     labels = collection.labels
-    Q = collection.quiver
     W = collection.whiteCliques
     B = collection.blackCliques
 
     reflect = x -> pmod(2*axis - x, n)
-    reflect_frozen = (x -> x <= n ? pmod(2*axis + 1 - k - x, n) : x)
 
     # reflect labels
-    for i = n+1:length(labels)
+    for i = 1:length(labels)
         collection.labels[i] = sort(reflect.(labels[i]))
     end
 
-    # shift edges to frozen vertices
-    Q2 = deepcopy(Q)
-
-    for i = 1:n
-        for j in outneighbors(Q, i)
-            rem_edge!(Q2, i, j)
-            add_edge!(Q2, reflect_frozen(i), j)
-        end
-
-        for j in inneighbors(Q, i)
-            rem_edge!(Q2, j, i)
-            add_edge!(Q2, j, reflect_frozen(i))
-        end
-    end
-    collection.quiver = Q2
-
-    # shift clique keys
+    # reflect clique keys
     W2 = Dict()
     B2 = Dict()
 
     for (K, C) in W
         K2 = sort(reflect.(K))
-        C2 = reflect_frozen.(C)
-        W2[K2] = C2
+        W2[K2] = C
     end
 
     for (L, C) in B
         L2 = sort(reflect.(L))
-        C2 = reflect_frozen.(C)
-        B2[L2] = C2
+        B2[L2] = C
     end
 
     collection.whiteCliques = W2
@@ -977,8 +955,8 @@ end
 
 Version of `reflect_collection!` that does not modify its argument.
 """
-function reflect_collection(collection::WSCollection, axis::Int = 1)
-    return reflect_collection!(deepcopy(collection), axis)
+function reflect(collection::WSCollection, axis::Int = 1)
+    return reflect!(deepcopy(collection), axis)
 end
 
 @doc raw"""
@@ -993,60 +971,29 @@ julia> H = rectangle_collection(4, 9)
 julia> complement_collection!(H)
 ```
 """
-function complement_collection!(collection::WSCollection) 
+function complement!(collection::WSCollection) 
     n = collection.n
     k = collection.k
     labels = collection.labels
-    Q = collection.quiver
     W = collection.whiteCliques
     B = collection.blackCliques
 
-    shift = x -> pmod(x + k, n)
-    shift_frozen = (x -> x <= n ? shift(x) : x)
-    
-    # take complements of labels
-    for i = 0:n-1 # frozen labels
-        F = [pmod(l+i, n) for l = 1:n-k]
-        labels[i+1] = sort(F)
-    end
-
-    I = collect(1:n)
-    M = collect(n+1:length(labels))
-
-    complement = A -> setdiff(I, A)
-    labels[M] = complement.(labels[M])
+    complement = A -> setdiff( collect(1:n), A)
+    labels = complement.(labels)
     collection.labels = labels
 
-    # shift edges to frozen vertices
-    Q2 = deepcopy(Q)
-
-    for i = 1:n
-        for j in outneighbors(Q, i)
-            rem_edge!(Q2, i, j)
-            add_edge!(Q2, shift(i), j)
-        end
-
-        for j in inneighbors(Q, i)
-            rem_edge!(Q2, j, i)
-            add_edge!(Q2, j, shift(i))
-        end
-    end
-    collection.quiver = Q2
-
-    # take complement of clique keys, and shift frozen
+    # take complement of clique keys
     W2 = Dict()
     B2 = Dict()
 
     for (K, C) in W
         L = sort(complement(K))
-        C2 = shift_frozen.(C)
-        B2[L] = C2
+        B2[L] = C
     end
 
     for (L, C) in B
         K = sort(complement(L))
-        C2 = shift_frozen.(C)
-        W2[K] = C2
+        W2[K] = C
     end
 
     collection.whiteCliques = W2
@@ -1062,8 +1009,8 @@ end
 
 Version of `complement_collection!` that does not modify its argument.
 """
-function complement_collection(collection::WSCollection)
-    return complement_collection!(deepcopy(collection))
+function complement(collection::WSCollection)
+    return complement!(deepcopy(collection))
 end
 
 @doc raw"""
@@ -1081,70 +1028,39 @@ julia> H = rectangle_collection(4, 9)
 julia> swaped_colors_collection!(H)
 ```
 """
-function swaped_colors_collection!(collection::WSCollection) 
+function swap_colors!(collection::WSCollection) 
     # swapping colors = complement + rotate by k
 
     n = collection.n
     k = collection.k
     labels = collection.labels
-    Q = collection.quiver
     W = collection.whiteCliques
     B = collection.blackCliques
 
     shift = x -> pmod(x + k, n)
-    shift_frozen = (x -> x <= n ? pmod(x + 2*k, n) : x)
+    complement = A -> setdiff( collect(1:n), A)
+    labels = complement.(labels)
 
-    # labels
-    for i = 0:n-1 # frozen labels
-        F = [pmod(l+i, n) for l = 1:n-k]
-        labels[i+1] = sort(F)
-    end
-
-    I = collect(1:n)
-    M = collect(n+1:length(labels))
-
-    complement = A -> setdiff(I, A)
-    labels[M] = complement.(labels[M])
-
-    for i = n+1:length(labels)
+    for i = 1:length(labels)
         labels[i] = sort(shift.(labels[i]))
     end
 
-    # shift edges to frozen vertices
-    Q2 = deepcopy(Q)
-
-    for i = 1:n
-        for j in outneighbors(Q, i)
-            rem_edge!(Q2, i, j)
-            add_edge!(Q2, shift_frozen(i), j)
-        end
-
-        for j in inneighbors(Q, i)
-            rem_edge!(Q2, j, i)
-            add_edge!(Q2, j, shift_frozen(i))
-        end
-    end
-    collection.quiver = Q2
-
-    # take complement of clique keys, and shift frozen
+    # take complement of clique keys and shift them
     W2 = Dict()
     B2 = Dict()
 
     for (K, C) in W
         L = sort(shift.(complement(K)))
-        C2 = shift_frozen.(C)
-        B2[L] = C2
+        B2[L] = C
     end
 
     for (L, C) in B
         K = sort(shift.(complement(L)))
-        C2 = shift_frozen.(C)
-        W2[K] = C2
+        W2[K] = C
     end
 
     collection.whiteCliques = W2
     collection.blackCliques = B2
-
     collection.k = n-k
 
     return collection
@@ -1155,8 +1071,8 @@ end
 
 Version of `swaped_colors_collection!` that does not modify its argument.
 """
-function swaped_colors_collection(collection::WSCollection)
-    return swaped_colors_collection!(deepcopy(collection))
+function swap_colors(collection::WSCollection)
+    return swap_colors!(deepcopy(collection))
 end
 
 # extend to maximal weakly separated collection using brute force
@@ -1177,9 +1093,8 @@ function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})
 
     # enforce frozen labels in the first n positions
     frozen::Vector{Vector{Int}} = Vector() 
-    for i = 0:n-1 
-        F = [pmod(l+i, n) for l = 1:k]
-        push!(frozen, sort(F))
+    for i = 1:n
+        push!(frozen, frozen_label(k, n, i))
     end
 
     labels = union(frozen, labels)
@@ -1223,9 +1138,8 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
 
     # enforce frozen labels in the first n positions
     frozen::Vector{Vector{Int}} = Vector() 
-    for i = 0:n-1 
-        F = [pmod(l+i, n) for l = 1:k]
-        push!(frozen, sort(F))
+    for i = 1:n
+        push!(frozen, frozen_label(k, n, i))
     end
 
     labels1 = union(frozen, labels1)
