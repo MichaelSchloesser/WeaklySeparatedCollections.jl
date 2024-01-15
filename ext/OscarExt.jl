@@ -38,6 +38,29 @@ Base.setindex!(seed::Seed, x::AbstractAlgebra.Generic.Frac{T} where T <: RingEle
 
 Base.length(seed::Seed) = length(seed.variables)
 
+function Base.show(io::IO, seed::Seed)
+    s = "Seed with $(seed.n_frozen) frozen and $(length(seed) - seed.n_frozen) mutable variables"
+    print(io, s)
+end
+
+function Base.print(seed::Seed; full::Bool = false)
+    s = "Seed with $(seed.n_frozen) frozen and $(length(seed) - seed.n_frozen) mutable variables"
+
+    if full
+        s *= ": \n"
+        for var in seed.variables
+            s *= "$var\n"
+        end
+    end
+    print(s)
+end
+
+
+function Base.println(seed::Seed; full::Bool = false)
+    print(seed; full)
+    print("\n")
+end
+
 function WeaklySeparatedCollections.is_frozen(seed::Seed, i::Int)
     return i <= seed.n_frozen
 end

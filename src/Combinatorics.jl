@@ -586,7 +586,12 @@ function Base.union(collection1::WSCollection, collection2::WSCollection)
 end
 
 # TODO different printing depending on io
-function Base.show(io::IO, collection::WSCollection, full::Bool = false)
+function Base.show(io::IO, collection::WSCollection)
+    s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels"
+    print(io, s)
+end
+
+function Base.print(collection::WSCollection; full::Bool = false)
     s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels"
 
     if full
@@ -595,7 +600,13 @@ function Base.show(io::IO, collection::WSCollection, full::Bool = false)
             s *= "$l\n"
         end
     end
-    print(io, s)
+    print(s)
+end
+
+
+function Base.println(collection::WSCollection; full::Bool = false)
+    print(collection; full)
+    print("\n")
 end
 
 @doc raw"""
@@ -851,7 +862,7 @@ function mutate(collection::WSCollection, label::Vector{Int}, mutateCliques::Boo
 end
 
 @doc raw"""
-    rotate_collection!(collection::WSCollection, amount::Int)
+    rotate!(collection::WSCollection, amount::Int)
 
 Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation.
 
@@ -859,7 +870,7 @@ Rotate `collection` by `amount`, where a positive amount indicates a clockwise r
 
 ```julia-repl
 julia> H = rectangle_collection(4, 9)
-julia> rotate_collection!(H, 2)
+julia> rotate!(H, 2)
 ```
 """
 function rotate!(collection::WSCollection, amount::Int)
@@ -896,16 +907,16 @@ function rotate!(collection::WSCollection, amount::Int)
 end
 
 @doc raw"""
-    rotate_collection(collection::WSCollection, amount::Int)
+    rotate(collection::WSCollection, amount::Int)
 
-Version of `rotate_collection!` that does not modify its argument. 
+Version of `rotate!` that does not modify its argument. 
 """
 function rotate(collection::WSCollection, amount::Int)
     return rotate!(deepcopy(collection), amount)
 end
 
 @doc raw"""
-    reflect_collection!(collection::WSCollection, axis::Int = 1) 
+    reflect!(collection::WSCollection, axis::Int = 1) 
 
 Reflect `collection` by letting the permutation `x ↦ 2*axis -x` interpreted modulo 
 `n = collection.n` act on the labels of `collection`.
@@ -914,7 +925,7 @@ Reflect `collection` by letting the permutation `x ↦ 2*axis -x` interpreted mo
 
 ```julia-repl
 julia> H = rectangle_collection(4, 9)
-julia> rotate_collection!(H, 1)
+julia> reflect!(H, 1)
 ```
 """
 function reflect!(collection::WSCollection, axis::Int = 1) 
@@ -951,16 +962,16 @@ function reflect!(collection::WSCollection, axis::Int = 1)
 end
 
 @doc raw"""
-    reflect_collection(collection::WSCollection, axis::Int = 1) 
+    reflect(collection::WSCollection, axis::Int = 1) 
 
-Version of `reflect_collection!` that does not modify its argument.
+Version of `reflect!` that does not modify its argument.
 """
 function reflect(collection::WSCollection, axis::Int = 1)
     return reflect!(deepcopy(collection), axis)
 end
 
 @doc raw"""
-    complement_collection!(collection::WSCollection) 
+    complement!(collection::WSCollection) 
 
 Return the collection whose labels are complementary to those of `collection`.
 
@@ -968,7 +979,7 @@ Return the collection whose labels are complementary to those of `collection`.
 
 ```julia-repl
 julia> H = rectangle_collection(4, 9)
-julia> complement_collection!(H)
+julia> complement!(H)
 ```
 """
 function complement!(collection::WSCollection) 
@@ -1005,16 +1016,16 @@ function complement!(collection::WSCollection)
 end
 
 @doc raw"""
-    complement_collection(collection::WSCollection) 
+    complement(collection::WSCollection) 
 
-Version of `complement_collection!` that does not modify its argument.
+Version of `complement!` that does not modify its argument.
 """
 function complement(collection::WSCollection)
     return complement!(deepcopy(collection))
 end
 
 @doc raw"""
-    swaped_colors_collection!(collection::WSCollection) 
+    swap_colors!(collection::WSCollection) 
 
 Return the weakly separated collection whose corresponding plabic graph is obtained
 from the one of `collection` by swapping the colors black and white.
@@ -1025,7 +1036,7 @@ This is the same as taking complements and rotating by `collection.k`.
 
 ```julia-repl
 julia> H = rectangle_collection(4, 9)
-julia> swaped_colors_collection!(H)
+julia> swap_colors!(H)
 ```
 """
 function swap_colors!(collection::WSCollection) 
@@ -1069,9 +1080,9 @@ function swap_colors!(collection::WSCollection)
 end
 
 @doc raw"""
-    swaped_colors_collection(collection::WSCollection) 
+    swap_colors(collection::WSCollection) 
 
-Version of `swaped_colors_collection!` that does not modify its argument.
+Version of `swap_colors!` that does not modify its argument.
 """
 function swap_colors(collection::WSCollection)
     return swap_colors!(deepcopy(collection))
