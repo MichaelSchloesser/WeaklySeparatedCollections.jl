@@ -13,7 +13,7 @@ function BFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = 
         current = dequeue!(queue)
 
         if current == target
-            sequence = []
+            sequence::Vector{Int} = []
 
             while current != root
                 m = parent[current]
@@ -52,7 +52,7 @@ function DFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = 
         current = pop!(stack)
 
         if current == target
-            sequence = []
+            sequence::Vector{Int} = []
 
             while current != root
                 m = parent[current]
@@ -242,11 +242,11 @@ function Astar(root::WSCollection, target::WSCollection; heuristic::HEURISTIC = 
         
         # reconstruct and return mutation sequence
         if current == target
-            sequence = []
+            sequence::Vector{Int} = []
 
             while current != root
                 m = cameFrom[current]
-                current = mutate!(current, m)
+                mutate!(current, m)
                 push!(sequence, m)
             end
 
@@ -282,6 +282,23 @@ end
 
 
 function find_label(root::WSCollection, label::Vector{Int}; heuristic::HEURISTIC = NUMBER_WRONG_LABELS, limitSearchSpace::Bool = true)
-    target = extend_to_collection([label], root)
-    return Astar(root, target; heuristic = heuristic, limitSearchSpace = limitSearchSpace)
+
+    seq::Vector{Int} = []
+    if label in root
+        return seq
+    end
+
+    seq = Astar(root, extend_to_collection([label], root); heuristic = heuristic, limitSearchSpace = limitSearchSpace)
+    temp = WSCollection(root, computeCliques = false)
+
+    count = 0
+    for i in seq
+        mutate!(temp, i)
+        count += 1
+        if temp[i] == label
+            break
+        end
+    end
+
+    return seq[1:count]
 end

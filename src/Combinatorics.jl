@@ -461,10 +461,10 @@ If `computeCliques` is set to false, the 2-cells will be set to `missing`.
 function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
     Q, W, B = compute_adjacencies(k, n, labels)
 
-    if computeCliques
-        return WSCollection(k, n, labels, Q, W, B)
+    if computeCliques 
+        return WSCollection(k, n, deepcopy(labels), Q, W, B)
     else
-        return WSCollection(k, n, labels, Q, missing, missing)
+        return WSCollection(k, n, deepcopy(labels), Q, missing, missing)
     end
 end
 
@@ -479,10 +479,10 @@ If `computeCliques` is `false` the black and white 2-cells are set to `missing` 
 """
 function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}; computeCliques::Bool = true)
     if !computeCliques
-        return WSCollection(k, n, labels, quiver, missing, missing)
+        return WSCollection(k, n, deepcopy(labels), deepcopy(quiver), missing, missing)
     else
         W, B = compute_boundaries(labels, quiver)
-        return WSCollection(k, n, labels, quiver, W, B)
+        return WSCollection(k, n, deepcopy(labels), deepcopy(quiver), W, B)
     end
 end
 
@@ -496,11 +496,11 @@ If `computeCliques` is `false` the black and white 2-cells are set to `missing` 
 """
 function WSCollection(collection::WSCollection; computeCliques::Bool = true)
     if !computeCliques
-        return WSCollection(collection.k, collection.n, collection.labels, collection.quiver, missing, missing)
+        return WSCollection(collection.k, collection.n, deepcopy(collection.labels), deepcopy(collection.quiver), missing, missing)
     else
         if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
             W, B = compute_boundaries(collection.labels, collection.quiver)
-            return WSCollection(collection.k, collection.n, collection.labels, collection.quiver, W, B)
+            return WSCollection(collection.k, collection.n, deepcopy(collection.labels), deepcopy(collection.quiver), W, B)
         else
             return deepcopy(collection)
         end
@@ -585,7 +585,7 @@ function Base.union(collection1::WSCollection, collection2::WSCollection)
     return union(collection1.labels, collection2.labels)
 end
 
-# TODO different printing depending on io
+
 function Base.show(io::IO, collection::WSCollection)
     s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels"
     print(io, s)
@@ -1160,7 +1160,7 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
     for v in labels2
         if !(v in labels1) && is_weakly_separated(n, union(labels1, [v]))
 
-            push!(labels1, v)
+            push!(labels1, deepcopy(v))
         end
 
         if length(labels1) == N
@@ -1197,7 +1197,7 @@ julia> extend_weakly_separated!(labels, H)
 ```
 """
 function extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)
-    return extend_weakly_separated!(collection.k, collection.n, labels, collection.labels)
+    return extend_weakly_separated!(collection.k, collection.n, labels, deepcopy(collection.labels))
 end
 
 @doc raw"""

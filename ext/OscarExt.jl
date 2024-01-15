@@ -19,7 +19,7 @@ function WeaklySeparatedCollections.Seed(cluster_size::Int, n_frozen::Int, quive
     R, _ = polynomial_ring(ZZ, cluster_size)
     S = fraction_field(R)
 
-    return Seed(n_frozen, gens(S), quiver)
+    return Seed(n_frozen, gens(S), deepcopy(quiver))
 end
 
 
@@ -55,7 +55,6 @@ function Base.print(seed::Seed; full::Bool = false)
     print(s)
 end
 
-
 function Base.println(seed::Seed; full::Bool = false)
     print(seed; full)
     print("\n")
@@ -64,7 +63,6 @@ end
 function WeaklySeparatedCollections.is_frozen(seed::Seed, i::Int)
     return i <= seed.n_frozen
 end
-
 
 function myProd(array)
     return isempty(array) ? 1 : prod(array)
@@ -117,16 +115,17 @@ end
 
 ################## special seeds ##################
 
-function WeaklySeparatedCollections.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int})
+function WeaklySeparatedCollections.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int}) 
     variable_names::Vector{String} = []
 
+    # TODO make frozen actually depend on the labels
     for f in 1:n
         push!(variable_names, "a$(pmod(f+k-1, n))")
     end
 
     for i in 1:n-k-1
         for j in 1:k-1
-            push!(variable_names, "x$(i)$j")
+            push!(variable_names, "x$i$j")
         end
     end
 

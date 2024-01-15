@@ -14,10 +14,9 @@ export  drawTiling, drawPLG
 export  visualizer!
 
 export  Seed, grid_Seed, extended_rectangle_seed, extended_checkboard_seed,
-        get_superpotential_terms, rectangle_potential_terms,
+        get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
         dihedral_perm_group, cyclic_perm_group, standard_form, get_orbit, get_stabilizer
 
-# TODO only import used functions
 import Graphs: SimpleDiGraph, edges, src, dst, has_edge, add_edge!, rem_edge!, inneighbors, outneighbors, degree
 
 using IterTools
