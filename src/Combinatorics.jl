@@ -672,7 +672,7 @@ true
 ```
 """
 function is_mutable(collection::WSCollection, i::Int) 
-    return !is_frozen(collection, i) && Graphs.degree(collection.quiver, [i])[1] == 4 
+    return !is_frozen(collection, i) && degree(collection.quiver, [i])[1] == 4 
 end
 
 @doc raw"""
@@ -1044,6 +1044,8 @@ function swap_colors!(collection::WSCollection)
     for i = 1:length(labels)
         labels[i] = sort(shift.(labels[i]))
     end
+
+    collection.labels = labels
 
     # take complement of clique keys and shift them
     W2 = Dict()

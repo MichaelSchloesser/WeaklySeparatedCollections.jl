@@ -1,8 +1,7 @@
 module OscarExt
 
 using WeaklySeparatedCollections, Oscar
-import Graphs as MyGraphs
-using Graphs
+import Graphs: SimpleDiGraph, inneighbors, outneighbors, has_edge, add_edge!, rem_edge!
 
 pmod = WeaklySeparatedCollections.pmod
 
@@ -33,6 +32,7 @@ end
 
 Base.getindex(seed::Seed, i::Int) = getindex(seed.variables, i)
 
+Base.getindex(seed::Seed, v::Vector{Int}) = getindex(seed.variables, v)
 
 Base.setindex!(seed::Seed, x::AbstractAlgebra.Generic.Frac{T} where T <: RingElem, i::Int) = setindex!(seed.variables, x, i)
 
@@ -55,8 +55,8 @@ function WeaklySeparatedCollections.mutate!(seed::Seed, i::Int)
 
     Q = seed.quiver
     x = seed.variables
-    N_in = collect(MyGraphs.inneighbors(Q, i))
-    N_out = collect(MyGraphs.outneighbors(Q, i))
+    N_in = collect(inneighbors(Q, i))
+    N_out = collect(outneighbors(Q, i))
 
     new_x_i = (myProd(x[N_in]) + myProd(x[N_out])) / x[i]
     seed.variables[i] = new_x_i
@@ -64,23 +64,23 @@ function WeaklySeparatedCollections.mutate!(seed::Seed, i::Int)
     # mutate quiver
     for j in N_in # add/remove edges according to quiver mutation
         for l in N_out
-            if MyGraphs.has_edge(Q, l, j)
-                MyGraphs.rem_edge!(Q, l, j)
+            if has_edge(Q, l, j)
+                rem_edge!(Q, l, j)
             elseif !is_frozen(seed, j) || !is_frozen(seed, l)
-                MyGraphs.add_edge!(Q, j, l)
+                add_edge!(Q, j, l)
             end
         end
     end
 
     # reverse edges adjacent to i
     for j in N_in
-        MyGraphs.rem_edge!(Q, j, i)
-        MyGraphs.add_edge!(Q, i, j)
+        rem_edge!(Q, j, i)
+        add_edge!(Q, i, j)
     end
 
     for l in N_out
-        MyGraphs.rem_edge!(Q, i, l)
-        MyGraphs.add_edge!(Q, l, i)
+        rem_edge!(Q, i, l)
+        add_edge!(Q, l, i)
     end
 
     seed.quiver = Q
@@ -122,7 +122,7 @@ end
 function WeaklySeparatedCollections.extended_checkboard_seed(k, n)
     check = checkboard_collection(k, n)
     check_seed = grid_Seed(check)
-    T = typeof(check_seed.variables[1])
+    T = typeof(check_seed[1])
     X = Array{T}(undef, n-k+1, k+1)
 
     for i in 0:n-k
@@ -130,11 +130,30 @@ function WeaklySeparatedCollections.extended_checkboard_seed(k, n)
             label = checkboard_label(k, n, i, j)
             pos = findfirst(x -> x == label, check.labels)
 
-            X[i+1, j+1] = check_seed.variables[pos]
+            X[i+1, j+1] = check_seed[pos]
         end
     end
 
     return check_seed, X
+end
+
+
+function WeaklySeparatedCollections.extended_rectangle_seed(k, n)
+    rec = rectangle_collection(k, n)
+    rec_seed = grid_Seed(rec)
+    T = typeof(rec_seed[1])
+    X = Array{T}(undef, n-k+1, k+1)
+
+    for i in 0:n-k
+        for j in 0:k
+            label = rectangle_label(k, n, i, j)
+            pos = findfirst(x -> x == label, rec.labels)
+
+            X[i+1, j+1] = rec_seed[pos]
+        end
+    end
+
+    return rec_seed, X
 end
 
 ################## superpotential ##################
@@ -145,7 +164,7 @@ function WeaklySeparatedCollections.get_superpotential_terms(collection::WSColle
 
     terms::Vector{AbstractAlgebra.Generic.Frac{ZZMPolyRingElem}} = []
     super_labels = super_potential_labels(k, n);
-    denom_index = 1
+    denom_index = 1 # TODO replace with proper frozen_labels
 
     for label in super_labels
         seed = use_grid ? grid_Seed(collection) : Seed(collection)
@@ -165,7 +184,7 @@ function WeaklySeparatedCollections.get_superpotential_terms(collection::WSColle
         denom_index += 1
     end
 
-    return circshift(terms, -k+1)
+    return circshift(terms, + k - 1)
 end
 
 
@@ -173,8 +192,10 @@ function WeaklySeparatedCollections.checkboard_potential_terms(k, n)
     _, X = extended_checkboard_seed(k, n)
     x = (i, j) -> X[i+1, j+1]
 
-    terms = [x(1, k-1)/x(0, k), x(n-k-1, 1)/x(n-k, 0)]
-
+    terms = [x(1, 1) for i in 1:n]
+    terms[Int(floor( k/2 ))] = x(1, k-1)/x(0, k)
+    terms[Int(floor( (n+k)/2 ))] = x(n-k-1, 1)/x(n-k, 0)
+    
     for d in 1-k:n-k-2
 
         (a, b) = d >= 0 ? (d, 0) : (0, -d)
@@ -187,12 +208,16 @@ function WeaklySeparatedCollections.checkboard_potential_terms(k, n)
             (a, b) = (a+1, b+1)
         end
 
-        push!(terms, term)
+        if d % 2 == 0
+            terms[pmod( Int(k + d/2), n)] = term
+        else
+            terms[pmod( Int(n - (d+1)/2), n)] = term
+        end
     end
 
-    # TODO sort terms to have terms = [p_J1, ... , p_Jn]
     return terms
 end
+
 
 ################## Action of cyclic and dihedral group ##################
 

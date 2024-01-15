@@ -1,9 +1,10 @@
 module Gui
 
 using WeaklySeparatedCollections, Mousetrap
+import WeaklySeparatedCollections as WSC
 
 using Luxor
-using Graphs
+import Graphs: outneighbors
 using Scratch
 using JLD2
 using FileIO
@@ -1051,7 +1052,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                     update_embedding_data()
                     update_displays()
                 elseif task == "rotate"
-                    rotate!(G, -data[1])
+                    WSC.rotate!(G, -data[1])
                     update_displays()
                 elseif task == "reflect"
                     reflect!(G)
@@ -1109,7 +1110,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                     update_embedding_data()
                     update_displays()
                 elseif task == "rotate"
-                    rotate!(G, data[1])
+                    WSC.rotate!(G, data[1])
                     update_displays()
                 elseif task == "reflect"
                     reflect!(G)
@@ -1243,7 +1244,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 end
             end
 
-            rotate!(G, 1)
+            WSC.rotate!(G, 1)
             update_displays()
             update_history_strings("rotate", [1])
         
@@ -1266,7 +1267,7 @@ function WeaklySeparatedCollections.visualizer!(collection::WSCollection = recta
                 end
             end
 
-            rotate!(G, -1)
+            WSC.rotate!(G, -1)
             update_displays()
             update_history_strings("rotate", [-1])
         

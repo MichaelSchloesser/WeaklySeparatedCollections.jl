@@ -13,10 +13,13 @@ export  drawTiling, drawPLG
         
 export  visualizer!
 
-export  Seed, grid_Seed, extended_checkboard_seed, get_superpotential_terms, checkboard_potential_terms,
+export  Seed, grid_Seed, extended_rectangle_seed, extended_checkboard_seed,
+        get_superpotential_terms, rectangle_potential_terms,
         dihedral_perm_group, cyclic_perm_group, standard_form, get_orbit, get_stabilizer
 
-using Graphs
+# TODO only import used functions
+import Graphs: SimpleDiGraph, edges, src, dst, has_edge, add_edge!, rem_edge!, inneighbors, outneighbors, degree
+
 using IterTools
 using DataStructures
 
@@ -38,6 +41,10 @@ Inside a Jupyter sheet drawing without saving an image is possible by omitting t
 - `drawLabels::Bool = true`
 - `adjustAngle::Bool = false`
 - `highlightMutables::Bool = true`
+- `labelDirection = "left"`
+
+`labelDirection` controls whether labels the "left" (i.e. the usual ones) or "right" (complements)
+labels are drawn.
 """
 function drawTiling end
 
@@ -85,9 +92,13 @@ function grid_Seed end
 
 function extended_checkboard_seed end
 
+function extended_rectangle_seed end
+
 function get_superpotential_terms end
 
 function checkboard_potential_terms end
+
+function rectangle_potential_terms end
 
 function dihedral_perm_group end
 

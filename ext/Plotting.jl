@@ -2,7 +2,8 @@
 module Plotting
 
 using WeaklySeparatedCollections, Luxor
-using Colors, Graphs
+using Colors
+import Graphs: all_neighbors, outneighbors
 
 pmod = WeaklySeparatedCollections.pmod
 norm = P -> sqrt(P.x^2 + P.y^2)
@@ -904,7 +905,7 @@ function drawPLG_straight(collection::WSCollection, width::Int = 500, height::In
                 dual_vertices = Set()
 
                 for j in N_all
-                    K = intersect(labels[i], labels[j])
+                    K = intersect(labels[i], labels[j])    
                     L = sort(union(labels[i], labels[j]))
                     p_w = sum(tau.(W[K]))/length(W[K])
                     p_b = sum(tau.(B[L]))/length(B[L])
