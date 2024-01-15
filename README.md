@@ -50,7 +50,7 @@ Now load both WeaklySeparatedCollections and Luxor to activate the plotting exte
 
 ```julia
 using WeaklySeparatedCollections
-using Luxor 
+import Luxor 
 ```
 
 #### GUI
@@ -66,8 +66,8 @@ Now loading all of WeaklySeparatedCollections, Luxor and Mousetrap will activate
 
 ```julia
 using WeaklySeparatedCollections
-using Luxor
-using Mousetrap
+import Luxor
+import Mousetrap
 ```
 
 ---
