@@ -10,6 +10,8 @@ norm = P -> sqrt(P.x^2 + P.y^2)
 LPoint = Luxor.Point
 const scale_factor = 2.4
 
+# TODO add support for non maximal wscs
+
 function embedding_data(collection::WSCollection, width::Int, height::Int, adjustAngle::Bool)
     n = collection.n
     k = collection.k

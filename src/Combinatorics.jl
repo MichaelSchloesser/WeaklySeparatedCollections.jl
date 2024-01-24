@@ -95,19 +95,21 @@ function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     return true
 end
 
-# TODO add types
-
-function frozen_label(k, n, i) 
-    sort([pmod(l+i-1, n) for l = 1:k]) 
+# TODO permute, so that frozen_label(k,n,i) = I_i. This may break other methods. F.e. in the oscar extension.
+# the superpotential labels should be permuted accordingly.
+function frozen_label(k::Int, n::Int, i::Int) 
+    return sort([pmod(l+i-1, n) for l = 1:k]) 
 end
 
-function rectangle_label(k, n, i, j)
+# TODO add super_potential_label
+
+function rectangle_label(k::Int, n::Int, i::Int, j::Int)
     L = collect(i+1:i+j)
     R = collect(n-k+j+1:n)
     return union(L, R)
 end
 
-function checkboard_label(k, n, i, j)
+function checkboard_label(k::Int, n::Int, i::Int, j::Int)
     sigma = (x, y) -> pmod(x+y, n)
 
     sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
@@ -116,13 +118,13 @@ function checkboard_label(k, n, i, j)
     return sort(union(L, R))
 end
 
-function dual_rectangle_label(k, n, i, j)
+function dual_rectangle_label(k::Int, n::Int, i::Int, j::Int)
     L = collect(1:i)
     R = collect(i+j+1:k+j)
     return union(L, R)
 end
 
-function dual_checkboard_label(k, n, i, j)
+function dual_checkboard_label(k::Int, n::Int, i::Int, j::Int)
     sigma = (x, y) -> pmod(x+y, n)
 
     sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
@@ -131,6 +133,22 @@ function dual_checkboard_label(k, n, i, j)
     return sort(union(L, R))
 end
 
+function frozen_labels(k::Int, n::Int)
+    return [frozen_label(k, n, i) for i in 1:n]
+end
+
+function super_potential_labels(k::Int, n::Int)
+    labels::Vector{Vector{Int}} = Vector()
+
+    I = push!(collect(2:k), n)
+
+    for i = 0:n-1 
+        S = (x -> pmod(x+i, n)).(I)
+        push!(labels, sort(S))
+    end
+    
+    return labels
+end
 
 @doc raw"""
     rectangle_labels(k::Int, n::Int)
@@ -139,11 +157,9 @@ Return the labels of the rectangle graph as a vector.
 The frozen labels are in positions `1` to `n`.
 """
 function rectangle_labels(k::Int, n::Int)
-    labels = Vector() 
-
-    for i = 1:n # frozen labels
-        push!(labels, frozen_label(k, n, i))
-    end
+    
+    # frozen labels first
+    labels = frozen_labels(k, n)
 
     for i = 1:n-k-1 # mutable labels
         for j = 1:k-1
@@ -161,11 +177,9 @@ Return the labels of the checkboard graph as a vector.
 The frozen labels are in positions `1` to `n`.
 """
 function checkboard_labels(k::Int, n::Int) 
-    labels = Vector() 
 
-    for i = 1:n # frozen labels
-        push!(labels, frozen_label(k, n, i))
-    end
+    # frozen labels first
+    labels = frozen_labels(k, n)
 
     for i = 1:n-k-1 # mutable labels
         for j = 1:k-1
@@ -183,11 +197,9 @@ Return the labels of the dual-rectangle graph as a vector.
 The frozen labels are in positions `1` to `n`.
 """
 function dual_rectangle_labels(k::Int, n::Int) 
-    labels = Vector() 
-
-    for i = 1:n # frozen labels
-        push!(labels, frozen_label(k, n, i))
-    end
+    
+    # frozen labels first
+    labels = frozen_labels(k, n)
 
     for i = 1:k-1 # mutable labels
         for j = 1:n-k-1
@@ -205,11 +217,9 @@ Return the labels of the dual-checkboard graph as a vector.
 The frozen labels are in positions `1` to `n`.
 """
 function dual_checkboard_labels(k::Int, n::Int) 
-    labels =  Vector() 
-
-    for i = 1:n # frozen labels
-        push!(labels, frozen_label(k, n, i))
-    end
+    
+    # frozen labels first
+    labels = frozen_labels(k, n)
 
     for i = 1:k-1 # mutable labels
         for j = 1:n-k-1
@@ -1275,18 +1285,4 @@ function checkboard_rotation_sequence(k::Int, n::Int)
     end
 
     return seq
-end
-
-
-function super_potential_labels(k::Int, n::Int)
-    labels::Vector{Vector{Int}} = Vector()
-
-    I = push!(collect(2:k), n)
-
-    for i = 0:n-1 
-        S = (x -> pmod(x+i, n)).(I)
-        push!(labels, sort(S))
-    end
-    
-    return labels
 end

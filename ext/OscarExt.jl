@@ -4,17 +4,11 @@ using WeaklySeparatedCollections, Oscar
 import Graphs: SimpleDiGraph, inneighbors, outneighbors, has_edge, add_edge!, rem_edge!
 
 pmod = WeaklySeparatedCollections.pmod
+frozen_label = WeaklySeparatedCollections.frozen_label
 
 ################## basic seed functionality ##################
 
-# TODO somehow use this
-# mutable struct WeaklySeparatedCollections.Seed
-#     n_frozen::Int
-#     variables::Vector{AbstractAlgebra.Generic.Frac{T}} where T <: RingElem
-#     quiver::SimpleDiGraph{Int}
-# end
-
-
+# TODO allow for custom printing
 function WeaklySeparatedCollections.Seed(cluster_size::Int, n_frozen::Int, quiver::SimpleDiGraph{Int})
     R, _ = polynomial_ring(ZZ, cluster_size)
     S = fraction_field(R)
@@ -22,7 +16,7 @@ function WeaklySeparatedCollections.Seed(cluster_size::Int, n_frozen::Int, quive
     return Seed(n_frozen, gens(S), deepcopy(quiver))
 end
 
-
+# TODO add version that prints variables with left/right labels
 function WeaklySeparatedCollections.Seed(collection::WSCollection)
     N = length(collection)
 
@@ -115,7 +109,7 @@ end
 
 ################## special seeds ##################
 
-function WeaklySeparatedCollections.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int}) 
+function WeaklySeparatedCollections.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int})
     variable_names::Vector{String} = []
 
     # TODO make frozen actually depend on the labels
@@ -180,22 +174,25 @@ end
 
 ################## superpotential ##################
 
-function WeaklySeparatedCollections.get_superpotential_terms(collection::WSCollection, use_grid = true)
+# TODO allow to pass seed, or custom printing
+function WeaklySeparatedCollections.get_superpotential_terms(collection::WSCollection; use_grid = false)
     k = collection.k
     n = collection.n
 
     terms::Vector{AbstractAlgebra.Generic.Frac{ZZMPolyRingElem}} = []
-    super_labels = super_potential_labels(k, n);
-    denom_index = 1 # TODO replace with proper frozen_labels
+    super_labels = super_potential_labels(k, n)
 
-    for label in super_labels
+    for i in 1:n
+        super = super_labels[i]
+        denom_index = findfirst( x -> x == frozen_label(k, n, i), collection.labels)
+
         seed = use_grid ? grid_Seed(collection) : Seed(collection)
 
-        if label in collection
-            pos = findfirst( x -> x == label, collection.labels)
+        if super in collection
+            pos = findfirst( x -> x == super, collection.labels)
             push!(terms, seed[pos]/seed[denom_index])
         else
-            seq = find_label(collection, label)
+            seq = find_label(collection, super)
             
             for i in seq
                 mutate!(seed, i)
@@ -203,7 +200,6 @@ function WeaklySeparatedCollections.get_superpotential_terms(collection::WSColle
 
             push!(terms, seed[seq[end]]/seed[denom_index])
         end
-        denom_index += 1
     end
 
     return circshift(terms, + k - 1)
@@ -266,12 +262,13 @@ end
 #     return s^v[1]*t^v[2]
 # end
 
+# TODO change so that the permutation is instead used directly on labls -> no need for standard_form
 function Base.:^(collection::WSCollection, x::PermGroupElem) # works for D_n and C_n defined via above functions
     D, _ = dihedral_perm_group( collection.n)
     v = standard_form(D, x)
 
-    res = rotate_collection(collection, v[1])
-    return v[2] == 0 ? res : reflect_collection!(res)
+    res = rotate(collection, v[1])
+    return v[2] == 0 ? res : reflect!(res)
 end
 
 function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = false) # standard action for gset on WSCollections
@@ -279,11 +276,17 @@ function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = fa
 end
 
 function WeaklySeparatedCollections.get_orbit(collection::WSCollection) # orbits without oscar
-    refl = reflect_collection(collection)
-    orb = Set([collection, refl])
+    orb = Set([collection])
 
     for i in 1:collection.n-1
-        push!(orb, rotate_collection(collection, i), rotate_collection(refl, i))
+        push!(orb, rotate(collection, i))
+    end
+
+    refl = reflect(collection)
+    push!(orb, refl)
+
+    for i in 1:collection.n-1
+        push!(orb, rotate(refl, i))
     end
 
     return collect(orb)

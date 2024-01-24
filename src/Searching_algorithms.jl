@@ -291,6 +291,7 @@ function find_label(root::WSCollection, label::Vector{Int}; heuristic::HEURISTIC
     seq = Astar(root, extend_to_collection([label], root); heuristic = heuristic, limitSearchSpace = limitSearchSpace)
     temp = WSCollection(root, computeCliques = false)
 
+    # only return the subsequence to the first wsc containing label.
     count = 0
     for i in seq
         mutate!(temp, i)
