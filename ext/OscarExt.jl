@@ -237,6 +237,69 @@ function WeaklySeparatedCollections.checkboard_potential_terms(k, n)
 end
 
 
+################## newton okounkov bodies ##################
+
+
+function newton_okounkov_inequalities(collection::WSCollection, q_term_index::Int = collection.k, r::Int = 1)
+    k, n = collection.k, collection.n
+    T = get_superpotential_terms(collection; use_grid = false)
+    empty_index = findfirst( x -> x == WSC.frozen_label(k, n, n-k+1), collection.labels)
+
+    A::Vector{Vector{Int}} = []
+    b::Vector{Int} = []
+
+    for i in 1:n
+        numer, denom = numerator(T[i]), denominator(T[i])
+        denom_exp = deleteat!(exponent_vector(denom, 1), empty_index)
+        for t in terms(numer)
+
+            # add row to A
+            t_exp = deleteat!(exponent_vector(t, 1), empty_index)
+            exponent_vec = denom_exp - t_exp
+            push!(A, exponent_vec)
+
+            # add entry to b
+            i == q_term_index ? push!(b, r) : push!(b, 0)
+        end
+    end
+
+    return Matrix(reduce(hcat, A)'), b
+end
+
+# return the inequalities of the newton okounkov body associated to the checkboard graph
+function checkboard_inequalities(k::Int, n::Int, q_term_index::Int = k, r::Int = 1)
+    T = checkboard_potential_terms(k, n)
+    empty_index = n-k+1
+    A::Vector{Vector{Int}} = []
+    b::Vector{Int} = []
+
+    for i in 1:n
+        numer, denom = numerator(T[i]), denominator(T[i])
+        denom_exp = deleteat!(exponent_vector(denom, 1), empty_index)
+        for t in terms(numer)
+
+            # add row to A
+            t_exp = deleteat!(exponent_vector(t, 1), empty_index)
+            exponent_vec = denom_exp - t_exp
+            push!(A, exponent_vec)
+
+            # add entry to b
+            i == q_term_index ? push!(b, r) : push!(b, 0)
+        end
+    end
+
+    return Matrix(reduce(hcat, A)'), b
+end
+
+function checkboard_body(k::Int, n::Int, q_term_index::Int = k)
+    return polyhedron(checkboard_inequalities(k, n, q_term_index))
+end
+
+function newton_okounkov_body(collection::WSCollection, q_term_index::Int = collection.k)
+    return polyhedron(newton_okounkov_inequalities(collection::WSCollection, q_term_index))
+end
+
+
 ################## Action of cyclic and dihedral group ##################
 
 function WeaklySeparatedCollections.dihedral_perm_group(n::Int) # D_n as specific permutation group

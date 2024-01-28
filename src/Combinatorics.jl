@@ -517,16 +517,6 @@ function WSCollection(collection::WSCollection; computeCliques::Bool = true)
     end
 end
 
-# @doc raw"""
-#     isequal(collection1::WSCollection, collection2::WSCollection)
-
-# Return true if the vertices of `collection1` and `collection2` share the same labels.
-# The order of labels in each collection does not matter.
-# """
-# function Base.isequal(collection1::WSCollection, collection2::WSCollection) 
-#     return issetequal(collection1.labels, collection2.labels)
-# end
-
 @doc raw"""
     (==)(collection1::WSCollection, collection2::WSCollection)
 
@@ -1207,7 +1197,7 @@ julia> extend_weakly_separated!(labels, H)
 ```
 """
 function extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)
-    return extend_weakly_separated!(collection.k, collection.n, labels, deepcopy(collection.labels))
+    return extend_weakly_separated!(collection.k, collection.n, labels, collection.labels)
 end
 
 @doc raw"""
