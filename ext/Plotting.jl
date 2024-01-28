@@ -36,7 +36,7 @@ function embedding_data(collection::WSCollection, width::Int, height::Int, adjus
     return n, k, labels, W, B, r, s, reference_polygon, tau
 end
 
-function WeaklySeparatedCollections.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
+function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
@@ -556,7 +556,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
 end
 
 
-function WeaklySeparatedCollections.drawPLG(collection::WSCollection, title::String, width::Int = 500, height::Int = 500;
+function WSC.drawPLG(collection::WSCollection, title::String, width::Int = 500, height::Int = 500;
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     adjustAngle::Bool = false, highlightMutables::Bool = false, labelDirection = "left")
 
@@ -586,7 +586,7 @@ end
 ########################################################################
 
 
-function WeaklySeparatedCollections.drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500; 
+function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500; 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, adjustAngle::Bool = false, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
@@ -1101,7 +1101,7 @@ function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int 
     end width height
 end
 
-function WeaklySeparatedCollections.drawPLG(collection::WSCollection, width::Int = 500, height::Int = 500;
+function WSC.drawPLG(collection::WSCollection, width::Int = 500, height::Int = 500;
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     adjustAngle::Bool = false, highlightMutables::Bool = false, labelDirection = "left")
 

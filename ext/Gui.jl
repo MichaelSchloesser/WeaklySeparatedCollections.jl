@@ -16,7 +16,7 @@ function temporary_set_transient_for!(self::Window, other::Window)
     Mousetrap.detail.set_transient_for!(self._internal, other._internal)
 end
 
-function WeaklySeparatedCollections.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
+function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
     scale_factor = 2.4
     LPoint = Luxor.Point
     norm = P -> sqrt(P.x^2 + P.y^2)

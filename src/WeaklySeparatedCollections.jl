@@ -15,7 +15,8 @@ export  visualizer!
 
 export  Seed, grid_Seed, extended_rectangle_seed, extended_checkboard_seed,
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
-        dihedral_perm_group, cyclic_perm_group, standard_form, get_orbit, get_stabilizer
+        dihedral_perm_group, cyclic_perm_group, standard_form, get_orbit, get_stabilizer,
+        newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
 
 import Graphs: SimpleDiGraph, edges, src, dst, has_edge, add_edge!, rem_edge!, inneighbors, outneighbors, degree
 
@@ -78,8 +79,7 @@ Start the graphical user interface to visualize the provided `collection`.
 """
 function visualizer! end
 
-# TODO somehow restrict type of variables
-mutable struct Seed 
+mutable struct Seed
     n_frozen::Int
     variables
     quiver::SimpleDiGraph{Int}
@@ -98,6 +98,14 @@ function get_superpotential_terms end
 function checkboard_potential_terms end
 
 function rectangle_potential_terms end
+
+function newton_okounkov_inequalities end
+
+function checkboard_inequalities end
+
+function newton_okounkov_body end
+
+function checkboard_body end
 
 function dihedral_perm_group end
 

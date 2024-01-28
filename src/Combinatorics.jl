@@ -231,13 +231,14 @@ function dual_checkboard_labels(k::Int, n::Int)
 end
 
 @doc raw"""
-    compute_cliques(k::Int, labels::Vector{Vector{Int}})
+    compute_cliques(labels::Vector{Vector{Int}})
 
 Return the non trivial black and white cliques of the weakly separated collection 
 whose elements are given by `labels`.
 """
-function compute_cliques(k::Int, labels::Vector{Vector{Int}}) # TODO parameter k is unnessesary
+function compute_cliques(labels::Vector{Vector{Int}})
     N = length(labels)
+    k = length(labels[1])
     W = Dict()
     B = Dict()
 
@@ -344,7 +345,7 @@ with elements given by `labels`.
 """
 function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}}) 
     N = length(labels)
-    W, B = compute_cliques(k, labels)
+    W, B = compute_cliques(labels)
     labelPos = Dict(labels[i] => i for i = 1:N) # memorize positions of labels
 
     Q = SimpleDiGraph(N, 0)

@@ -2,14 +2,15 @@ module OscarExt
 
 using WeaklySeparatedCollections, Oscar
 import Graphs: SimpleDiGraph, inneighbors, outneighbors, has_edge, add_edge!, rem_edge!
+import WeaklySeparatedCollections as WSC
 
-pmod = WeaklySeparatedCollections.pmod
-frozen_label = WeaklySeparatedCollections.frozen_label
+pmod = WSC.pmod
+frozen_label = WSC.frozen_label
 
 ################## basic seed functionality ##################
 
 # TODO allow for custom printing
-function WeaklySeparatedCollections.Seed(cluster_size::Int, n_frozen::Int, quiver::SimpleDiGraph{Int})
+function WSC.Seed(cluster_size::Int, n_frozen::Int, quiver::SimpleDiGraph{Int})
     R, _ = polynomial_ring(ZZ, cluster_size)
     S = fraction_field(R)
 
@@ -17,7 +18,7 @@ function WeaklySeparatedCollections.Seed(cluster_size::Int, n_frozen::Int, quive
 end
 
 # TODO add version that prints variables with left/right labels
-function WeaklySeparatedCollections.Seed(collection::WSCollection)
+function WSC.Seed(collection::WSCollection)
     N = length(collection)
 
     return Seed(N, deepcopy(collection.n), deepcopy(collection.quiver))
@@ -54,7 +55,7 @@ function Base.println(seed::Seed; full::Bool = false)
     print("\n")
 end
 
-function WeaklySeparatedCollections.is_frozen(seed::Seed, i::Int)
+function WSC.is_frozen(seed::Seed, i::Int)
     return i <= seed.n_frozen
 end
 
@@ -62,7 +63,7 @@ function myProd(array)
     return isempty(array) ? 1 : prod(array)
 end
 
-function WeaklySeparatedCollections.mutate!(seed::Seed, i::Int)
+function WSC.mutate!(seed::Seed, i::Int)
 
     if is_frozen(seed, i)
         error("Trying to mutate the frozen variable $(seed.variables[i]).")
@@ -103,13 +104,13 @@ function WeaklySeparatedCollections.mutate!(seed::Seed, i::Int)
     return seed
 end
 
-function WeaklySeparatedCollections.mutate(seed::Seed, i::Int)
+function WSC.mutate(seed::Seed, i::Int)
     return mutate!(deepcopy(seed), i)
 end
 
 ################## special seeds ##################
 
-function WeaklySeparatedCollections.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int})
+function WSC.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int})
     variable_names::Vector{String} = []
 
     # TODO make frozen actually depend on the labels
@@ -130,12 +131,12 @@ function WeaklySeparatedCollections.grid_Seed(k::Int, n::Int, quiver::SimpleDiGr
 end
 
 
-function WeaklySeparatedCollections.grid_Seed(collection::WSCollection)
+function WSC.grid_Seed(collection::WSCollection)
     grid_Seed(collection.k, collection.n, deepcopy(collection.quiver))
 end
 
 
-function WeaklySeparatedCollections.extended_checkboard_seed(k, n)
+function WSC.extended_checkboard_seed(k, n)
     check = checkboard_collection(k, n)
     check_seed = grid_Seed(check)
     T = typeof(check_seed[1])
@@ -154,7 +155,7 @@ function WeaklySeparatedCollections.extended_checkboard_seed(k, n)
 end
 
 
-function WeaklySeparatedCollections.extended_rectangle_seed(k, n)
+function WSC.extended_rectangle_seed(k, n)
     rec = rectangle_collection(k, n)
     rec_seed = grid_Seed(rec)
     T = typeof(rec_seed[1])
@@ -175,7 +176,7 @@ end
 ################## superpotential ##################
 
 # TODO allow to pass seed, or custom printing
-function WeaklySeparatedCollections.get_superpotential_terms(collection::WSCollection; use_grid = false)
+function WSC.get_superpotential_terms(collection::WSCollection; use_grid = false)
     k = collection.k
     n = collection.n
 
@@ -206,7 +207,7 @@ function WeaklySeparatedCollections.get_superpotential_terms(collection::WSColle
 end
 
 
-function WeaklySeparatedCollections.checkboard_potential_terms(k, n)
+function WSC.checkboard_potential_terms(k, n)
     _, X = extended_checkboard_seed(k, n)
     x = (i, j) -> X[i+1, j+1]
 
@@ -240,7 +241,7 @@ end
 ################## newton okounkov bodies ##################
 
 
-function newton_okounkov_inequalities(collection::WSCollection, q_term_index::Int = collection.k, r::Int = 1)
+function WSC.newton_okounkov_inequalities(collection::WSCollection, r::Int = 1; q_term_index::Int = collection.k)
     k, n = collection.k, collection.n
     T = get_superpotential_terms(collection; use_grid = false)
     empty_index = findfirst( x -> x == WSC.frozen_label(k, n, n-k+1), collection.labels)
@@ -267,7 +268,7 @@ function newton_okounkov_inequalities(collection::WSCollection, q_term_index::In
 end
 
 # return the inequalities of the newton okounkov body associated to the checkboard graph
-function checkboard_inequalities(k::Int, n::Int, q_term_index::Int = k, r::Int = 1)
+function WSC.checkboard_inequalities(k::Int, n::Int, r::Int = 1; q_term_index::Int = k)
     T = checkboard_potential_terms(k, n)
     empty_index = n-k+1
     A::Vector{Vector{Int}} = []
@@ -291,26 +292,26 @@ function checkboard_inequalities(k::Int, n::Int, q_term_index::Int = k, r::Int =
     return Matrix(reduce(hcat, A)'), b
 end
 
-function checkboard_body(k::Int, n::Int, q_term_index::Int = k)
-    return polyhedron(checkboard_inequalities(k, n, q_term_index))
+function WSC.checkboard_body(k::Int, n::Int; q_term_index::Int = k)
+    return polyhedron(checkboard_inequalities(k, n; q_term_index = q_term_index))
 end
 
-function newton_okounkov_body(collection::WSCollection, q_term_index::Int = collection.k)
-    return polyhedron(newton_okounkov_inequalities(collection::WSCollection, q_term_index))
+function WSC.newton_okounkov_body(collection::WSCollection; q_term_index::Int = collection.k)
+    return polyhedron(newton_okounkov_inequalities(collection::WSCollection; q_term_index = q_term_index))
 end
 
 
 ################## Action of cyclic and dihedral group ##################
 
-function WeaklySeparatedCollections.dihedral_perm_group(n::Int) # D_n as specific permutation group
+function WSC.dihedral_perm_group(n::Int) # D_n as specific permutation group
     return sub(cperm(collect(1:n)), perm([pmod(n+2-i, n) for i in 1:n]))
 end
 
-function WeaklySeparatedCollections.cyclic_perm_group(n::Int) # C_n as specific permutation group
+function WSC.cyclic_perm_group(n::Int) # C_n as specific permutation group
     return sub(cperm(collect(1:n)))
 end
 
-function WeaklySeparatedCollections.standard_form(D::PermGroup, x::PermGroupElem) # return vector v with x = s^v[1]*t^v[2]
+function WSC.standard_form(D::PermGroup, x::PermGroupElem) # return vector v with x = s^v[1]*t^v[2]
     s = gens(D)[1]
 
     m = 1^x - 1
@@ -338,7 +339,7 @@ function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = fa
     return gset(D, (G, x) -> G^x , seeds; closed = closed)
 end
 
-function WeaklySeparatedCollections.get_orbit(collection::WSCollection) # orbits without oscar
+function WSC.get_orbit(collection::WSCollection) # orbits without oscar
     orb = Set([collection])
 
     for i in 1:collection.n-1
@@ -359,7 +360,7 @@ function Oscar.stabilizer(D::PermGroup, collection::WSCollection)
     return stabilizer(D, collection, ^)
 end
 
-function WeaklySeparatedCollections.get_stabilizer(collection::WSCollection)
+function WSC.get_stabilizer(collection::WSCollection)
     k, n = collection.k, collection.n
     D, _ = dihedral_perm_group(n)
 
