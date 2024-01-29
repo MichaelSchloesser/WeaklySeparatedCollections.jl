@@ -72,7 +72,7 @@ using Test
         "compute_cliques from labels"
 
         labels = checkboard_labels(4, 9)
-        WeaklySeparatedCollections.compute_cliques(4, labels)
+        WeaklySeparatedCollections.compute_cliques(labels)
         true
     end
 
@@ -93,7 +93,7 @@ using Test
         labels = check.labels
         quiver = check.quiver
         W, B = WeaklySeparatedCollections.compute_cliques(labels, quiver)
-        W2, B2 = WeaklySeparatedCollections.compute_cliques(4, labels)
+        W2, B2 = WeaklySeparatedCollections.compute_cliques(labels)
 
         (W == W2) && (B == B2) 
     end
