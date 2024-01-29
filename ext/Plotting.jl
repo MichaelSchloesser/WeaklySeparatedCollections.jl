@@ -4,6 +4,7 @@ module Plotting
 using WeaklySeparatedCollections, Luxor
 using Colors
 import Graphs: all_neighbors, outneighbors
+import WeaklySeparatedCollections as WSC
 
 pmod = WeaklySeparatedCollections.pmod
 norm = P -> sqrt(P.x^2 + P.y^2)
