@@ -12,7 +12,7 @@ using FileIO
 bin_path = ""
 
 # TODO exchange this with set_transient_for! as soon as a Moustrap is updated
-function temporary_set_transient_for!(self::Window, other::Window) 
+function temporary_set_transient_for!(self::Window, other::Window)
     Mousetrap.detail.set_transient_for!(self._internal, other._internal)
 end
 
@@ -34,7 +34,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         draw_vertex_labels = true
         draw_face_labels = true
         highlight_mutables = false
-        adjust_angle = true
+        top_label = nothing
         label_direction = "left"
 
         # theme and colors
@@ -52,7 +52,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
 
             try 
                 D = FileIO.load(bin_path * "config.jld2")
-            catch e
+            catch 
                 # if no config file exists, create one
                 D = Dict(
                 "size" => size,
@@ -61,7 +61,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                 "draw_vertex_labels" => draw_vertex_labels,
                 "draw_face_labels" => draw_face_labels,
                 "highlight_mutables" => highlight_mutables,
-                "adjust_angle" => adjust_angle,
+                "top_label" => top_label,
                 "label_direction" => label_direction,
                 "theme" => theme
                 )
@@ -73,13 +73,13 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             plg_drawmode = D["plg_drawmode"]
             draw_vertex_labels = D["draw_vertex_labels"]
             draw_face_labels = D["draw_face_labels"]
-            adjust_angle = D["adjust_angle"]
             theme = D["theme"]
 
             try
+                top_label = D["top_label"]
                 highlight_mutables = D["highlight_mutables"]
                 label_direction = D["label_direction"]
-            catch e
+            catch 
             end
             
             if theme == "dark"
@@ -94,15 +94,15 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         reference_polygon = []
         reference_radius = 1
         scale = resolution/(scale_factor * reference_radius)
-        tau = i -> scale*sum( reference_polygon[G.labels[i]] )
+        tau = i -> scale*sum( reference_polygon[G[i]] )
 
         function update_embedding_data()
             reference_polygon = [LPoint( sin(i*2*pi/G.n), -cos(i*2*pi/G.n) ) for i = 0:G.n-1 ]
             reference_radius = norm(sum(reference_polygon[1:G.k]))
             scale = resolution/(scale_factor * reference_radius)
 
-            if adjust_angle
-                angle = acos( -sum(reference_polygon[1:G.k]).y/norm(sum(reference_polygon[1:G.k])) ) - (G.k-1)*2*pi/G.n
+            if !isnothing(top_label)
+                angle = acos( -sum(reference_polygon[1:G.k]).y/norm(sum(reference_polygon[1:G.k])) ) - (G.k-top_label+0.5)*2*pi/G.n
                 reference_polygon = [LPoint( sin(i*2*pi/G.n - angle), -cos(i*2*pi/G.n - angle) ) for i = 0:G.n-1 ]
             end
         end
@@ -160,13 +160,13 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         set_expand!(image_display_right, true)
         
         function update_displays()
-            drawTiling(G, bin_path*"display.png", resolution, resolution, 
-            backgroundColor = "lightblue4", drawLabels = draw_vertex_labels, adjustAngle = adjust_angle, 
+            drawTiling(G, bin_path*"display.png", resolution, resolution, top_label,
+            backgroundColor = "lightblue4", drawLabels = draw_vertex_labels, 
             labelDirection = label_direction)
 
-            drawPLG(G, bin_path*"display2.png", resolution, resolution, 
+            drawPLG(G, bin_path*"display2.png", resolution, resolution, top_label,
             drawmode = plg_drawmode, backgroundColor = "lightblue4", drawLabels = draw_face_labels, 
-            adjustAngle = adjust_angle, highlightMutables = highlight_mutables, labelDirection = label_direction)
+            highlightMutables = highlight_mutables, labelDirection = label_direction)
 
             create_from_file!(image_display_left, bin_path * "display.png")
             create_from_file!(image_display_right, bin_path * "display2.png")
@@ -233,16 +233,25 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         set_child!(export_background_entry_clamp, export_background_entry)
         set_margin_top!(export_background_entry_clamp, 5)
 
-        export_adjust_angle_label = Label("Adjust drawing angle:")
-        set_size_request!(export_adjust_angle_label, Vector2f(170, 0))
+        export_top_label_label = Label("Adjust top label:")
+        set_size_request!(export_top_label_label, Vector2f(170, 0))
 
-        export_adjust_angle_check = CheckButton() # TODO could use a tooltip
-        if adjust_angle
-            set_state!(export_adjust_angle_check, CHECK_BUTTON_STATE_ACTIVE)
+        export_top_label_check = CheckButton() 
+        if isnothing(top_label)
+            set_state!(export_top_label_check, CHECK_BUTTON_STATE_INACTIVE)
         else
-            set_state!(export_adjust_angle_check, CHECK_BUTTON_STATE_INACTIVE)
+            set_state!(export_top_label_check, CHECK_BUTTON_STATE_ACTIVE)
         end
-        set_margin_vertical!(export_adjust_angle_check, 5)
+        set_margin_top!(export_top_label_check, 5)
+
+        export_top_label_scale = Scale(0, G.n, 0.1)
+        set_orientation!(export_top_label_scale, ORIENTATION_HORIZONTAL)
+        set_should_draw_value!(export_top_label_scale, true)
+        set_size_request!(export_top_label_scale, Vector2f(320, 0))
+        if !isnothing(top_label)
+            set_value!(export_top_label_scale, top_label)
+        end
+        set_can_respond_to_input!(export_top_label_scale, get_is_active(export_top_label_check))
 
         export_draw_labels_label = Label("Draw labels:")
         set_size_request!(export_draw_labels_label, Vector2f(170, 0))
@@ -253,7 +262,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         else
             set_state!(export_draw_labels_check, CHECK_BUTTON_STATE_INACTIVE)
         end
-        set_margin_vertical!(export_draw_labels_check, 5)
+        set_margin_top!(export_draw_labels_check, 5)
 
         export_ok_button = Button()
         set_child!(export_ok_button, Label("Ok"))
@@ -273,8 +282,9 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             hbox(export_figure_label, export_figure_dropdown),
             hbox(export_resolution_label, export_width_entry_clamp, export_height_entry_clamp),
             hbox(export_background_label, export_background_entry_clamp),
-            hbox(export_adjust_angle_label, export_adjust_angle_check),
             hbox(export_draw_labels_label, export_draw_labels_check),
+            hbox(export_top_label_label, export_top_label_check),
+            hbox(export_top_label_scale),
             export_buttons
         )
         set_margin!(export_window_content, 10)
@@ -367,8 +377,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         highlight_mutables_label = Label("Highlight mutable faces:")
         set_size_request!(highlight_mutables_label, Vector2f(190, 0))
 
-        adjust_angle_label = Label("Adjust drawing angle:")
-        set_size_request!(adjust_angle_label, Vector2f(190, 0))
+        top_label_label = Label("Adjust top label:")
+        set_size_request!(top_label_label, Vector2f(190, 0))
 
         theme_label = Label("Theme:")
         set_size_request!(theme_label, Vector2f(190, 0))
@@ -435,19 +445,28 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         end
         set_margin_top!(highlight_mutables_check, 5)
 
-        adjust_angle_check = CheckButton()
-        if adjust_angle
-            set_state!(adjust_angle_check, CHECK_BUTTON_STATE_ACTIVE)
+        top_label_check = CheckButton() 
+        if isnothing(top_label)
+            set_state!(top_label_check, CHECK_BUTTON_STATE_INACTIVE)
         else
-            set_state!(adjust_angle_check, CHECK_BUTTON_STATE_INACTIVE)
+            set_state!(top_label_check, CHECK_BUTTON_STATE_ACTIVE)
         end
-        set_margin_vertical!(adjust_angle_check, 5)
+        set_margin_vertical!(top_label_check, 5)
+
+        top_label_scale = Scale(0, G.n, 0.1)
+        set_orientation!(top_label_scale, ORIENTATION_HORIZONTAL)
+        set_should_draw_value!(top_label_scale, true)
+        set_size_request!(top_label_scale, Vector2f(320, 0))
+        if !isnothing(top_label)
+            set_value!(top_label_scale, top_label)
+        end
+        set_can_respond_to_input!(top_label_scale, get_is_active(top_label_check))
         
         theme_dropdown = DropDown()
         theme_dropdown_item_1 = push_back!(theme_dropdown, "Darkmode")
         theme_dropdown_item_2 = push_back!(theme_dropdown, "Lightmode")
         set_size_request!(theme_dropdown, Vector2f(110, 0))
-        set_margin_top!(theme_dropdown, 5)
+        set_margin_top!(theme_dropdown, 10)
         if theme == "dark"
             set_selected!(theme_dropdown, theme_dropdown_item_1)
         else
@@ -480,7 +499,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             hbox(draw_vertex_labels_label, draw_vertex_labels_check),
             hbox(draw_face_labels_label, draw_face_labels_check),
             hbox(highlight_mutables_label, highlight_mutables_check),
-            hbox(adjust_angle_label, adjust_angle_check),
+            hbox(top_label_label, top_label_check),
+            hbox(top_label_scale),
             hline(2),
             hbox(theme_label, theme_dropdown),
             # TODO color stuffi
@@ -966,19 +986,25 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                 chosen_path = get_path(files[1])
                 
                 # TODO more export_check 
-                w, h = parse(Int64, get_text(export_width_entry)) , parse(Int64, get_text(export_height_entry))
-                export_adjust_angle = get_is_active(export_adjust_angle_check)
+                w, h = parse(Int64, get_text(export_width_entry)), parse(Int64, get_text(export_height_entry))
+
+                if get_is_active(export_top_label_check)
+                    export_top_label = get_value(export_top_label_scale)
+                else
+                    export_top_label = nothing
+                end
+        
                 export_draw_labels = get_is_active(export_draw_labels_check)
                 export_background_color = get_text(export_background_entry)
 
                 if get_selected(export_figure_dropdown) == figure_dropdown_item_1
-                    drawTiling(G, chosen_path, w, h, backgroundColor = export_background_color, 
-                                adjustAngle = export_adjust_angle, highlightMutables = false, drawLabels = export_draw_labels,
+                    drawTiling(G, chosen_path, w, h, export_top_label, backgroundColor = export_background_color, 
+                                highlightMutables = false, drawLabels = export_draw_labels,
                                 labelDirection = label_direction)
                 else
                     # TODO more export_check 
-                    drawPLG(G, chosen_path, w, h, backgroundColor = export_background_color, drawmode = plg_drawmode,
-                                adjustAngle = export_adjust_angle, drawLabels = export_draw_labels, 
+                    drawPLG(G, chosen_path, w, h, export_top_label, backgroundColor = export_background_color, 
+                                drawmode = plg_drawmode, drawLabels = export_draw_labels, 
                                 highlightMutables = false, labelDirection = label_direction)
                 end
 
@@ -1023,6 +1049,11 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             return nothing
         end
 
+
+        connect_signal_toggled!(export_top_label_check) do self::CheckButton
+            set_can_respond_to_input!(export_top_label_scale, get_is_active(export_top_label_check))
+            return nothing
+        end
 
         exit = Action("exit.action", app) do x
             # emits close request for main window which is handeled further below
@@ -1484,7 +1515,12 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             draw_vertex_labels = get_is_active(draw_vertex_labels_check)
             draw_face_labels = get_is_active(draw_face_labels_check)
             highlight_mutables = get_is_active(highlight_mutables_check)
-            adjust_angle = get_is_active(adjust_angle_check)
+
+            if get_is_active(top_label_check)
+                top_label = get_value(top_label_scale)
+            else
+                top_label = nothing
+            end
             
             theme_dropdown_item = get_selected(theme_dropdown)
             
@@ -1504,7 +1540,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                 "draw_vertex_labels" => draw_vertex_labels,
                 "draw_face_labels" => draw_face_labels,
                 "highlight_mutables" => highlight_mutables,
-                "adjust_angle" => adjust_angle,
+                "top_label" => top_label,
                 "theme" => theme
             )
             FileIO.save(bin_path * "config.jld2", D)
@@ -1547,6 +1583,11 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             catch e
                 set_text!(display_resolution_entry, "$fallback_resolution")
             end
+            return nothing
+        end
+
+        connect_signal_toggled!(top_label_check) do self::CheckButton
+            set_can_respond_to_input!(top_label_scale, get_is_active(top_label_check))
             return nothing
         end
 

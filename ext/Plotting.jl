@@ -13,7 +13,7 @@ const scale_factor = 2.4
 
 # TODO add support for non maximal wscs
 
-function embedding_data(collection::WSCollection, width::Int, height::Int, adjustAngle::Bool)
+function embedding_data(collection::WSCollection, width::Int, height::Int, topLabel = nothing)
     n = collection.n
     k = collection.k
     labels = collection.labels
@@ -28,24 +28,23 @@ function embedding_data(collection::WSCollection, width::Int, height::Int, adjus
     r = norm(sum(reference_polygon[1:k]))
     s = min(width, height)/(scale_factor*r) 
 
-    angle = 0
-    if adjustAngle
-        angle = acos( -sum(reference_polygon[1:k]).y/norm(sum(reference_polygon[1:k])) ) - (k-1)*2*pi/n
-        reference_polygon = [LPoint( sin(i*2*pi/n - angle), -cos(i*2*pi/n - angle) ) for i = 0:n-1 ]
+    if !isnothing(topLabel)
+        new_angle = acos( -sum(reference_polygon[1:k]).y/norm(sum(reference_polygon[1:k])) ) - (k-topLabel+0.5)*2*pi/n
+        reference_polygon = [LPoint( sin(i*2*pi/n - new_angle), -cos(i*2*pi/n - new_angle) ) for i = 0:n-1 ]
     end
 
     return n, k, labels, W, B, r, s, reference_polygon, tau
 end
 
-function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, adjustAngle::Bool = false, 
+function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing; 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
     if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
 
     Drawing(width, height, title)
         origin()
@@ -120,15 +119,15 @@ function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 50
 end
 
 
-function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
+function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing; 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     labelDirection = "left")
 
     if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
 
     Drawing(width, height, title)
         origin()
@@ -245,15 +244,15 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
 end
 
 
-function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
+function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing; 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
     if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
     
     Drawing(width, height, title)
         origin()
@@ -408,15 +407,15 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
 end
 
 
-function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, adjustAngle::Bool = false, 
+function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing; 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     labelDirection = "left") 
 
     if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
     
     Drawing(width, height, title)
         origin()
@@ -557,23 +556,22 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
 end
 
 
-function WSC.drawPLG(collection::WSCollection, title::String, width::Int = 500, height::Int = 500;
+function WSC.drawPLG(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing;
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
-    adjustAngle::Bool = false, highlightMutables::Bool = false, labelDirection = "left")
+    highlightMutables::Bool = false, labelDirection = "left")
 
     if drawmode == "straight"
 
-        drawPLG_straight(collection, title, width, height; backgroundColor, drawLabels, adjustAngle, 
+        drawPLG_straight(collection, title, width, height, topLabel; backgroundColor, drawLabels,
         highlightMutables, labelDirection)
 
     elseif drawmode == "smooth"
 
-        drawPLG_smooth(collection, title, width, height; backgroundColor, drawLabels, adjustAngle, labelDirection = "left")
+        drawPLG_smooth(collection, title, width, height, topLabel; backgroundColor, drawLabels, labelDirection = "left")
 
     elseif drawmode == "polygonal"
 
-        drawPLG_poly(collection, title, width, height; backgroundColor, drawLabels, adjustAngle, 
-        labelDirection = "left")
+        drawPLG_poly(collection, title, width, height, topLabel; backgroundColor, drawLabels, labelDirection = "left")
 
     else 
         error("invalid drawmode: $drawmode")
@@ -587,15 +585,15 @@ end
 ########################################################################
 
 
-function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, adjustAngle::Bool = false, 
+function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing; 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
     if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
 
     @draw begin
         origin()
@@ -669,15 +667,15 @@ function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int 
 end
 
 
-function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
+function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing; 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") 
 
     if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
 
     @draw begin
         origin()
@@ -791,15 +789,15 @@ function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 
 end
 
 
-function drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
+function drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing; 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
     if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
     
     @draw begin
         origin()
@@ -954,15 +952,15 @@ function drawPLG_straight(collection::WSCollection, width::Int = 500, height::In
 end
 
 
-function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500; 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, adjustAngle::Bool = false, 
+function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing; 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") 
 
     if cliques_missing(collection)
         error("cliques needed for drawing are missing!")
     end
 
-    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, adjustAngle)
+    n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
     
     @draw begin
         origin()
@@ -1102,22 +1100,22 @@ function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int 
     end width height
 end
 
-function WSC.drawPLG(collection::WSCollection, width::Int = 500, height::Int = 500;
+function WSC.drawPLG(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing;
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
-    adjustAngle::Bool = false, highlightMutables::Bool = false, labelDirection = "left")
+    highlightMutables::Bool = false, labelDirection = "left")
 
     if drawmode == "straight"
 
-        drawPLG_straight(collection, width, height; backgroundColor, drawLabels, adjustAngle, 
+        drawPLG_straight(collection, width, height, topLabel; backgroundColor, drawLabels, 
         highlightMutables, labelDirection)
 
     elseif drawmode == "smooth"
 
-        drawPLG_smooth(collection, width, height; backgroundColor, drawLabels, adjustAngle, labelDirection = "left")
+        drawPLG_smooth(collection, width, height, topLabel; backgroundColor, drawLabels, labelDirection = "left")
 
     elseif drawmode == "polygonal"
 
-        drawPLG_poly(collection, width, height; backgroundColor, drawLabels, adjustAngle, 
+        drawPLG_poly(collection, width, height, topLabel; backgroundColor, drawLabels, 
         labelDirection = "left")
 
     else 
