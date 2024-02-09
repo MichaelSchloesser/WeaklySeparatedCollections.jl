@@ -954,7 +954,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
 
 
         open_export_window = Action("open_export_window.action", app) do x
-            set_upper!(export_top_label_check, G.n)
+            set_upper!(export_top_label_scale, G.n)
             present!(export_window)
 
             return nothing
@@ -1475,7 +1475,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         ############## settings ##############
 
         open_settings_window = Action("open_settings_window.action", app) do x
-            set_upper!(top_label_check, G.n)
+            set_upper!(top_label_scale, G.n)
             present!(settings_window)
 
             return nothing
