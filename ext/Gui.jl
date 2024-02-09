@@ -953,7 +953,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         add_action!(file_submenu, "Save As...", save_as)
 
 
-        open_export_window = Action("open_export_window.action", app) do x    
+        open_export_window = Action("open_export_window.action", app) do x
+            set_upper!(export_top_label_check, G.n)
             present!(export_window)
 
             return nothing
@@ -1473,7 +1474,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
 
         ############## settings ##############
 
-        open_settings_window = Action("open_settings_window.action", app) do x 
+        open_settings_window = Action("open_settings_window.action", app) do x
+            set_upper!(top_label_check, G.n)
             present!(settings_window)
 
             return nothing
