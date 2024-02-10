@@ -74,13 +74,10 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             draw_vertex_labels = D["draw_vertex_labels"]
             draw_face_labels = D["draw_face_labels"]
             theme = D["theme"]
-
-            try
-                top_label = D["top_label"]
-                highlight_mutables = D["highlight_mutables"]
-                label_direction = D["label_direction"]
-            catch 
-            end
+            top_label = D["top_label"]
+            highlight_mutables = D["highlight_mutables"]
+            label_direction = D["label_direction"]
+            
             
             if theme == "dark"
                 set_current_theme!(app, THEME_DEFAULT_DARK)
@@ -160,11 +157,11 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         set_expand!(image_display_right, true)
         
         function update_displays()
-            drawTiling(G, bin_path*"display.png", resolution, resolution, top_label,
+            drawTiling(G, bin_path*"display.png", resolution, resolution, topLabel = top_label,
             backgroundColor = "lightblue4", drawLabels = draw_vertex_labels, 
             labelDirection = label_direction)
 
-            drawPLG(G, bin_path*"display2.png", resolution, resolution, top_label,
+            drawPLG(G, bin_path*"display2.png", resolution, resolution, topLabel = top_label,
             drawmode = plg_drawmode, backgroundColor = "lightblue4", drawLabels = draw_face_labels, 
             highlightMutables = highlight_mutables, labelDirection = label_direction)
 

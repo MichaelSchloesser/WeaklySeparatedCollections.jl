@@ -36,7 +36,7 @@ function embedding_data(collection::WSCollection, width::Int, height::Int, topLa
     return n, k, labels, W, B, r, s, reference_polygon, tau
 end
 
-function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing; 
+function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; topLabel = nothing,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
@@ -119,7 +119,7 @@ function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 50
 end
 
 
-function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing; 
+function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; topLabel = nothing,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     labelDirection = "left")
 
@@ -244,7 +244,7 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
 end
 
 
-function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing; 
+function drawPLG_straight(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; topLabel = nothing,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
@@ -407,7 +407,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
 end
 
 
-function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing; 
+function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; topLabel = nothing,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     labelDirection = "left") 
 
@@ -556,7 +556,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
 end
 
 
-function WSC.drawPLG(collection::WSCollection, title::String, width::Int = 500, height::Int = 500, topLabel = nothing;
+function WSC.drawPLG(collection::WSCollection, title::String, width::Int = 500, height::Int = 500; topLabel = nothing,
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left")
 
@@ -585,7 +585,7 @@ end
 ########################################################################
 
 
-function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing; 
+function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500; topLabel = nothing,
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
@@ -667,7 +667,7 @@ function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int 
 end
 
 
-function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing; 
+function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 500; topLabel = nothing,
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") 
 
@@ -789,7 +789,7 @@ function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 
 end
 
 
-function drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing; 
+function drawPLG_straight(collection::WSCollection, width::Int = 500, height::Int = 500; topLabel = nothing,
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
@@ -952,7 +952,7 @@ function drawPLG_straight(collection::WSCollection, width::Int = 500, height::In
 end
 
 
-function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing; 
+function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int = 500; topLabel = nothing,
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") 
 
@@ -1100,7 +1100,7 @@ function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int 
     end width height
 end
 
-function WSC.drawPLG(collection::WSCollection, width::Int = 500, height::Int = 500, topLabel = nothing;
+function WSC.drawPLG(collection::WSCollection, width::Int = 500, height::Int = 500; topLabel = nothing,
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left")
 

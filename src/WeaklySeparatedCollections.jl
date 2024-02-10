@@ -1,13 +1,14 @@
 
 module WeaklySeparatedCollections
 
-export  is_weakly_separated, checkboard_label, rectangle_label, checkboard_label, dual_rectangle_label,
-        rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
+export  is_weakly_separated, frozen_label, super_potential_label, checkboard_label, rectangle_label, checkboard_label, dual_rectangle_label,
+        frozen_labels, super_potential_labels, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
         WSCollection, hash, in, getindex, setindex!, length, cliques_missing, intersect, setdiff, union, is_frozen, is_mutable, get_mutables, mutate!, mutate, 
         checkboard_collection, rectangle_collection, dual_checkboard_collection, dual_rectangle_collection, 
         rotate!, reflect!, complement!, swap_colors!, rotate, reflect, complement, swap_colors, 
-        extend_weakly_separated!, extend_to_collection, super_potential_labels,
-        BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, HEURISTIC, Astar, find_label
+        extend_weakly_separated!, extend_to_collection
+
+export  BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, HEURISTIC, Astar, find_label
 
 export  drawTiling, drawPLG
         
@@ -37,13 +38,14 @@ Inside a Jupyter sheet drawing without saving an image is possible by omitting t
 `drawTiling(collection::WSCollection, width::Int = 500, height::Int = 500)`.
 
 # Keyword Arguments
+- `topLabel = nothing`
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`
 - `drawLabels::Bool = true`
-- `adjustAngle::Bool = false`
 - `highlightMutables::Bool = true`
 - `labelDirection = "left"`
 
-`labelDirection` controls whether labels the "left" (i.e. the usual ones) or "right" (complements)
+`toplabel` controls the rotation of the drawing by drawing the specified label at the top.
+`labelDirection` controls whether the "left" (i.e. the usual ones) or "right" (complements)
 labels are drawn.
 """
 function drawTiling end
@@ -59,16 +61,17 @@ Inside a Jupyter sheet drawing without saving an image is possible by omitting t
 `drawPLG(collection::WSCollection, width::Int = 500, height::Int = 500)`. 
 
 # Keyword Arguments
+- `topLabel = nothing`
 - `drawmode::String = "straight"`
 - `backgroundColor::Union{String, ColorTypes.Colorant} = ""`
 - `drawLabels::Bool = true`
-- `adjustAngle::Bool = false`
 - `highlightMutables::Bool = false`
 - `labelDirection = "left"`
 
+`toplabel` controls the rotation of the drawing by drawing the specified label at the top.
 `drawmode` controls how edges are drawn and may be choosen as `"straight"`, `"smooth"` or `"polygonal"`.
-`labelDirection` controls whether labels the "left" (i.e. the usual ones) or "right" (complements)
-labels are drawn.
+`labelDirection` controls whether the "left" (i.e. the usual ones) or "right" (complements) labels 
+are drawn.
 """
 function drawPLG end
 
