@@ -503,7 +503,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             hbox(top_label_scale),
             hline(2),
             hbox(theme_label, theme_dropdown),
-            # TODO color stuffi
+            # TODO color stuff
             settings_buttons
         )
         set_margin!(settings_window_content, 10)
@@ -1610,7 +1610,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             set_text!(export_height_entry, "$resolution")
             fallback_width = resolution
             fallback_height = resolution
-
+            
             return WINDOW_CLOSE_REQUEST_RESULT_ALLOW_CLOSE
         end
 

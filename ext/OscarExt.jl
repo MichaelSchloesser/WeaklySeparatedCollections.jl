@@ -6,6 +6,7 @@ import WeaklySeparatedCollections as WSC
 
 pmod = WSC.pmod
 frozen_label = WSC.frozen_label
+super_potential_label = WSC.super_potential_label
 
 ################## basic seed functionality ##################
 
@@ -115,7 +116,7 @@ function WSC.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int})
 
     # TODO make frozen actually depend on the labels
     for f in 1:n
-        push!(variable_names, "a$(pmod(f+k-1, n))")
+        push!(variable_names, "a$f")
     end
 
     for i in 1:n-k-1
@@ -173,37 +174,37 @@ function WSC.extended_rectangle_seed(k, n)
     return rec_seed, X
 end
 
+
 ################## superpotential ##################
 
-# TODO allow to pass seed, or custom printing
-function WSC.get_superpotential_terms(collection::WSCollection; use_grid = false)
+
+function WSC.get_superpotential_terms(collection::WSCollection, seed::Seed = Seed(collection))
     k = collection.k
     n = collection.n
 
     terms::Vector{AbstractAlgebra.Generic.Frac{ZZMPolyRingElem}} = []
-    super_labels = super_potential_labels(k, n)
 
     for i in 1:n
-        super = super_labels[i]
-        denom_index = findfirst( x -> x == frozen_label(k, n, i), collection.labels)
+        super = WSC.super_potential_label(k, n, i)
+        denom_index = findfirst( x -> x == WSC.frozen_label(k, n, i), collection.labels)
 
-        seed = use_grid ? grid_Seed(collection) : Seed(collection)
+        s = deepcopy(seed)
 
         if super in collection
             pos = findfirst( x -> x == super, collection.labels)
-            push!(terms, seed[pos]/seed[denom_index])
+            push!(terms, s[pos]/s[denom_index])
         else
             seq = find_label(collection, super)
             
             for i in seq
-                mutate!(seed, i)
+                mutate!(s, i)
             end
 
-            push!(terms, seed[seq[end]]/seed[denom_index])
+            push!(terms, s[seq[end]]/s[denom_index])
         end
     end
 
-    return circshift(terms, + k - 1)
+    return terms
 end
 
 
@@ -243,7 +244,7 @@ end
 
 function WSC.newton_okounkov_inequalities(collection::WSCollection, r::Int = 1; q_term_index::Int = collection.k)
     k, n = collection.k, collection.n
-    T = get_superpotential_terms(collection; use_grid = false)
+    T = get_superpotential_terms(collection)
     empty_index = findfirst( x -> x == WSC.frozen_label(k, n, n-k+1), collection.labels)
 
     A::Vector{Vector{Int}} = []

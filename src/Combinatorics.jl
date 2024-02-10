@@ -98,10 +98,17 @@ end
 # TODO permute, so that frozen_label(k,n,i) = I_i. This may break other methods. F.e. in the oscar extension.
 # the superpotential labels should be permuted accordingly.
 function frozen_label(k::Int, n::Int, i::Int) 
-    return sort([pmod(l+i-1, n) for l = 1:k]) 
+    return sort!([pmod(l+i-1, n) for l = 2-k:1]) 
 end
 
-# TODO add super_potential_label
+function super_potential_label(k, n, i)
+    super = [pmod(l+i-1, n) for l = 2-k:1]
+    super[1] = pmod(i-k, n) 
+
+    sort!(super)
+    
+    return super
+end
 
 function rectangle_label(k::Int, n::Int, i::Int, j::Int)
     L = collect(i+1:i+j)
@@ -138,16 +145,7 @@ function frozen_labels(k::Int, n::Int)
 end
 
 function super_potential_labels(k::Int, n::Int)
-    labels::Vector{Vector{Int}} = Vector()
-
-    I = push!(collect(2:k), n)
-
-    for i = 0:n-1 
-        S = (x -> pmod(x+i, n)).(I)
-        push!(labels, sort(S))
-    end
-    
-    return labels
+    return [super_potential_label(k, n, i) for i in 1:n]
 end
 
 @doc raw"""
