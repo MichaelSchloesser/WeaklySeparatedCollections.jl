@@ -95,8 +95,6 @@ function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     return true
 end
 
-# TODO permute, so that frozen_label(k,n,i) = I_i. This may break other methods. F.e. in the oscar extension.
-# the superpotential labels should be permuted accordingly.
 function frozen_label(k::Int, n::Int, i::Int) 
     return sort!([pmod(l+i-1, n) for l = 2-k:1]) 
 end

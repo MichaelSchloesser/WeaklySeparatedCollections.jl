@@ -111,7 +111,7 @@ end
 
 ################## special seeds ##################
 
-function WSC.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int})
+function WSC.grid_Seed(n::Int, height::Int, width::Int, quiver::SimpleDiGraph{Int})
     variable_names::Vector{String} = []
 
     # TODO make frozen actually depend on the labels
@@ -119,8 +119,8 @@ function WSC.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int})
         push!(variable_names, "a$f")
     end
 
-    for i in 1:n-k-1
-        for j in 1:k-1
+    for i in 1:height-1
+        for j in 1:width-1
             push!(variable_names, "x$i$j")
         end
     end
@@ -132,8 +132,8 @@ function WSC.grid_Seed(k::Int, n::Int, quiver::SimpleDiGraph{Int})
 end
 
 
-function WSC.grid_Seed(collection::WSCollection)
-    grid_Seed(collection.k, collection.n, deepcopy(collection.quiver))
+function WSC.grid_Seed(collection::WSCollection, height::Int = collection.n - collection.k, width::Int = collection.k)
+    grid_Seed(collection.n, height, width,  deepcopy(collection.quiver))
 end
 
 
