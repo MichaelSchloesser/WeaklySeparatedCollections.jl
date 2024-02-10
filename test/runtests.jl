@@ -1,4 +1,5 @@
 using WeaklySeparatedCollections
+import WeaklySeparatedCollections as WSC
 using Test
 
 
