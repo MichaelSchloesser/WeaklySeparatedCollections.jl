@@ -1,6 +1,18 @@
 
 ################## uninformed searching ##################
 
+@doc raw"""
+    BFS(root::WSCollection, target::WSCollection)
+
+Return a sequence of mutations, transforming `root` into `target`.
+This sequence is computed by a breadth first search. 
+
+# Keyword arguments:
+- `limitSearchSpace::Bool = true`
+
+If `limitSearchSpace` is set to true then labels already contained
+in `target` will never be mutated.
+"""
 function BFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = true)
     queue = Queue{WSCollection}()
     explored = Vector{WSCollection}()
@@ -41,7 +53,18 @@ function BFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = 
 
 end
 
+@doc raw"""
+    DFS(root::WSCollection, target::WSCollection)
 
+Return a sequence of mutations, transforming `root` into `target`.
+This sequence is computed by a depth first search. 
+
+# Keyword arguments:
+- `limitSearchSpace::Bool = true`
+
+If `limitSearchSpace` is set to true then labels already contained
+in `target` will never be mutated.
+"""
 function DFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = true)
     stack = Stack{WSCollection}()
     explored = Vector{WSCollection}()
@@ -83,7 +106,12 @@ function DFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = 
     
 end
 
+@doc raw"""
+    generalized_associahedron(root::WSCollection)
 
+return all maximal weakly separated collections of same type as `root`
+together with a graph that decribes mutations between the wsc's. 
+"""
 function generalized_associahedron(root::WSCollection)
     queue = Queue{WSCollection}()
     wsc_list = Vector{WSCollection}()
@@ -120,7 +148,12 @@ function generalized_associahedron(root::WSCollection)
     return wsc_list, associahedron
 end
 
+@doc raw"""
+    generalized_associahedron(root::WSCollection)
 
+return all maximal weakly separated collections of type `k`, `n`
+together with a graph that decribes mutations between the wsc's. 
+"""
 function generalized_associahedron(k::Int, n::Int)
     return generalized_associahedron( rectangle_collection(k, n))
 end
@@ -189,6 +222,14 @@ function min_label_dist_change_experimental(old_label, new_label, h_value, missi
     return h_value + minimum( x -> estimate(x, new_label), missing_labels) - minimum( x -> estimate(x, old_label), missing_labels) 
 end
 
+@doc raw"""
+    HEURISTIC
+
+An enum with possible values: 
+- `NUMBER_WRONG_LABELS`
+- `MIN_LABEL_DIST`
+- `MIN_LABEL_DIST_EXPERIMENTAL`
+"""
 @enum HEURISTIC begin
     NUMBER_WRONG_LABELS
     MIN_LABEL_DIST
@@ -199,6 +240,21 @@ end
 
 ################## informed searching ##################
 
+@doc raw"""
+    Astar(root::WSCollection, target::WSCollection)
+
+Return a sequence of mutations, transforming `root` into `target`.
+This sequence is computed by a the astar algorithm. 
+
+# Keyword arguments:
+- `heuristic::HEURISTIC = NUMBER_WRONG_LABELS`
+- `limitSearchSpace::Bool = true`
+
+The available `heuristic`'s are `NUMBER_WRONG_LABELS`, `MIN_LABEL_DIST`
+and `MIN_LABEL_DIST_EXPERIMENTAL`.
+If `limitSearchSpace` is set to true then labels already contained
+in `target` will never be mutated.
+"""
 function Astar(root::WSCollection, target::WSCollection; heuristic::HEURISTIC = NUMBER_WRONG_LABELS, limitSearchSpace::Bool = true)
 
     experimental = false
@@ -280,7 +336,23 @@ function Astar(root::WSCollection, target::WSCollection; heuristic::HEURISTIC = 
     end
 end
 
+@doc raw"""
+    Astar(root::WSCollection, target::WSCollection)
 
+Returns a sequence of mutations, transforming `root` into a wsc 
+containing `label`.
+
+This sequence is computed by a the astar algorithm. 
+
+# Keyword arguments:
+- `heuristic::HEURISTIC = NUMBER_WRONG_LABELS`
+- `limitSearchSpace::Bool = true`
+
+The available `heuristic`'s are `NUMBER_WRONG_LABELS`, `MIN_LABEL_DIST`
+and `MIN_LABEL_DIST_EXPERIMENTAL`.
+If `limitSearchSpace` is set to true then labels already contained
+in `target` will never be mutated.
+"""
 function find_label(root::WSCollection, label::Vector{Int}; heuristic::HEURISTIC = NUMBER_WRONG_LABELS, limitSearchSpace::Bool = true)
 
     seq::Vector{Int} = []

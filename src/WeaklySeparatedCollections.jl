@@ -1,8 +1,8 @@
 
 module WeaklySeparatedCollections
 
-export  is_weakly_separated, frozen_label, super_potential_label, checkboard_label, rectangle_label, checkboard_label, dual_rectangle_label,
-        frozen_labels, super_potential_labels, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
+export  is_weakly_separated, frozen_label, checkboard_label, rectangle_label, checkboard_label, dual_rectangle_label,
+        frozen_labels, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
         WSCollection, hash, in, getindex, setindex!, length, cliques_missing, intersect, setdiff, union, is_frozen, is_mutable, get_mutables, mutate!, mutate, 
         checkboard_collection, rectangle_collection, dual_checkboard_collection, dual_rectangle_collection, 
         rotate!, reflect!, complement!, swap_colors!, rotate, reflect, complement, swap_colors, 
@@ -82,6 +82,48 @@ Start the graphical user interface to visualize the provided `collection`.
 """
 function visualizer! end
 
+@doc raw"""
+    Seed
+
+Seed in the rational function field of a multivariate polynomial ring over the
+integers.
+
+# Attributes
+- `n_frozen::Int`
+- `variables`
+- `quiver::SimpleDiGraph{Int}`
+
+# Constructors
+    Seed(n_frozen::Int, variables, quiver::SimpleDiGraph{Int})
+    Seed(cluster_size::Int, n_frozen::Int, quiver::SimpleDiGraph{Int})
+    Seed(collection::WSCollection)
+
+# Examples
+
+```julia-repl
+julia> Q = rectangle_collection(4, 9).quiver 
+julia> R, _ = polynomial_ring(ZZ, 21)
+julia> S = fraction_field(R)
+julia> Seed(9, gens(S), Q)
+Seed with 9 frozen and 12 mutable variables
+```
+
+Equivalently we may write
+
+```julia-repl
+julia> Q = rectangle_collection(4, 9).quiver 
+julia> Seed(21, 9, Q)
+Seed with 9 frozen and 12 mutable variables
+```
+
+Or even shorter
+
+```julia-repl
+julia> Seed(rectangle_collection(4, 9)) 
+Seed with 9 frozen and 12 mutable variables
+```
+
+"""
 mutable struct Seed
     n_frozen::Int
     variables
@@ -90,24 +132,83 @@ end
 
 function Seed end
 
+@doc raw"""
+    grid_Seed(n::Int, height::Int, width::Int, quiver::SimpleDiGraph{Int})
+    grid_Seed(collection::WSCollection, height, width)
+
+Return a seed with `n` respectively `collection.n` frozen variables and mutable
+variables arranged on a grid with specified `height` and `width`. 
+"""
 function grid_Seed end
 
+@doc raw"""
+    extended_checkboard_seed(k::Int, n::Int)
+
+Return the seed associated to the checkboard graph with variables on a grid
+and a Matrix containing the variables in a naturally extended grid.
+"""
 function extended_checkboard_seed end
 
+@doc raw"""
+    extended_rectangle_seed(k::Int, n::Int)
+
+Return the seed associated to the rectangle graph with variables on a grid
+and a Matrix containing the variables in a naturally extended grid.
+"""
 function extended_rectangle_seed end
 
+@doc raw"""
+    get_superpotential_terms(collection::WSCollection, seed::Seed = Seed(collection))
+
+Return the terms of the superpotential written in the cluster corresponding to
+the specified `collection`. A seed can optionally be specified. 
+"""
 function get_superpotential_terms end
 
+@doc raw"""
+    checkboard_potential_terms(k::Int, n::Int)
+
+Return the terms of the superpotential written in the cluster corresponding to
+the checkboard graph.
+"""
 function checkboard_potential_terms end
 
+@doc raw"""
+    rectangle_potential_terms(k::Int, n::Int)
+
+Return the terms of the superpotential written in the cluster corresponding to
+the rectangle graph.
+"""
 function rectangle_potential_terms end
 
+@doc raw"""
+    newton_okounkov_inequalities(collection::WSCollection, r::Int = 1)
+
+Return the `A` and `b` of the system `Ax <= b` describing the `r-th` 
+dilation of the newton okounkov body of the specified `collection`.
+"""
 function newton_okounkov_inequalities end
 
+@doc raw"""
+    checkboard_inequalities(k::Int, n::Int, r::Int = 1)
+
+Return the `A` and `b` of the system `Ax <= b` describing the `r-th` 
+dilation of the newton okounkov body of the checkboard graph.
+"""
 function checkboard_inequalities end
 
+@doc raw"""
+    newton_okounkov_body(collection::WSCollection)
+
+Return the newton okounkov body of the specified `collection`.
+"""
 function newton_okounkov_body end
 
+@doc raw"""
+    checkboard_body(k::Int, n::Int)
+
+Return the newton okounkov body of the checkboard graph.
+"""
 function checkboard_body end
 
 function dihedral_perm_group end

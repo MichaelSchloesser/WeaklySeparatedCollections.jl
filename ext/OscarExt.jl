@@ -185,7 +185,7 @@ function WSC.get_superpotential_terms(collection::WSCollection, seed::Seed = See
     terms::Vector{AbstractAlgebra.Generic.Frac{ZZMPolyRingElem}} = []
 
     for i in 1:n
-        super = WSC.super_potential_label(k, n, i)
+        super = super_potential_label(k, n, i)
         denom_index = findfirst( x -> x == WSC.frozen_label(k, n, i), collection.labels)
 
         s = deepcopy(seed)
@@ -208,7 +208,7 @@ function WSC.get_superpotential_terms(collection::WSCollection, seed::Seed = See
 end
 
 
-function WSC.checkboard_potential_terms(k, n)
+function WSC.checkboard_potential_terms(k::Int, n::Int)
     _, X = extended_checkboard_seed(k, n)
     x = (i, j) -> X[i+1, j+1]
 

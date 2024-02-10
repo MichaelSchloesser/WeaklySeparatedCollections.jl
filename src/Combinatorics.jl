@@ -95,9 +95,22 @@ function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     return true
 end
 
+@doc raw"""
+    frozen_label(k::Int, n::Int, i::Int)
+
+return the `i-th` frozen label.
+
+# Examples
+
+```julia-repl
+julia> frozen_label(3, 6, 3)
+julia> [1,2,3]
+```
+"""
 function frozen_label(k::Int, n::Int, i::Int) 
     return sort!([pmod(l+i-1, n) for l = 2-k:1]) 
 end
+
 
 function super_potential_label(k, n, i)
     super = [pmod(l+i-1, n) for l = 2-k:1]
@@ -108,12 +121,24 @@ function super_potential_label(k, n, i)
     return super
 end
 
+@doc raw"""
+    rectangle_label(k::Int, n::Int, i::Int, j::Int)
+
+Return the label of the rectangle graph in row `i`
+and column `j`. 
+"""
 function rectangle_label(k::Int, n::Int, i::Int, j::Int)
     L = collect(i+1:i+j)
     R = collect(n-k+j+1:n)
     return union(L, R)
 end
 
+@doc raw"""
+    checkboard_label(k::Int, n::Int, i::Int, j::Int)
+
+Return the label of the checkboard graph in row `i`
+and column `j`. 
+"""
 function checkboard_label(k::Int, n::Int, i::Int, j::Int)
     sigma = (x, y) -> pmod(x+y, n)
 
@@ -123,12 +148,24 @@ function checkboard_label(k::Int, n::Int, i::Int, j::Int)
     return sort(union(L, R))
 end
 
+@doc raw"""
+    dual_rectangle_label(k::Int, n::Int, i::Int, j::Int)
+
+Return the label of the dual rectangle graph in row `i`
+and column `j`. 
+"""
 function dual_rectangle_label(k::Int, n::Int, i::Int, j::Int)
     L = collect(1:i)
     R = collect(i+j+1:k+j)
     return union(L, R)
 end
 
+@doc raw"""
+    checkboard_label(k::Int, n::Int, i::Int, j::Int)
+
+Return the label of the dual checkboard graph in row `i`
+and column `j`. 
+"""
 function dual_checkboard_label(k::Int, n::Int, i::Int, j::Int)
     sigma = (x, y) -> pmod(x+y, n)
 
@@ -138,6 +175,11 @@ function dual_checkboard_label(k::Int, n::Int, i::Int, j::Int)
     return sort(union(L, R))
 end
 
+@doc raw"""
+    frozen_labels(k::Int, n::Int)
+
+Return the frozen labels as a vector.
+"""
 function frozen_labels(k::Int, n::Int)
     return [frozen_label(k, n, i) for i in 1:n]
 end
@@ -563,21 +605,38 @@ Return the length of `collection.labels`.
 """
 Base.length(collection::WSCollection) = length(collection.labels)
 
+@doc raw"""
+    cliques_missing(collection::WSCollection)
+
+Return true if the white or black cliques in `collection` are missing. 
+"""
 function cliques_missing(collection::WSCollection)
     return ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
 end
 
+@doc raw"""
+    intersect(collection1::WSCollection, collection2::WSCollection)
 
+Return the common labels of `collection1` and `collection2`.
+"""
 function Base.intersect(collection1::WSCollection, collection2::WSCollection)
     return intersect(collection1.labels, collection2.labels)
 end
 
+@doc raw"""
+    setdiff(collection1::WSCollection, collection2::WSCollection)
 
+Return the labels of `collection1` minus the labels of `collection2`.
+"""
 function Base.setdiff(collection1::WSCollection, collection2::WSCollection)
     return setdiff(collection1.labels, collection2.labels)
 end
 
+@doc raw"""
+    setdiff(collection1::WSCollection, collection2::WSCollection)
 
+Return the union of labels in `collection1` and `collection2`.
+"""
 function Base.union(collection1::WSCollection, collection2::WSCollection)
     return union(collection1.labels, collection2.labels)
 end
@@ -684,7 +743,7 @@ function is_mutable(collection::WSCollection, i::Int)
 end
 
 @doc raw"""
-    is_mutable(collection::WSCollection, i::Int) 
+    get_mutables(collection::WSCollection)
 
 Return all mutable vertices of `collection`.
 """

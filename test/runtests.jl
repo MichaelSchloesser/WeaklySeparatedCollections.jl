@@ -310,28 +310,28 @@ using Test
     
     @test begin # drawPLG_poly
         G = checkboard_collection(4, 9)
-        drawPLG(G, "test_2.png", 500, 500, drawmode = "polygonal")
+        drawPLG(G, "test_2.png", 500, 500; drawmode = "polygonal")
         true
     end
 
     
     @test begin # drawPLG_straight
         G = checkboard_collection(4, 9)
-        drawPLG(G, "test_3.png", 500, 500, drawmode = "straight")
+        drawPLG(G, "test_3.png", 500, 500; drawmode = "straight")
         true
     end
 
     
     @test begin # drawPLG_smooth
         G = checkboard_collection(4, 9)
-        drawPLG(G, "test_4.png", 500, 500, drawmode = "smooth")
+        drawPLG(G, "test_4.png", 500, 500; drawmode = "smooth")
         true
     end
 
     
     @test begin # backgroundColor via named colors
         G = checkboard_collection(4, 9)
-        drawPLG(G, "test_5.png", 500, 500, backgroundColor = "purple")
+        drawPLG(G, "test_5.png", 500, 500; backgroundColor = "purple")
         true
     end
 
@@ -339,7 +339,7 @@ using Test
     using Colors 
     @test begin # backgroundColor via RGBA value. fails without using Colors
         G = checkboard_collection(4, 9)
-        drawPLG(G, "test_6.png", 500, 500, backgroundColor = RGBA(1.0, 1.0, 1.0, 0.4))
+        drawPLG(G, "test_6.png", 500, 500; backgroundColor = RGBA(1.0, 1.0, 1.0, 0.4))
         true
     end
 
