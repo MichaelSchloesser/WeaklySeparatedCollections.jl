@@ -360,7 +360,7 @@ using Test
         "get_mutables"
 
         check = checkboard_collection(4, 9)
-        get_mutables(check) == check.labels[10:end]
+        get_mutables(check) == collect(10:21)
     end
 
     
@@ -475,7 +475,7 @@ using Test
 
         label = [3,5,6]
         rec = rectangle_collection(3, 6)
-        extend_to_collection(3, 6, [label], rec)
+        extend_to_collection([label], rec)
         true
     end
 
@@ -608,7 +608,7 @@ using Test
         
         label = WSC.super_potential_label(4, 9, 3)
 
-        find_label(check, rec)
+        find_label(check, label)
         true
     end
     

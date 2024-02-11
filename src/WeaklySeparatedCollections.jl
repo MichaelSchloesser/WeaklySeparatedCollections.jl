@@ -18,7 +18,7 @@ export  Seed, grid_Seed, extended_rectangle_seed, extended_checkboard_seed,
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
         newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
 
-import Graphs: SimpleDiGraph, edges, src, dst, has_edge, add_edge!, rem_edge!, inneighbors, outneighbors, degree
+import Graphs: SimpleGraph, SimpleDiGraph, edges, src, dst, has_edge, add_edge!, rem_edge!, inneighbors, outneighbors, degree
 
 using IterTools
 using DataStructures
