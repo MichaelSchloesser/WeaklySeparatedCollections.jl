@@ -13,7 +13,7 @@ This sequence is computed by a breadth first search.
 If `limitSearchSpace` is set to true then labels already contained
 in `target` will never be mutated.
 """
-function BFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = true)
+function BFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = false)
     queue = Queue{WSCollection}()
     explored = Vector{WSCollection}()
     parent = Dict{WSCollection, Int}()
@@ -65,7 +65,7 @@ This sequence is computed by a depth first search.
 If `limitSearchSpace` is set to true then labels already contained
 in `target` will never be mutated.
 """
-function DFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = true)
+function DFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = false)
     stack = Stack{WSCollection}()
     explored = Vector{WSCollection}()
     parent = Dict{WSCollection, Int}()
@@ -161,12 +161,7 @@ end
 ################## heuristics ##################
 
 function diff_len(w, x)
-    d = 0
-    for a in w
-        d = d + !(a in x)
-    end
-
-    return d
+    return sum((a -> !(a in x)).(w))
 end
 
 # easy estimation of minimum number of mutations needed to reach the target
