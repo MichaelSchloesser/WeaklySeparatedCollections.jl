@@ -917,6 +917,38 @@ function mutate(collection::WSCollection, label::Vector{Int}, mutateCliques::Boo
     return mutate!( deepcopy(collection), label, mutateCliques)
 end
 
+
+function apply_to_collection(f, collection::WSCollection) # f: Int -> Int
+
+    # apply to labels
+    for i = 1:length(collection)
+        collection[i] = sort(f.(collection[i]))
+    end
+
+    W = collection.whiteCliques
+    B = collection.blackCliques
+
+    # shift clique keys
+    W2 = Dict()
+    B2 = Dict()
+
+    for (K, C) in W
+        K2 = sort(f.(K))
+        W2[K2] = C
+    end
+
+    for (L, C) in B
+        L2 = sort(f.(L))
+        B2[L2] = C
+    end
+
+    collection.whiteCliques = W2
+    collection.blackCliques = B2
+
+    return collection
+end
+
+
 @doc raw"""
     rotate!(collection::WSCollection, amount::Int)
 
@@ -930,36 +962,9 @@ julia> rotate!(H, 2)
 ```
 """
 function rotate!(collection::WSCollection, amount::Int)
-    n = collection.n
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
+    shift = x -> pmod(x + amount, collection.n)
 
-    shift = x -> pmod(x + amount, n)
-
-    # shift labels
-    for i = 1:length(labels)
-        collection.labels[i] = sort(shift.(labels[i]))
-    end
-
-    # shift clique keys
-    W2 = Dict()
-    B2 = Dict()
-
-    for (K, C) in W
-        K2 = sort(shift.(K))
-        W2[K2] = C
-    end
-
-    for (L, C) in B
-        L2 = sort(shift.(L))
-        B2[L2] = C
-    end
-
-    collection.whiteCliques = W2
-    collection.blackCliques = B2
-
-    return collection
+    return apply_to_collection(shift, collection)
 end
 
 @doc raw"""
@@ -984,37 +989,11 @@ julia> H = rectangle_collection(4, 9)
 julia> reflect!(H, 1)
 ```
 """
-function reflect!(collection::WSCollection, axis::Int = 1) 
-    n = collection.n
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
+function reflect!(collection::WSCollection, axis = 1) 
+    
+    reflect = x -> pmod( Int(2*axis) - x, collection.n)
 
-    reflect = x -> pmod(2*axis - x, n)
-
-    # reflect labels
-    for i = 1:length(labels)
-        collection.labels[i] = sort(reflect.(labels[i]))
-    end
-
-    # reflect clique keys
-    W2 = Dict()
-    B2 = Dict()
-
-    for (K, C) in W
-        K2 = sort(reflect.(K))
-        W2[K2] = C
-    end
-
-    for (L, C) in B
-        L2 = sort(reflect.(L))
-        B2[L2] = C
-    end
-
-    collection.whiteCliques = W2
-    collection.blackCliques = B2
-
-    return collection
+    return apply_to_collection(reflect, collection)
 end
 
 @doc raw"""

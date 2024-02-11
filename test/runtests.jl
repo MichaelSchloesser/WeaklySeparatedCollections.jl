@@ -757,10 +757,62 @@ using Test
 
     ######## Action of D_n ########
 
-    # TODO
-    # dihedral_perm_group, cyclic_perm_group, standard_form
-    # Base.:^, gset, get_orbit, stabilizer, get_stabilizer
+    @test begin
+        "dihedral_perm_group"
 
+        dihedral_perm_group(5)
+        true
+    end
+
+
+    @test begin
+        "cyclic_perm_group"
+
+        cyclic_perm_group(5)
+        true
+    end
+
+
+    @test begin
+        "Base.:^"
+
+        s, t = gens(dihedral_perm_group(6))
+        check = checkboard_collection(3, 6)
+
+        (check^s)^t == check^(s*t)
+    end
+
+    @test begin
+        "gset"
+
+        D = dihedral_perm_group(6)
+        check = checkboard_collection(3, 6)
+
+        gset(D, [check])
+        true
+    end
+
+
+    @test begin
+        "orbit"
+
+        D = dihedral_perm_group(6)
+        check = checkboard_collection(3, 6)
+
+        M = gset(D, [check])
+        
+        (orbit(M, check) == orbit(D, check) ) && (orbit(M, check) == orbit(check) )
+    end
+
+
+    @test begin
+        "stabilizer"
+
+        D = dihedral_perm_group(6)
+        check = checkboard_collection(3, 6)
+
+        (stabilizer(D, check) == stabilizer(check) )
+    end
 
     ######## Plotting ########
 

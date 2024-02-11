@@ -305,68 +305,40 @@ end
 ################## Action of cyclic and dihedral group ##################
 
 function WSC.dihedral_perm_group(n::Int) # D_n as specific permutation group
-    return sub(cperm(collect(1:n)), perm([pmod(n+2-i, n) for i in 1:n]))
+    return permutation_group(n, [cperm(collect(1:n)), perm([pmod(n+2-i, n) for i in 1:n])] )
 end
 
 function WSC.cyclic_perm_group(n::Int) # C_n as specific permutation group
-    return sub(cperm(collect(1:n)))
+    return permutation_group(n, [cperm(collect(1:n))] )
 end
 
-function WSC.standard_form(D::PermGroup, x::PermGroupElem) # return vector v with x = s^v[1]*t^v[2]
-    s = gens(D)[1]
-
-    m = 1^x - 1
-    x = x*s^-m
-
-    return isone(x) ? [m, 0] : [-m, 1]
-end
-
-# TODO kill or rename
-# function s_t_perm(D::PermGroup, v::Vector{Int})
-#     s, t = gens(D)
-#     return s^v[1]*t^v[2]
-# end
-
-# TODO change so that the permutation is instead used directly on labls -> no need for standard_form
-function Base.:^(collection::WSCollection, x::PermGroupElem) # works for D_n and C_n defined via above functions
-    D, _ = dihedral_perm_group( collection.n)
-    v = standard_form(D, x)
-
-    res = rotate(collection, v[1])
-    return v[2] == 0 ? res : reflect!(res)
+function Base.:^(collection::WSCollection, p::PermGroupElem) # works for D_n and C_n defined via above functions
+    f = x -> p(x)
+    return apply_to_collection(f, collection)
 end
 
 function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = false) # standard action for gset on WSCollections
     return gset(D, (G, x) -> G^x , seeds; closed = closed)
 end
 
-function WSC.get_orbit(collection::WSCollection) # orbits without oscar
-    orb = Set([collection])
+function Oscar.orbit(D::PermGroup, collection::WSCollection)
+    M = gset(D, [collection])
+    return orbit(M, collection)
+end
 
-    for i in 1:collection.n-1
-        push!(orb, rotate(collection, i))
-    end
-
-    refl = reflect(collection)
-    push!(orb, refl)
-
-    for i in 1:collection.n-1
-        push!(orb, rotate(refl, i))
-    end
-
-    return collect(orb)
+function Oscar.orbit(collection::WSCollection)
+    D = dihedral_perm_group(collection.n)
+    M = gset(D, [collection])
+    return orbit(M, collection)
 end
 
 function Oscar.stabilizer(D::PermGroup, collection::WSCollection)
     return stabilizer(D, collection, ^)
 end
 
-function WSC.get_stabilizer(collection::WSCollection)
-    k, n = collection.k, collection.n
-    D, _ = dihedral_perm_group(n)
-
-    S, _ = collect(stabilizer(D, collection))
-    return S
+function Oscar.stabilizer(collection::WSCollection)
+    D = dihedral_perm_group(collection.n)
+    return stabilizer(D, collection)
 end
 
 end

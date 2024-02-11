@@ -16,7 +16,6 @@ export  visualizer!
 
 export  Seed, grid_Seed, extended_rectangle_seed, extended_checkboard_seed,
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
-        dihedral_perm_group, cyclic_perm_group, standard_form, get_orbit, get_stabilizer,
         newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
 
 import Graphs: SimpleDiGraph, edges, src, dst, has_edge, add_edge!, rem_edge!, inneighbors, outneighbors, degree
@@ -211,16 +210,8 @@ Return the newton okounkov body of the checkboard graph.
 """
 function checkboard_body end
 
-#TODO
-
 function dihedral_perm_group end
 
 function cyclic_perm_group end
-
-function standard_form end
-
-function get_orbit end
-
-function get_stabilizer end
 
 end
