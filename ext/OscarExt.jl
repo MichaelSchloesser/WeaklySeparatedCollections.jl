@@ -327,7 +327,7 @@ function Oscar.orbit(D::PermGroup, collection::WSCollection)
 end
 
 function Oscar.orbit(collection::WSCollection)
-    D = dihedral_perm_group(collection.n)
+    D = WSC.dihedral_perm_group(collection.n)
     M = gset(D, [collection])
     return orbit(M, collection)
 end
@@ -337,7 +337,7 @@ function Oscar.stabilizer(D::PermGroup, collection::WSCollection)
 end
 
 function Oscar.stabilizer(collection::WSCollection)
-    D = dihedral_perm_group(collection.n)
+    D = WSC.dihedral_perm_group(collection.n)
     return stabilizer(D, collection)
 end
 

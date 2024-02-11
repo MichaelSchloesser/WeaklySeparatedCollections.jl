@@ -801,7 +801,7 @@ using Test
 
         M = gset(D, [check])
         
-        (orbit(M, check) == orbit(D, check) ) && (orbit(M, check) == orbit(check) )
+        ( collect(orbit(M, check)) == collect(orbit(D, check)) ) && ( collect(orbit(M, check)) == collect(orbit(check)) )
     end
 
 
