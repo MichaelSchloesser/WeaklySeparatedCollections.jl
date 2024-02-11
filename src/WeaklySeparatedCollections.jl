@@ -210,6 +210,7 @@ Return the newton okounkov body of the checkboard graph.
 """
 function checkboard_body end
 
+# not exported:
 function dihedral_perm_group end
 
 function cyclic_perm_group end
