@@ -56,9 +56,12 @@ The data type for WSC's or rather (abstract) plabic tilings is given by `WSColle
 WSCollection
 ```
 
+```@docs
+WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
+```
+
+
 [`WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)`](@ref)
-
-
 
 
 
