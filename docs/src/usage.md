@@ -60,14 +60,10 @@ WSCollection
 WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
 ```
 
-```jldoctest
-julia> a = 1
-
-julia> b = 2;
-
-julia> c = 3;  # comment
-
-julia> a + b + c
+```@example
+a = 1
+b = 2
+a + b
 ```
 
 
