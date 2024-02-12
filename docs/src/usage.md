@@ -62,14 +62,12 @@ WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool =
 
 ```jldoctest
 julia> a = 1
-1
 
 julia> b = 2;
 
 julia> c = 3;  # comment
 
 julia> a + b + c
-6
 ```
 
 
