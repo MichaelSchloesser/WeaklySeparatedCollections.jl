@@ -61,10 +61,4 @@ WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{
 WSCollection(collection::WSCollection; computeCliques::Bool = true)
 ```
 
-Thus to construct a WSC we only need to know its labels.
-```@example 1
-using WeaklySeparatedCollections
-using Graphs
-labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6]]
-is_weakly_separated(labels)
-```
+
