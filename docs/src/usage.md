@@ -80,10 +80,9 @@ dual_checkboard_collection
 dual_rectangle_collection
 ```
 
-We may easily compare two WSC's
+Two WSC's are considered equal if their underlying labels are equal as sets. 
 
 ```@docs
-isequal
 Base.:(==)
 ```
 
@@ -105,23 +104,23 @@ mutate
 Apart from mutation, several other transformations of WSC's are available:
 
 ```@docs
-rotate_collection!
-rotate_collection
+rotate!
+rotate
 ```
 
 ```@docs
-reflect_collection!
-reflect_collection
+reflect!
+reflect
 ```
 
 ```@docs
-complement_collection!
-complement_collection
+complement!
+complement
 ```
 
 ```@docs
-swaped_colors_collection!
-swaped_colors_collection
+swap_colors!
+swap_colors
 ```
 
 We often want to deal with maximal WSC's instead of their subsets. To extend a given WSC to a maximal one, the following functions may be used:
@@ -142,15 +141,7 @@ drawTiling
 ```
 
 ```@docs
-drawPLG_straight
-```
-
-```@docs
-drawPLG_smooth
-```
-
-```@docs
-drawPLG_poly
+drawPLG
 ```
 
 ## Graphical user interface
