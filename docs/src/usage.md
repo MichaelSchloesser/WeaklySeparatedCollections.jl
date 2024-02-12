@@ -41,7 +41,7 @@ $b_1, \ldots, b_n$. Here the labelling is chosen in clockwise order.
 We only consider $\textbf{reduced}$ plabic graphs which can be also seen to be in one to one correspondance to WSC's that are maximal with respect to inclusion. 
 For more details we referr to TODO.
 
-## Creating a weakly separated collection
+## Creating WSC's
 
 !!! compat "Vectors instead of sets"
     In this package we use vecors in place of sets, although WSC's are by definition sets of $k$-sets. 
@@ -54,6 +54,8 @@ The data type for WSC's or rather (abstract) plabic tilings is given by `WSColle
 WSCollection
 ```
 
+### Constructors
+
 There are three different constructors to create a WSC:
 
 ```@docs
@@ -63,38 +65,73 @@ WSCollection(collection::WSCollection; computeCliques::Bool = true)
 ```
 
 Thus to construct a WSC we only need to know its labels.
-```@example 1
+
+#### Examples:
+```@example constructors
 using WeaklySeparatedCollections # hide
 labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], 
-        [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6]]
-is_weakly_separated(6, labels)
+          [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6] ]
+is_weakly_separated(6, labels) # checks for pairwise weak separation
 ```
 
-```@example 1
+```@example constructors
 C = WSCollection(3, 6, labels)
 ```
 
 However, if the underlying quiver is already known it can be passed to the constructor to speed up computations.
 
-```@example 1
+```@example constructors
 Q = C.quiver
 WSCollection(3, 6, labels, Q)
 ```
 
 The last constructor is useful, if we already have a WSC but want to omit the 2-cells or if the 2-cells of our WSC are missing and we want to compute them.
 
-```@example 1
+```@example constructors
 D = WSCollection(C, computeCliques = false)
-D.whiteCliques
+cliques_missing(D) # checks if the cliques (i.e. the 2-cells) are missing
 ```
 
-```@example 1
+```@example constructors
 D = WSCollection(D)
 D.whiteCliques
 ```
 
+### Extending to maximal collections
+
+Sometimes we only want some maximal WSC containing one or more disired labels. To obtain such WSC's we simple add labels to our desired as long as possible.
+
+```@docs
+extend_weakly_separated!
+extend_to_collection
+```
+
+#### Examples:
+
+We may extend by brute force:
+
+```@example extending
+using WeaklySeparatedCollections # hide
+label = [1, 3, 4]
+extend_weakly_separated(3, 6, [label])
+```
+Or if we want to prefer labels from a known weakly separated set (and then fill up by brute force):
+
+```@example extending
+preferred_labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], 
+                    [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6]]
+extend_weakly_separated(3, 6, [label], preferred_labels)
+```
+
+We could have just as well passed a WSC instead of `preferred_labels` above. Note that so far we only constructed arrays of labels.
+To obtain a WSC containing these labels we use `extend_to_collection`.
+
+```@example extending
+extend_to_collection(3, 6, [label], preferred_labels)
+```
+
 ## Predefined collections
-Although any WSC may be constructed as explained above, this can be quite tedious. Thus we provide shortcuts for the construction of some well known WSC's:
+We provide shortcuts for the construction of some well known WSC's:
 
 ```@docs
 checkboard_collection
@@ -103,26 +140,24 @@ dual_checkboard_collection
 dual_rectangle_collection
 ```
 
-If we only want the underlying labels we may instead use
+#### Examples:
 
-```@docs
-rectangle_label
-rectangle_labels
+```@example predefined
+using WeaklySeparatedCollections # hide
+rectangle_collection(3, 6)
 ```
 
-```@docs
-checkboard_label
-checkboard_labels
+If we only want the underlying labels we may instead use [`rectangle_labels(k::Int, n::Int)`](@ref) (similar for the other predefined collections).
+
+```@example predefined
+rectangle_labels(3, 6)
 ```
 
-```@docs
-dual_rectangle_label
-dual_rectangle_labels
-```
+The labels of the rectangle collection can be arranged on a grid in a natural way. Specific labels in this grid are returned by [rectangle_label(k::Int, n::Int, i::Int, j::Int)](@ref)
+where $i = 0, ..., n-k$ and $j = 0, ..., k$ (similar for the other collections, where for the dual ones $i = 0, ..., k$ and $j = 0, ..., n-k$ ).
 
-```@docs
-dual_checkboard_label
-dual_checkboard_labels
+```@example predefined
+rectangle_label(3, 6, 1, 2)
 ```
 
 ## Basic functionality
@@ -130,12 +165,13 @@ Armed with this plethora of examples, we are ready to discuss the basic function
 
 WSC's behave in many ways as their underlying arrays of labels would. In particular labels may be accessed directly.
 
-```@example 2
+```@example access
+using WeaklySeparatedCollections # hide
 rec = rectangle_collection(3, 6)
 rec[3]
 ```
 
-```@example 2
+```@example access
 rec[7] = [1, 3, 6]
 ```
 
@@ -151,26 +187,28 @@ setdiff
 union
 ```
 
-Examples:
-```@example 3
+#### Examples:
+
+```@example basics
+using WeaklySeparatedCollections # hide
 rec = rectangle_collection(3, 6)
 check = checkboard_collection(3, 6)
 
 check[10] in rec 
 ```
 
-```@example 3
+```@example basics
 length(check)
 ```
 
-```@example 3
+```@example basics
 intersect(rec, check) # similar for union and setdiff
 ```
 
 ## Mutation
 
 WSC's usually contain `frozen` elements that never change. On the other hand some elements may be modified via mutation and are called `mutable`.
-To figure out which elemnents of a WSC are frozen or mutable use the functions `is_frozen` or `is_mutable`.
+To figure out which elements of a WSC are frozen or mutable use the functions `is_frozen` or `is_mutable`.
 
 ```@docs
 is_frozen
@@ -178,6 +216,7 @@ is_mutable
 ```
 
 ```@example
+using WeaklySeparatedCollections # hide
 rec = rectangle_collection(3, 6)
 is_frozen(rec, 4), is_mutable(rec, 7), is_mutable(rec, 11)
 ```
@@ -195,16 +234,27 @@ The indices of the mutable labels on a WSC can be obtained by using
 get_mutables
 ```
 
-Finally, to mutate a WSC, the functions `mutate`and `mutate!` are available.
+Finally, to mutate a WSC in the direction of a mutable label, the functions `mutate`and `mutate!` are available.
 
 ```@docs
 mutate!
 mutate
 ```
 
-Examples
+#### Examples:
 
-## other transformations
+```@example mutation
+using WeaklySeparatedCollections # hide
+rec = rectangle_collection(3, 6)
+get_mutables(rec)
+```
+
+```@example mutation
+mutate!(rec, 7)
+println(rec, full = true)
+```
+
+### Other transformations
 
 Apart from mutation, several other transformations of WSC's are available:
 
@@ -228,12 +278,36 @@ swap_colors!
 swap_colors
 ```
 
-We often want to deal with maximal WSC's instead of their subsets. To extend a given WSC to a maximal one, the following functions may be used:
+### Searching
 
-```@docs
-extend_weakly_separated!
-extend_to_collection
+TODO:
+
+BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, HEURISTIC, Astar, find_label
+
+#### Examples:
+
+```@example transformations
+using WeaklySeparatedCollections # hide
+check = checkboard_collection(3, 6)
+check.labels
 ```
+
+```@example transformations
+using WeaklySeparatedCollections # hide
+check = checkboard_collection(3, 6)
+rotate!(check, 1)
+check.labels
+```
+
+```@example transformations
+using WeaklySeparatedCollections # hide
+reflect!(check, 1)
+check.labels
+```
+
+## Oscar extension
+
+TODO
 
 ## Plotting
 Plotting WSC's requires `Luxor` to be installed and loaded as detailed [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/#Extensions).
@@ -248,6 +322,10 @@ drawTiling
 ```@docs
 drawPLG
 ```
+
+#### Examples:
+
+TODO
 
 ## Graphical user interface
 This section is work in progress.

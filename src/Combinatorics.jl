@@ -161,7 +161,7 @@ function dual_rectangle_label(k::Int, n::Int, i::Int, j::Int)
 end
 
 @doc raw"""
-    checkboard_label(k::Int, n::Int, i::Int, j::Int)
+    dual_checkboard_label(k::Int, n::Int, i::Int, j::Int)
 
 Return the label of the dual checkboard graph in row `i`
 and column `j`. 
