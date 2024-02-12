@@ -61,13 +61,15 @@ WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool =
 ```
 
 ```jldoctest
-a = 1
-b = 2
-a + b
+julia> a = 1
+1
 
-# output
+julia> b = 2;
 
-3
+julia> c = 3;  # comment
+
+julia> a + b + c
+6
 ```
 
 
