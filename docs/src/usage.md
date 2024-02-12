@@ -166,12 +166,6 @@ intersect(rec, check) # similar for union and setdiff
 
 ## frozen labels and mutation
 
-```@docs
-is_frozen
-frozen_label
-frozen_labels
-```
-
 WSC's usually contain `frozen` elements that never change. On the other hand some elements may be modified via mutation and are called `mutable`.
 To figure out which elemnents of a WSC are frozen or mutable use the functions `is_frozen` or `is_mutable`.
 
@@ -180,11 +174,25 @@ is_frozen
 is_mutable
 ```
 
+```@example
+rec = rectangle_collection(3, 6)
+is_frozen(rec, 4), is_mutable(rec, 7), is_mutable(rec, 11)
+```
+
+The frozen labels contained in any (maximal) WSC can be obtained via
+
+```@docs
+frozen_label
+frozen_labels
+```
+
+The indices of the mutable labels on a WSC can be obtained by using
+
 ```@docs
 get_mutables
 ```
 
-To mutate a WSC, the functions `mutate`and `mutate!` are available.
+Finally, to mutate a WSC, the functions `mutate`and `mutate!` are available.
 
 ```@docs
 mutate!
