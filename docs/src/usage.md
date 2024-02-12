@@ -60,9 +60,15 @@ WSCollection
 WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
 ```
 
+```jldoctest
+a = 1
+b = 2
+a + b
 
-[`WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)`](@ref)
+# output
 
+3
+```
 
 
 To see if two or more $k$-subsets are weakly separated, we use the function `is_weakly_separated`.
@@ -167,6 +173,8 @@ visualizer!
 ```
 
 TODO:
+
+[`WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)`](@ref)
 
 ### settings
 explain the non obvious options (or all) here.
