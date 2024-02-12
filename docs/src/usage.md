@@ -41,20 +41,34 @@ $b_1, \ldots, b_n$. Here the labelling is chosen in clockwise order.
 We only consider $\textbf{reduced}$ plabic graphs which can be also seen to be in one to one correspondance to WSC's that are maximal with respect to inclusion. 
 For more details we referr to TODO.
 
-## Combinatorics
+## Weakly separated collections
 
-In this section we will learn how to use the combinatorial part of WeaklySeparatedCollections. 
+In this section we will learn how to create and use a WSC.
 
 !!! compat "Vectors instead of sets"
     In this package we use vecors in place of sets, although WSC's are by definition sets of $k$-sets. 
     We always assume such vectors to be increasingly ordered and not contain double elements. 
     None of the below methods check these properties and unforseen behavior may arise if they are not fulfilled.
 
+The data type for WSC's or rather (abstract) plabic tilings is given by `WSCollection`.
+
+```@docs
+WSCollection
+```
+
+[`WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)`](@ref)
+
+
+
+
+
 To see if two or more $k$-subsets are weakly separated, we use the function `is_weakly_separated`.
 
 ```@docs
 is_weakly_separated
 ```
+
+## predefined collections
 
 The labels of some known weakly separated collections are available via
 
@@ -63,12 +77,6 @@ rectangle_labels
 checkboard_labels
 dual_rectangle_labels
 dual_checkboard_labels
-```
-
-The data type for WSC's or rather (abstract) plabic tilings is given by `WSCollection`.
-
-```@docs
-WSCollection
 ```
 
 The above predefined sets of labels give rise to weakly separated collections which are available via

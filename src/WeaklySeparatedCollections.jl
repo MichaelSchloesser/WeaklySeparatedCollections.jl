@@ -1,10 +1,13 @@
 
 module WeaklySeparatedCollections
 
-export  is_weakly_separated, frozen_label, checkboard_label, rectangle_label, checkboard_label, dual_rectangle_label,
-        frozen_labels, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels, 
-        WSCollection, hash, in, getindex, setindex!, length, cliques_missing, intersect, setdiff, union, is_frozen, is_mutable, get_mutables, mutate!, mutate, 
-        checkboard_collection, rectangle_collection, dual_checkboard_collection, dual_rectangle_collection, 
+export  is_weakly_separated, WSCollection, hash, in, getindex, setindex!, length, cliques_missing, 
+        intersect, setdiff, union, is_frozen, is_mutable, get_mutables, mutate!, mutate,
+
+        frozen_label, checkboard_label, rectangle_label, checkboard_label, dual_rectangle_label,
+        frozen_labels, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels,
+        checkboard_collection, rectangle_collection, dual_checkboard_collection, dual_rectangle_collection,
+        
         rotate!, reflect!, complement!, swap_colors!, rotate, reflect, complement, swap_colors, 
         extend_weakly_separated!, extend_to_collection
 
