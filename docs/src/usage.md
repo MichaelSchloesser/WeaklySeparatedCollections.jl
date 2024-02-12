@@ -55,7 +55,7 @@ WSCollection
 ```
 
 There are three different constructors to create a WSC:
-```@docs; setup = :(using Graphs)
+```@docs;
 WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
 WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}; computeCliques::Bool = true)
 WSCollection(collection::WSCollection; computeCliques::Bool = true)
