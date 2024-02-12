@@ -1,4 +1,5 @@
-using Documenter, WeaklySeparatedCollections
+using WeaklySeparatedCollections, Documenter
+DocMeta.setdocmeta!(MyPackage, :DocTestSetup, :(using WeaklySeparatedCollections); recursive=true)
 
 makedocs(;
     modules = [WeaklySeparatedCollections],
