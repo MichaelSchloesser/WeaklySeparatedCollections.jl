@@ -1,5 +1,4 @@
 using Documenter, WeaklySeparatedCollections
-import Graphs: SimpleGraph, SimpleDiGraph, nv, edges, src, dst, has_edge, add_edge!, add_vertex!, rem_edge!, inneighbors, outneighbors, degree
 
 makedocs(;
     modules = [WeaklySeparatedCollections],
