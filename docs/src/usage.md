@@ -63,17 +63,8 @@ WSCollection(collection::WSCollection; computeCliques::Bool = true)
 
 Thus to construct a WSC we only need to know its labels.
 ```@example 1
+using WeaklySeparatedCollections
+using Graphs
 labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6]]
 is_weakly_separated(labels)
-```
-
-```@example 1
-C = WSCollection(3, 6, labels)
-```
-
-However, if the underlying quiver is already known it can be passed to the constructor to speed up computations.
-
-```@example 1
-Q = C.quiver
-WSCollection(3, 6, labels, Q)
 ```
