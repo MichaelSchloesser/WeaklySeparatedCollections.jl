@@ -1,15 +1,22 @@
 
 module WeaklySeparatedCollections
 
-export  is_weakly_separated, WSCollection, hash, in, getindex, setindex!, length, cliques_missing, 
-        intersect, setdiff, union, is_frozen, is_mutable, get_mutables, mutate!, mutate,
+export  WSCollection,
 
         frozen_label, checkboard_label, rectangle_label, checkboard_label, dual_rectangle_label,
         frozen_labels, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels,
         checkboard_collection, rectangle_collection, dual_checkboard_collection, dual_rectangle_collection,
-        
+
+        getindex, setindex!, length, in,
+        intersect, setdiff, union, 
+
+        is_frozen, is_mutable, get_mutables, 
+        mutate!, mutate,
         rotate!, reflect!, complement!, swap_colors!, rotate, reflect, complement, swap_colors, 
+
         extend_weakly_separated!, extend_to_collection
+
+        is_weakly_separated, hash, cliques_missing, 
 
 export  BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, HEURISTIC, Astar, find_label
 

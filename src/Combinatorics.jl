@@ -482,13 +482,6 @@ Optionally the 2-cells can be set to `missing`, to save memory.
     WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
     WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, 
                                                               computeCliques::Bool = true)
-
-# Examples
-
-```julia-repl
-julia> labels = rectangle_labels(4, 9)
-julia> WSCollection(4, 9, labels);
-```
 """
 mutable struct WSCollection
     k::Int
@@ -508,6 +501,7 @@ computed using only a set of vertex `labels`.
 If `computeCliques` is set to false, the 2-cells will be set to `missing`.
 """
 function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
+    # TODO enfore frozen labels first
     Q, W, B = compute_adjacencies(k, n, labels)
 
     if computeCliques 
@@ -527,6 +521,7 @@ their adjacencies encoded in `quiver`. Faster than just using labels most of the
 If `computeCliques` is `false` the black and white 2-cells are set to `missing` instead.
 """
 function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}; computeCliques::Bool = true)
+    # TODO enfore frozen labels first
     if !computeCliques
         return WSCollection(k, n, deepcopy(labels), deepcopy(quiver), missing, missing)
     else

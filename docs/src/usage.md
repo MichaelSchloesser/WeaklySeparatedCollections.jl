@@ -41,9 +41,7 @@ $b_1, \ldots, b_n$. Here the labelling is chosen in clockwise order.
 We only consider $\textbf{reduced}$ plabic graphs which can be also seen to be in one to one correspondance to WSC's that are maximal with respect to inclusion. 
 For more details we referr to TODO.
 
-## Weakly separated collections
-
-In this section we will learn how to create and use a WSC.
+## Creating a weakly separated collection
 
 !!! compat "Vectors instead of sets"
     In this package we use vecors in place of sets, although WSC's are by definition sets of $k$-sets. 
@@ -56,35 +54,44 @@ The data type for WSC's or rather (abstract) plabic tilings is given by `WSColle
 WSCollection
 ```
 
+There are three different constructors to create a WSC:
 ```@docs
 WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
+WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}; computeCliques::Bool = true)
+WSCollection(collection::WSCollection; computeCliques::Bool = true)
 ```
 
-```@example
-a = 1
-b = 2
-a + b
+Thus to construct a WSC we only need to know its labels.
+```@example 1
+labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6]]
+is_weakly_separated(labels)
 ```
 
+```@example 1
+C = WSCollection(3, 6, labels)
+```
 
-To see if two or more $k$-subsets are weakly separated, we use the function `is_weakly_separated`.
+However, if the underlying quiver is already known it can be passed to the constructor to speed up computations.
 
-```@docs
-is_weakly_separated
+```@example 1
+Q = C.quiver
+WSCollection(3, 6, labels, Q)
+```
+
+The last constructor is useful, if we already have a WSC but want to omit the 2-cells or if the 2-cells of our WSC are missing and we want to compute them.
+
+```@example 1
+D = WSCollection(C, computeCliques = false)
+D.whiteCliques
+```
+
+```@example 1
+D = WSCollection(D)
+D.whiteCliques
 ```
 
 ## predefined collections
-
-The labels of some known weakly separated collections are available via
-
-```@docs
-rectangle_labels
-checkboard_labels
-dual_rectangle_labels
-dual_checkboard_labels
-```
-
-The above predefined sets of labels give rise to weakly separated collections which are available via
+Although any WSC may be constructed as explained above, this can be quite tedious. Thus we provide shortcuts for the construction of some well known WSC's:
 
 ```@docs
 checkboard_collection
@@ -93,10 +100,76 @@ dual_checkboard_collection
 dual_rectangle_collection
 ```
 
-Two WSC's are considered equal if their underlying labels are equal as sets. 
+If we only want the underlying labels we may instead use
 
 ```@docs
-Base.:(==)
+rectangle_label
+rectangle_labels
+```
+
+```@docs
+checkboard_label
+checkboard_labels
+```
+
+```@docs
+dual_rectangle_label
+dual_rectangle_labels
+```
+
+```@docs
+dual_checkboard_label
+dual_checkboard_labels
+```
+
+## basic functionality
+Armed with this plethora of examples, we are ready to discuss the basic functionalities of WSC's.
+
+WSC's behave in many ways as their underlying arrays of labels would. In particular labels may be accessed directly.
+
+```@example 2
+rec = rectangle_collection(3, 6)
+rec[3]
+```
+
+```@example 2
+rec[7] = [1, 3, 6]
+```
+
+Caution is advised when modifying labels as above, as it is not checked if the resulting labels are still weakly separated nor is the associated data changed accordingly.
+
+For convenience we also extend the following functions:
+
+```@docs
+in
+length
+intersect
+setdiff
+union
+```
+
+Examples:
+```@example 3
+rec = rectangle_collection(3, 6)
+check = checkboard_collection(3, 6)
+
+check[10] in rec 
+```
+
+```@example 3
+length(check)
+```
+
+```@example 3
+intersect(rec, check) # similar for union and setdiff
+```
+
+## frozen labels and mutation
+
+```@docs
+is_frozen
+frozen_label
+frozen_labels
 ```
 
 WSC's usually contain `frozen` elements that never change. On the other hand some elements may be modified via mutation and are called `mutable`.
@@ -105,6 +178,10 @@ To figure out which elemnents of a WSC are frozen or mutable use the functions `
 ```@docs
 is_frozen
 is_mutable
+```
+
+```@docs
+get_mutables
 ```
 
 To mutate a WSC, the functions `mutate`and `mutate!` are available.
