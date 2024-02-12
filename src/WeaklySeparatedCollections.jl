@@ -10,8 +10,7 @@ export  WSCollection,
         getindex, setindex!, length, in,
         intersect, setdiff, union, 
 
-        is_frozen, is_mutable, get_mutables, 
-        mutate!, mutate,
+        is_frozen, is_mutable, get_mutables, mutate!, mutate,
         rotate!, reflect!, complement!, swap_colors!, rotate, reflect, complement, swap_colors, 
 
         extend_weakly_separated!, extend_to_collection,
