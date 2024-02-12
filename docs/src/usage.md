@@ -55,10 +55,221 @@ WSCollection
 ```
 
 There are three different constructors to create a WSC:
-```@docs;
+
+```@docs
 WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
 WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}; computeCliques::Bool = true)
 WSCollection(collection::WSCollection; computeCliques::Bool = true)
 ```
 
+Thus to construct a WSC we only need to know its labels.
+```@example 1
+using WeaklySeparatedCollections
+using Graphs
+labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6]]
+is_weakly_separated(labels)
+```
+
+```@example 1
+C = WSCollection(3, 6, labels)
+```
+
+However, if the underlying quiver is already known it can be passed to the constructor to speed up computations.
+
+```@example 1
+Q = C.quiver
+WSCollection(3, 6, labels, Q)
+```
+
+The last constructor is useful, if we already have a WSC but want to omit the 2-cells or if the 2-cells of our WSC are missing and we want to compute them.
+
+```@example 1
+D = WSCollection(C, computeCliques = false)
+D.whiteCliques
+```
+
+```@example 1
+D = WSCollection(D)
+D.whiteCliques
+```
+
+## Predefined collections
+Although any WSC may be constructed as explained above, this can be quite tedious. Thus we provide shortcuts for the construction of some well known WSC's:
+
+```@docs
+checkboard_collection
+rectangle_collection
+dual_checkboard_collection
+dual_rectangle_collection
+```
+
+If we only want the underlying labels we may instead use
+
+```@docs
+rectangle_label
+rectangle_labels
+```
+
+```@docs
+checkboard_label
+checkboard_labels
+```
+
+```@docs
+dual_rectangle_label
+dual_rectangle_labels
+```
+
+```@docs
+dual_checkboard_label
+dual_checkboard_labels
+```
+
+## Basic functionality
+Armed with this plethora of examples, we are ready to discuss the basic functionalities of WSC's.
+
+WSC's behave in many ways as their underlying arrays of labels would. In particular labels may be accessed directly.
+
+```@example 2
+rec = rectangle_collection(3, 6)
+rec[3]
+```
+
+```@example 2
+rec[7] = [1, 3, 6]
+```
+
+Caution is advised when modifying labels as above, as it is not checked if the resulting labels are still weakly separated nor is the associated data changed accordingly.
+
+For convenience we also extend the following functions:
+
+```@docs
+in
+length
+intersect
+setdiff
+union
+```
+
+Examples:
+```@example 3
+rec = rectangle_collection(3, 6)
+check = checkboard_collection(3, 6)
+
+check[10] in rec 
+```
+
+```@example 3
+length(check)
+```
+
+```@example 3
+intersect(rec, check) # similar for union and setdiff
+```
+
+## Mutation
+
+WSC's usually contain `frozen` elements that never change. On the other hand some elements may be modified via mutation and are called `mutable`.
+To figure out which elemnents of a WSC are frozen or mutable use the functions `is_frozen` or `is_mutable`.
+
+```@docs
+is_frozen
+is_mutable
+```
+
+```@example
+rec = rectangle_collection(3, 6)
+is_frozen(rec, 4), is_mutable(rec, 7), is_mutable(rec, 11)
+```
+
+The frozen labels contained in any (maximal) WSC can be obtained via
+
+```@docs
+frozen_label
+frozen_labels
+```
+
+The indices of the mutable labels on a WSC can be obtained by using
+
+```@docs
+get_mutables
+```
+
+Finally, to mutate a WSC, the functions `mutate`and `mutate!` are available.
+
+```@docs
+mutate!
+mutate
+```
+
+Examples
+
+## other transformations
+
+Apart from mutation, several other transformations of WSC's are available:
+
+```@docs
+rotate!
+rotate
+```
+
+```@docs
+reflect!
+reflect
+```
+
+```@docs
+complement!
+complement
+```
+
+```@docs
+swap_colors!
+swap_colors
+```
+
+We often want to deal with maximal WSC's instead of their subsets. To extend a given WSC to a maximal one, the following functions may be used:
+
+```@docs
+extend_weakly_separated!
+extend_to_collection
+```
+
+## Plotting
+Plotting WSC's requires `Luxor` to be installed and loaded as detailed [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/#Extensions).
+
+In the introduction we learned about plabic tilings as well as plabic graphs as objects living in the plane which are in one to one correspndance to maximal WSC's.
+Thus we can plot a maximal WSC using its corresponding plabic tiling or plabic graph. The functions to accomplish this are:
+
+```@docs
+drawTiling
+```
+
+```@docs
+drawPLG
+```
+
+## Graphical user interface
+This section is work in progress.
+
+The graphical user interface requires both an installation of `Luxor` as well as `Mousetrap`. See [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/#Extensions) for details.
+
+While plotting WSC's enables us to visualize them, the resulting images lack interactivity. This is where the built in gui application comes in handy. To start it we use
+
+```@docs
+visualizer!
+```
+
+TODO:
+
+[`WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)`](@ref)
+
+### settings
+explain the non obvious options (or all) here.
+
+- `adjust drawing angle`: If checked, the embeddings of the plabic graph (and tiling) will be rotated such that the boundary vertex `1` is drawn at a more consistant position.
+
+### file: saving, loading, export
+
+### edit
 
