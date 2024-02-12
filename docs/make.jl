@@ -1,5 +1,5 @@
 using WeaklySeparatedCollections, Documenter
-DocMeta.setdocmeta!(WeaklySeparatedCollections, :DocTestSetup, :(using WeaklySeparatedCollections); recursive=true)
+DocMeta.setdocmeta!(WeaklySeparatedCollections, :DocTestSetup, :(using WeaklySeparatedCollections, Graphs); recursive=true)
 
 makedocs(;
     modules = [WeaklySeparatedCollections],
