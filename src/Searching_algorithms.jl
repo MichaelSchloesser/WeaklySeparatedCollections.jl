@@ -164,7 +164,11 @@ function diff_len(w, x)
     return sum((a -> !(a in x)).(w))
 end
 
-# easy estimation of minimum number of mutations needed to reach the target
+@doc raw"""
+    number_wrong_labels(collection::WSCollection, target::WSCollection)
+
+Return the number of labels in `collection` that do not occur in `target`.
+"""
 function number_wrong_labels(collection::WSCollection, target::WSCollection) 
     return length(setdiff(collection, target))
 end
@@ -174,7 +178,13 @@ function number_wrong_labels_change(old_label, new_label, h_value, target)
     return h_value + (old_label in target) - (new_label in target)
 end
 
-# more complicated but better estimation of distance to the target. takes longer
+@doc raw"""
+    min_label_dist(collection::WSCollection, target::WSCollection)
+
+Return the sum of minimum label distances, where for each label in `collection` 
+this distance is calculated as the minimal number of integer pairs one needs 
+to exchange in order to obtain a label of `target`.
+"""
 function min_label_dist(collection::WSCollection, target::WSCollection)
     n = target.n
     wrong_labels = setdiff(collection, target)
@@ -196,7 +206,15 @@ function min_label_dist_change(old_label, new_label, h_value, target)
     return h_value + minimum( x -> estimate(new_label, x), target.labels[n+1:end]) - minimum( x -> estimate(old_label, x), target.labels[n+1:end]) 
 end
 
-# assumption: dont need to mutate correct labels -> consider missing labels only
+@doc raw"""
+    min_label_dist_experimental(collection::WSCollection, target::WSCollection)
+
+Return the sum over minimal label distances of wrong labels in `collection`. 
+
+This assumes that a minimal sequence of mutations between WSC's can be 
+found while never mutating correct labels i.e. labels that are contained 
+in the target WSC.
+"""
 function min_label_dist_experimental(collection::WSCollection, target::WSCollection)
     wrong_labels = setdiff(collection, target)
     missing_labels = setdiff(target, collection)

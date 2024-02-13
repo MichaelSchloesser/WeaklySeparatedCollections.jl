@@ -302,9 +302,106 @@ check.labels
 
 ### Searching
 
-TODO:
+In theory all WSC's of common type can be transformed into each other by mutations. In proctice however it is quite difficult to find a suitable sequence of mutations from one WSC to another. Thus we provide different searching algorithms to automate the search for such sequences.
 
-BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, HEURISTIC, Astar, find_label
+On the conceptually easy end we have breadth and depth first search:
+
+```@docs
+BFS
+```
+
+```@docs
+DFS
+```
+
+#### Examples:
+
+```@example uninformed
+using WeaklySeparatedCollections # hide
+check = checkboard_collection(3, 7)
+rec = rectangle_collection(3, 7)
+BFS(check, rec)
+```
+
+```@example uninformed
+DFS(check, rec)
+```
+
+If the target WSC is close enough, searching is also feasable for bigger parameters.
+
+```@example uninformed
+check = checkboard_collection(7, 16)
+label = [1, 2, 3, 4, 5, 6, 15]
+target = extend_to_collection([label], check)
+DFS(check, target, limitSearchSpace = true)
+```
+
+For more informed searching we first need suitable heuristics, i.e. lower bounds on the number of mutations needed to reach a WSC from a given one.
+
+```@docs
+number_wrong_labels
+```
+
+```@docs
+min_label_dist
+```
+
+```@docs
+min_label_dist_experimental
+```
+
+#### Examples:
+
+```@example heuristics
+using WeaklySeparatedCollections # hide
+check = checkboard_collection(10, 20)
+rec = rectangle_collection(10, 20)
+number_wrong_labels(check, rec)
+```
+
+```@example heuristics
+min_label_dist(check, rec)
+```
+
+```@example heuristics
+min_label_dist_experimental(check, rec)
+```
+
+The above heuristics can be used for the Astar algorithm by passing the corresponding enum.
+
+```@docs
+Astar
+```
+
+#### Examples:
+
+```@example Astar
+using WeaklySeparatedCollections # hide
+check = checkboard_collection(3, 8)
+rec = rectangle_collection(3, 8)
+Astar(check, rec)
+```
+
+```@example Astar
+check = checkboard_collection(4, 9)
+rec = rectangle_collection(4, 9)
+Astar(check, rec, heuristic = MIN_LABEL_DIST_EXPERIMENTAL)
+```
+
+Sometimes we only want to find a sequence of mutations from some WSC to any WSC containing some desired label. 
+
+```@docs
+find_label
+```
+
+```@example find_label
+using WeaklySeparatedCollections # hide
+check = checkboard_collection(4, 9)
+rec = rectangle_collection(4, 9)
+Astar(check, rec, heuristic = MIN_LABEL_DIST_EXPERIMENTAL)
+```
+
+, generalized_associahedron
 
 ## Oscar extension
 

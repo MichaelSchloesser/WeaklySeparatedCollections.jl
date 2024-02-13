@@ -16,7 +16,8 @@ export  WSCollection,
         extend_weakly_separated!, extend_to_collection,
         is_weakly_separated, hash, cliques_missing
 
-export  BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, HEURISTIC, Astar, find_label
+export  BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, 
+        HEURISTIC, NUMBER_WRONG_LABELS, MIN_LABEL_DIST, MIN_LABEL_DIST_EXPERIMENTAL, Astar, find_label
 
 export  drawTiling, drawPLG
         
