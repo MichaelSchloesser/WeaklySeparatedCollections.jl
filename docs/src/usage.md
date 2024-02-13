@@ -273,7 +273,7 @@ reflect
 
 ```@docs
 complement!
-complement
+complement(collection::WSCollection)
 ```
 
 ```@docs
