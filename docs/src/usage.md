@@ -263,29 +263,21 @@ Apart from mutation, several other transformations of WSC's are available:
 
 ```@docs
 rotate!
-rotate
 ```
 
 ```@docs
 reflect!
-reflect
 ```
 
 ```@docs
 complement!
-complement(collection::WSCollection)
 ```
 
 ```@docs
 swap_colors!
-swap_colors
 ```
 
-### Searching
-
-TODO:
-
-BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, HEURISTIC, Astar, find_label
+For each of the above methods, a variant that does not modify its argument is avaliable (just omit the `!` ). 
 
 #### Examples:
 
@@ -307,6 +299,12 @@ using WeaklySeparatedCollections # hide
 reflect!(check, 1)
 check.labels
 ```
+
+### Searching
+
+TODO:
+
+BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, HEURISTIC, Astar, find_label
 
 ## Oscar extension
 
