@@ -5,8 +5,8 @@ DocMeta.setdocmeta!(WeaklySeparatedCollections, :DocTestSetup, :(using WeaklySep
 makedocs(;
     modules = [WeaklySeparatedCollections],
     pages = [
-        "Home" => "index.md"
-        "User guide" => "usage.md"
+        "Home" => "index.md" 
+        "User guide" => "usage.md" # TODO split this up
         "References" => "reference.md"
     ],
     sitename = "WeaklySeparatedCollections",

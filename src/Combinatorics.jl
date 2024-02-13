@@ -568,7 +568,7 @@ Base.hash(collection::WSCollection) = hash(Set(collection.labels))
 @doc raw"""
     in(label::Vector{Int}, collection::WSCollection)
 
-Return true `label` is occurs as label of `collection`.
+Return true if `label` is occurs as label of `collection`.
 """
 Base.in(label::Vector{Int}, collection::WSCollection) = label in collection.labels
 

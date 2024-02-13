@@ -67,6 +67,7 @@ WSCollection(collection::WSCollection; computeCliques::Bool = true)
 Thus to construct a WSC we only need to know its labels.
 
 #### Examples:
+
 ```@example constructors
 using WeaklySeparatedCollections # hide
 labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], 
@@ -108,25 +109,27 @@ extend_to_collection
 
 #### Examples:
 
-We may extend by brute force:
+We may extend using brute force:
 
-```@example extending
+```@example extend
 using WeaklySeparatedCollections # hide
 label = [1, 3, 4]
-extend_weakly_separated(3, 6, [label])
+extend_weakly_separated!(3, 6, [label])
 ```
 Or if we want to prefer labels from a known weakly separated set (and then fill up by brute force):
 
-```@example extending
+```@example extend
+label = [1, 3, 4]
 preferred_labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], 
                     [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6]]
-extend_weakly_separated(3, 6, [label], preferred_labels)
+extend_weakly_separated!(3, 6, [label], preferred_labels)
 ```
 
 We could have just as well passed a WSC instead of `preferred_labels` above. Note that so far we only constructed arrays of labels.
 To obtain a WSC containing these labels we use `extend_to_collection`.
 
-```@example extending
+```@example extend
+label = [1, 3, 4]
 extend_to_collection(3, 6, [label], preferred_labels)
 ```
 
