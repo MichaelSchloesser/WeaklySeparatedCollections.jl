@@ -401,7 +401,35 @@ rec = rectangle_collection(4, 9)
 Astar(check, rec, heuristic = MIN_LABEL_DIST_EXPERIMENTAL)
 ```
 
-, generalized_associahedron
+Finally to get an overview we can calculate all WSC's of a given type and connect those who arise from each other by mutation. 
+The resulting Graph is also called the generalized associahedron.
+
+```@docs
+generalized_associahedron
+```
+
+```@example Astar
+using WeaklySeparatedCollections # hide
+root = checkboard_collection(3, 7)
+list, A = generalized_associahedron(root)
+A
+```
+
+The obtained Graph may be plottet in 3D using external libraries such as [GraphMakie](https://github.com/MakieOrg/GraphMakie.jl):
+
+```
+max = length(root) - root.n
+n_mutables = a -> length(get_mutables(list[a]))
+min = minimum(n_mutables(a) for a in 1:nv(A))
+d = max - min
+
+# greener means more mutable faces, red means less mutable faces.
+node_colors = [RGBA(1.0 - (n_mutables(a) - min)/d, (n_mutables(a) - min)/d, 0.0, 1.0) for a in 1:nv(A)]
+
+graphplot(A, layout = Spring(dim = 3, seed = 1), edge_width = 0.5, node_size = 15, node_color = node_colors)
+```
+
+![](docs/src/assets/associahedron_3_7.png)
 
 ## Oscar extension
 
