@@ -150,13 +150,13 @@ using WeaklySeparatedCollections # hide
 rectangle_collection(3, 6)
 ```
 
-If we only want the underlying labels we may instead use [`rectangle_labels(k::Int, n::Int)`](@ref) (similar for the other predefined collections).
+If we only want the underlying labels we may instead use `rectangle_labels(k::Int, n::Int)` (similar for the other predefined collections).
 
 ```@example predefined
 rectangle_labels(3, 6)
 ```
 
-The labels of the rectangle collection can be arranged on a grid in a natural way. Specific labels in this grid are returned by [rectangle_label(k::Int, n::Int, i::Int, j::Int)](@ref)
+The labels of the rectangle collection can be arranged on a grid in a natural way. Specific labels in this grid are returned by `rectangle_label(k::Int, n::Int, i::Int, j::Int)`
 where $i = 0, ..., n-k$ and $j = 0, ..., k$ (similar for the other collections, where for the dual ones $i = 0, ..., k$ and $j = 0, ..., n-k$ ).
 
 ```@example predefined
@@ -254,6 +254,13 @@ get_mutables(rec)
 
 ```@example mutation
 mutate!(rec, 7)
+println(rec, full = true)
+```
+
+For convenience we may also mutate by specifying a label:
+
+```@example mutation
+mutate!(rec, [3,4,6])
 println(rec, full = true)
 ```
 
@@ -397,8 +404,18 @@ find_label
 ```@example find_label
 using WeaklySeparatedCollections # hide
 check = checkboard_collection(4, 9)
-rec = rectangle_collection(4, 9)
-Astar(check, rec, heuristic = MIN_LABEL_DIST_EXPERIMENTAL)
+label = [2, 3, 4, 9]
+s = find_label(check, label, heuristic = MIN_LABEL_DIST_EXPERIMENTAL)
+```
+
+Lets test the found sequence
+
+```@example find_label
+for i in s
+    mutate!(check, i)
+end
+
+check[21] # = label
 ```
 
 Finally to get an overview we can calculate all WSC's of a given type and connect those who arise from each other by mutation. 
@@ -431,14 +448,11 @@ graphplot(A, layout = Spring(dim = 3, seed = 1), edge_width = 0.5, node_size = 1
 
 ![](docs/src/assets/associahedron_3_7.png)
 
-## Oscar extension
-
-TODO
-
 ## Plotting
+
 Plotting WSC's requires `Luxor` to be installed and loaded as detailed [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/#Extensions).
 
-In the introduction we learned about plabic tilings as well as plabic graphs as objects living in the plane which are in one to one correspndance to maximal WSC's.
+In the introduction we learned about plabic tilings as well as plabic graphs as objects living in the plane which are in one to one correspondance to maximal WSC's.
 Thus we can plot a maximal WSC using its corresponding plabic tiling or plabic graph. The functions to accomplish this are:
 
 ```@docs
@@ -451,7 +465,32 @@ drawPLG
 
 #### Examples:
 
-TODO
+If working in a Jupyter sheet, WSC's may be plottet directly without saving the image in a file.
+
+```
+H = rectangle_collection(3, 6)
+drawTiling(H) # plotts H as plabic tiling
+```
+
+![](docs/src/assets/example_1.png)
+
+```
+H = rectangle_collection(3, 6)
+drawPLG_straight(H; drawLabels = true) # plotts H as plabic graph with straight edges
+```
+
+![](docs/src/assets/example_2.png)
+
+To save an image as png, svg, pdf or eps file, we just need to give it a title with the corresponding file extension.
+
+```
+H = checkboard_collection(3, 6)
+# will save the image as title.png (by defalut without background)
+drawPLG_straight(H, "title.png"; drawLabels = true)
+```
+
+![](docs/src/assets/example_3.png)
+
 
 ## Graphical user interface
 This section is work in progress.
@@ -464,10 +503,6 @@ While plotting WSC's enables us to visualize them, the resulting images lack int
 visualizer!
 ```
 
-TODO:
-
-[`WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)`](@ref)
-
 ### settings
 explain the non obvious options (or all) here.
 
@@ -476,4 +511,8 @@ explain the non obvious options (or all) here.
 ### file: saving, loading, export
 
 ### edit
+
+## Oscar extension
+
+TODO
 
