@@ -418,7 +418,7 @@ end
 check[21] # = label
 ```
 
-Finally to get an overview we can calculate all WSC's of a given type and connect those who arise from each other by mutation. 
+Finally to get an overview we can calculate all WSC's of a given type and connect those who arise from each other by mutation by an edge. 
 The resulting Graph is also called the generalized associahedron.
 
 ```@docs
@@ -441,9 +441,11 @@ min = minimum(n_mutables(a) for a in 1:nv(A))
 d = max - min
 
 # greener means more mutable faces, red means less mutable faces.
-node_colors = [RGBA(1.0 - (n_mutables(a) - min)/d, (n_mutables(a) - min)/d, 0.0, 1.0) for a in 1:nv(A)]
+node_colors = [RGBA(1.0 - (n_mutables(a) - min)/d, (n_mutables(a) - min)/d, 0.0, 1.0) 
+                for a in 1:nv(A)]
 
-graphplot(A, layout = Spring(dim = 3, seed = 1), edge_width = 0.5, node_size = 15, node_color = node_colors)
+graphplot(A, layout = Spring(dim = 3, seed = 1), edge_width = 0.5, node_size = 15, 
+            node_color = node_colors)
 ```
 
 ![](assets/associahedron_3_7.png)
@@ -505,7 +507,7 @@ visualizer!
 
 Much of the functionality discussed so far is available through this interface, for example to mutate a WSC in the direction of a label we can just click on it.
 
-We shortly explain the contend of the menubar as well as settings
+We shortly explain the contend of the menubar as well as settings.
 
 ### Settings
 
@@ -545,5 +547,7 @@ Finally under the view submenu all options to disable/enable parts of the gui ar
 
 ## Oscar extension
 
-TODO
+
+
+
 

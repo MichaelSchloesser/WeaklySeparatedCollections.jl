@@ -9,22 +9,6 @@ end
     is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
 
 Test if two vectors `v` and `w` viewed as subsets of `{1 , ..., n }` are weakly separated.
-
-# Examples
-
-```julia-repl
-julia> v = [1,2,3,5,6,9]
-julia> w = [1,2,4,5,7,8]
-julia> is_weakly_separated(9, v, w)
-true
-```
-
-```julia-repl
-julia> v = [1,2,3,5,6,9]
-julia> w = [1,2,3,5,7,8]
-julia> is_weakly_separated(9, v, w)
-false
-```
 """
 function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int}) 
     x = setdiff(v, w)
@@ -71,16 +55,6 @@ end
     is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
 
 Test if the vectors contained in `labels` are pairwise weakly separated.
-
-# Examples
-
-```julia-repl
-julia> u = [1,2,3,4,5,6]
-julia> v = [1,2,3,5,6,9]
-julia> w = [1,2,3,5,7,8]
-julia> is_weakly_separated(9, [u, v, w])
-true
-```
 """
 function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
     len = length(labels)
@@ -99,13 +73,6 @@ end
     frozen_label(k::Int, n::Int, i::Int)
 
 return the `i-th` frozen label.
-
-# Examples
-
-```julia-repl
-julia> frozen_label(3, 6, 3)
-julia> [1,2,3]
-```
 """
 function frozen_label(k::Int, n::Int, i::Int) 
     return sort!([pmod(l+i-1, n) for l = 2-k:1]) 
@@ -482,6 +449,7 @@ Optionally the 2-cells can be set to `missing`, to save memory.
     WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
     WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, 
                                                               computeCliques::Bool = true)
+    WSCollection(collection::WSCollection; computeCliques::Bool = true)
 """
 mutable struct WSCollection
     k::Int
@@ -702,15 +670,6 @@ end
 Return true if the vertex `i` of `collection` is frozen.
 
 # Examples
-
-```julia-repl
-julia> H = rectangle_collection(4, 9)
-julia> is_frozen(H, 5)
-true
-
-julia> is_frozen(H, 11)
-false
-```
 """
 function is_frozen(collection::WSCollection, i::Int) 
     return i <= collection.n
@@ -723,15 +682,6 @@ Return true if the vertex `i` of `collection` is mutable. This is the case if
 it is not frozen and is of degree 4.
 
 # Examples
-
-```julia-repl
-julia> H = rectangle_collection(4, 9)
-julia> is_mutable(H, 11)
-false
-
-julia> is_frozen(H, 10)
-true
-```
 """
 function is_mutable(collection::WSCollection, i::Int) 
     return !is_frozen(collection, i) && degree(collection.quiver, [i])[1] == 4 
@@ -752,14 +702,6 @@ end
 Mutate the `collection` in direction `i` if `i` is a mutable vertex of `collection`.
 
 If `mutateCliques` is set to false, the 2-cells are set to missing.
-
-
-# Examples
-
-```julia-repl
-julia> H = rectangle_collection(4, 9)
-julia> mutate!(H, 10)
-```
 """
 function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
 
@@ -878,20 +820,6 @@ end
     mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
 
 Mutate the `collection` by addressing a vertex with its label.
-
-# Examples
-
-```julia-repl
-julia> H = rectangle_collection(4, 9)
-julia> H.labels[10]
-4-element Vector{Int64}:
- 2
- 7
- 8
- 9
-
-julia> mutate!(H, [2,7,8,9])
-```
 """
 function mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true) 
     i = findfirst(x -> x == label, collection.labels)
@@ -948,13 +876,6 @@ end
     rotate!(collection::WSCollection, amount::Int)
 
 Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation.
-
-# Examples
-
-```julia-repl
-julia> H = rectangle_collection(4, 9)
-julia> rotate!(H, 2)
-```
 """
 function rotate!(collection::WSCollection, amount::Int)
     shift = x -> pmod(x + amount, collection.n)
@@ -976,13 +897,6 @@ end
 
 Reflect `collection` by letting the permutation `x ↦ 2*axis -x` interpreted modulo 
 `n = collection.n` act on the labels of `collection`.
-
-# Examples
-
-```julia-repl
-julia> H = rectangle_collection(4, 9)
-julia> reflect!(H, 1)
-```
 """
 function reflect!(collection::WSCollection, axis = 1) 
     
@@ -1004,13 +918,6 @@ end
     complement!(collection::WSCollection) 
 
 Return the collection whose labels are complementary to those of `collection`.
-
-# Examples
-
-```julia-repl
-julia> H = rectangle_collection(4, 9)
-julia> complement!(H)
-```
 """
 function complement!(collection::WSCollection) 
     n = collection.n
@@ -1061,13 +968,6 @@ Return the weakly separated collection whose corresponding plabic graph is obtai
 from the one of `collection` by swapping the colors black and white.
 
 This is the same as taking complements and rotating by `collection.k`.
-
-# Examples
-
-```julia-repl
-julia> H = rectangle_collection(4, 9)
-julia> swap_colors!(H)
-```
 """
 function swap_colors!(collection::WSCollection) 
     # swapping colors = complement + rotate by k
@@ -1123,13 +1023,6 @@ end
     extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})  
 
 Extend `labels` to contain the labels of a maximal weakly separated collection.
-
-# Examples
-
-```julia-repl
-julia> labels = [[1,3,5,7], [1,3,5,9]]
-julia> extend_weakly_separated!(4, 9, labels)
-```
 """
 function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})
     N = k*(n-k)+1
@@ -1167,14 +1060,6 @@ end
 
 Extend `labels1` to contain the labels of a maximal weakly separated collection.
 Use elements of `labels2` if possible.
-
-# Examples
-
-```julia-repl
-julia> labels1 = [[1,3,5,7], [1,3,5,9]]
-julia> labels2 = checkboard_labels(4, 9)
-julia> extend_weakly_separated!(4, 9, labels1, labels2)
-```
 """
 function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
     N = k*(n-k)+1
@@ -1217,14 +1102,6 @@ end
 
 Extend `labels` to contain the labels of a maximal weakly separated collection.
 Use labels of `collection` if possible.
-
-# Examples
-
-```julia-repl
-julia> labels = [[1,3,5,7], [1,3,5,9]]
-julia> H = checkboard_collection(4, 9)
-julia> extend_weakly_separated!(labels, H)
-```
 """
 function extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)
     return extend_weakly_separated!(collection.k, collection.n, labels, collection.labels)
@@ -1234,13 +1111,6 @@ end
     extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
 
 Return a maximal weakly separated collection containing all elements of `labels`.
-
-# Examples
-
-```julia-repl
-julia> labels = [[1,3,5,7], [1,3,5,9]]
-julia> extend_to_collection(4, 9, labels)
-```
 """
 function extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
     return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels)))
@@ -1252,14 +1122,6 @@ end
 
 Return a maximal weakly separated collection containing all elements of `labels1`.
 Use elements of `labels2` if possible.
-
-# Examples
-
-```julia-repl
-julia> labels1 = [[1,3,5,7], [1,3,5,9]]
-julia> labels2 = checkboard_labels(4, 9)
-julia> extend_to_collection(4, 9, labels1, labels2)
-```
 """
 function extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
     return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels1), labels2))
@@ -1270,14 +1132,6 @@ end
 
 Return a maximal weakly separated collection containing all elements of `labels`.
 Use labels of `collection` if possible.
-
-# Examples
-
-```julia-repl
-julia> labels = [[1,3,5,7], [1,3,5,9]]
-julia> H = checkboard_collection(4, 9)
-julia> extend_to_collection(labels, H)
-```
 """
 function extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)
     return WSCollection(collection.k, collection.n, extend_weakly_separated!(deepcopy(labels), collection))

@@ -105,32 +105,6 @@ integers.
     Seed(n_frozen::Int, variables, quiver::SimpleDiGraph{Int})
     Seed(cluster_size::Int, n_frozen::Int, quiver::SimpleDiGraph{Int})
     Seed(collection::WSCollection)
-
-# Examples
-
-```julia-repl
-julia> Q = rectangle_collection(4, 9).quiver 
-julia> R, _ = polynomial_ring(ZZ, 21)
-julia> S = fraction_field(R)
-julia> Seed(9, gens(S), Q)
-Seed with 9 frozen and 12 mutable variables
-```
-
-Equivalently we may write
-
-```julia-repl
-julia> Q = rectangle_collection(4, 9).quiver 
-julia> Seed(21, 9, Q)
-Seed with 9 frozen and 12 mutable variables
-```
-
-Or even shorter
-
-```julia-repl
-julia> Seed(rectangle_collection(4, 9)) 
-Seed with 9 frozen and 12 mutable variables
-```
-
 """
 mutable struct Seed
     n_frozen::Int
