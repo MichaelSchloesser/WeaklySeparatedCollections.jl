@@ -72,7 +72,7 @@ end
 @doc raw"""
     frozen_label(k::Int, n::Int, i::Int)
 
-return the `i-th` frozen label.
+Return the `i-th` frozen label.
 """
 function frozen_label(k::Int, n::Int, i::Int) 
     return sort!([pmod(l+i-1, n) for l = 2-k:1]) 
@@ -668,8 +668,6 @@ end
     is_frozen(collection::WSCollection, i::Int)
 
 Return true if the vertex `i` of `collection` is frozen.
-
-# Examples
 """
 function is_frozen(collection::WSCollection, i::Int) 
     return i <= collection.n
@@ -678,10 +676,7 @@ end
 @doc raw"""
     is_mutable(collection::WSCollection, i::Int) 
 
-Return true if the vertex `i` of `collection` is mutable. This is the case if
-it is not frozen and is of degree 4.
-
-# Examples
+Return true if the vertex `i` of `collection` is mutable.
 """
 function is_mutable(collection::WSCollection, i::Int) 
     return !is_frozen(collection, i) && degree(collection.quiver, [i])[1] == 4 

@@ -218,10 +218,20 @@ is_frozen
 is_mutable
 ```
 
-```@example
+```@example frozen
 using WeaklySeparatedCollections # hide
 rec = rectangle_collection(3, 6)
-is_frozen(rec, 4), is_mutable(rec, 7), is_mutable(rec, 11)
+is_frozen(rec, 4)
+```
+
+```@example frozen
+rec = rectangle_collection(3, 6)
+is_mutable(rec, 7)
+```
+
+```@example frozen
+rec = rectangle_collection(3, 6)
+is_mutable(rec, 11)
 ```
 
 The frozen labels contained in any (maximal) WSC can be obtained via
