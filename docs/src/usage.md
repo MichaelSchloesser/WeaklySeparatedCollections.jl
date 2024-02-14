@@ -491,9 +491,7 @@ drawPLG_straight(H, "title.png"; drawLabels = true)
 
 ![](assets/example_3.png)
 
-
 ## Graphical user interface
-This section is work in progress.
 
 The graphical user interface requires both an installation of `Luxor` as well as `Mousetrap`. See [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/#Extensions) for details.
 
@@ -505,14 +503,37 @@ visualizer!
 
 ![](assets/example_gui.png)
 
-### settings
+Much of the functionality discussed so far is available through this interface, for example to mutate a WSC in the direction of a label we can just click on it.
+
+We shortly explain the contend of the menubar as well as settings
+
+### Settings
+
 explain the non obvious options (or all) here.
 
 - `adjust drawing angle`: If checked, the embeddings of the plabic graph (and tiling) will be rotated such that the boundary vertex `1` is drawn at a more consistant position.
 
-### file: saving, loading, export
+### File
 
-### edit
+Through the File submenu we may save or load WSC's. 
+
+![](assets/file_submenu.png)
+
+Moreover we can also easily export the images drawn in the gui as png, svg, pdf or eps file
+
+![](assets/example_export.png)
+
+### Edit
+
+The Edit submenu contains transformations other than mutation, such as rotations and reflections as well as a quick way to load all the predefines WSC's.
+
+![](assets/edit_submenu.png)
+
+### View
+
+Finally under the view submenu all options to disable/enable parts of the gui are collected.
+
+![](assets/view_submenu.png)
 
 ## Oscar extension
 
