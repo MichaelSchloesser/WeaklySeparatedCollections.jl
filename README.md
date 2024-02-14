@@ -120,4 +120,4 @@ H = rectangle_collection(4, 9)
 visualizer!(H)
 ```
 
-![](docs/src/assets/example_5.png)
+![](docs/src/assets/example_gui.png)

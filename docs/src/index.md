@@ -55,3 +55,16 @@ using WeaklySeparatedCollections
 import Luxor
 import Mousetrap
 ```
+
+### Oscar
+We extend some functionality of [Oscar](https://github.com/oscar-system/Oscar.jl) and add methods to handle the A-cluster mutation of Seeds coming from weakly separated collections as well as the associated newton-okounkov-bodies.
+
+This extension is only supported for Linux users (although Windows users may use Linux from Windows via [wsl](https://learn.microsoft.com/en-us/windows/wsl/)).
+We refer to the official [Oscar website](https://www.oscar-system.org/install/) for details of the installation.
+
+Afterward using the loading the extension is as simple as typing
+
+```julia
+using WeaklySeparatedCollections
+using Oscar
+```

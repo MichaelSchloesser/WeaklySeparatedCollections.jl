@@ -446,7 +446,7 @@ node_colors = [RGBA(1.0 - (n_mutables(a) - min)/d, (n_mutables(a) - min)/d, 0.0,
 graphplot(A, layout = Spring(dim = 3, seed = 1), edge_width = 0.5, node_size = 15, node_color = node_colors)
 ```
 
-![](docs/src/assets/associahedron_3_7.png)
+![](assets/associahedron_3_7.png)
 
 ## Plotting
 
@@ -472,14 +472,14 @@ H = rectangle_collection(3, 6)
 drawTiling(H) # plotts H as plabic tiling
 ```
 
-![](docs/src/assets/example_1.png)
+![](assets/example_1.png)
 
 ```
 H = rectangle_collection(3, 6)
 drawPLG_straight(H; drawLabels = true) # plotts H as plabic graph with straight edges
 ```
 
-![](docs/src/assets/example_2.png)
+![](assets/example_2.png)
 
 To save an image as png, svg, pdf or eps file, we just need to give it a title with the corresponding file extension.
 
@@ -489,7 +489,7 @@ H = checkboard_collection(3, 6)
 drawPLG_straight(H, "title.png"; drawLabels = true)
 ```
 
-![](docs/src/assets/example_3.png)
+![](assets/example_3.png)
 
 
 ## Graphical user interface
@@ -502,6 +502,8 @@ While plotting WSC's enables us to visualize them, the resulting images lack int
 ```@docs
 visualizer!
 ```
+
+![](assets/example_gui.png)
 
 ### settings
 explain the non obvious options (or all) here.
