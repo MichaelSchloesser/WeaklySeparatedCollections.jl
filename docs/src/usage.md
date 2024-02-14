@@ -509,9 +509,17 @@ We shortly explain the contend of the menubar as well as settings
 
 ### Settings
 
-explain the non obvious options (or all) here.
+![](assets/settings.png)
 
-- `adjust drawing angle`: If checked, the embeddings of the plabic graph (and tiling) will be rotated such that the boundary vertex `1` is drawn at a more consistant position.
+- `Draw mode` controls how edges of the plabic graph are drwn. The available modes are `Straight`, `Smooth` and `Polygonal`
+
+- `Label direction` controls whether the left (i.e. the usual ones) or right labels (complements of left labels) are drawn.
+
+- `Draw vertex labels` controls if the labels in the plabic tiling should be drawn or not.
+
+- `Draw face labels` controls whether the labels in the plabic graph are drawn or not.
+
+- `adjust top label` if checked then a the boundary label of the plabic graph that should be drawn at the top can be chosen through the slider below. This adjusts both the embedding of the plabic graph as well as the corresponding tiling.
 
 ### File
 
