@@ -264,7 +264,7 @@ mutate!(rec, [3,4,6])
 println(rec, full = true)
 ```
 
-### Other transformations
+## Other transformations
 
 Apart from mutation, several other transformations of WSC's are available:
 
