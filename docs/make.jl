@@ -4,7 +4,8 @@ DocMeta.setdocmeta!(WeaklySeparatedCollections, :DocTestSetup, :(using WeaklySep
 
 makedocs(;
     modules = [
-        WeaklySeparatedCollections
+        WeaklySeparatedCollections,
+        Base.get_extension(WeaklySeparatedCollections, :OscarExt)
     ],
     pages = [
         "Home" => "index.md" 
