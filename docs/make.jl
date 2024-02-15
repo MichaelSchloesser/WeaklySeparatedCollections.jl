@@ -3,7 +3,11 @@ using Documenter, WeaklySeparatedCollections, Graphs
 DocMeta.setdocmeta!(WeaklySeparatedCollections, :DocTestSetup, :(using WeaklySeparatedCollections, Graphs); recursive=true)
 
 makedocs(;
-    modules = [WeaklySeparatedCollections, WeaklySeparatedCollections.OscarExt],
+    modules = [
+        WeaklySeparatedCollections, 
+        isdefined(Base, :get_extension) ? Base.get_extension(WeaklySeparatedCollections, :OscarExt) :
+        WeaklySeparatedCollections.OscarExt
+    ],
     pages = [
         "Home" => "index.md" 
         "User guide" => "usage.md" # TODO split this up
