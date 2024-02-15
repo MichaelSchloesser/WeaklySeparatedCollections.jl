@@ -566,16 +566,16 @@ This extension requires an installation of Oscar [Oscar](https://github.com/osca
 
 There is a natural action of the dihedral group on WSC's (realised as permutation group) induced by applying permutations to $k$-sets.
 
-!!! note "right action and notation"
+!!! note "Notation"
     Most computer algebra systems, in particular Oscar, preferr rigth actions over left actions. Thus a permutation $\pi \in S_n$ is applied to $x \in [n]$ from the right.
-    We define $x^\pi := \pi(x)$. As a consequence we need to consider Permutation groups with the opposite product $\pi * \tau := \tau \circ \pi$ where the right hand side is the usual composition of functions. This ensures $x^{\pi * \tau} = (x^\pi)^\tau$.
+    We define $x^\pi := \pi(x)$. As a consequence we need to consider Permutation groups with the opposite product $\pi * \tau := \tau \circ \pi$, where the right hand side is the usual composition of functions. This ensures $x^{\pi * \tau} = (x^\pi)^\tau$.
 
 ```@docs
 Base.:^
 ```
 
 We extend several Oscar functions to simplify their usage with WSC's. We urge the reader to consult the Oscar documentaion, specifically the sections 
-[Permutation Groups](https://docs.oscar-system.org/stable/Groups/permgroup/) and [Group Actions](https://docs.oscar-system.org/stable/Groups/action/) for questions regarding Oscar functions.
+[Permutation Groups](https://docs.oscar-system.org/stable/Groups/permgroup/) and [Group Actions](https://docs.oscar-system.org/stable/Groups/action/) for more information about their usage.
 
 ```@docs
 Oscar.gset
@@ -628,7 +628,7 @@ using WeaklySeparatedCollections # hide
 using Oscar # hide
 check = checkboard_collection(3, 6)
 seed = Seed(check)
-seed[5]
+println(seed[5])
 ```
 
 For quality of life:
@@ -646,8 +646,8 @@ is_frozen(seed::Seed, i::Int)
 The remaining variables of a seed can be mutated via 
 
 ```@docs
-mutate!
-mutate
+mutate!(seed::Seed, i::Int)
+mutate(seed::Seed, i::Int)
 ```
 
 #### Examples:
@@ -662,7 +662,7 @@ is_frozen(seed, 7)
 
 ```@example seed
 mutate!(seed, 7)
-seed[7]
+println(seed[7])
 ```
 
 As hinted at earlier, for some WSC's it makes sense to arrange their labels on a (extended) grid. Thus it is only natural to also think of the associated cluster variables as arranged on the same grid. 
@@ -686,20 +686,67 @@ s, X = extended_rectangle_seed(3, 6)
 X
 ```
 
-### Superpotential
+### Superpotential and Newton Okuounkov bodies
+
+The Superpotential is defined as the rational function $W = \sum_{i \neq k} W_i + W_k*q$ on $Gr_{n-k, n} \times \mathbb{C}$. Using the A-cluster structure of the coordinate ring of $Gr_{n-k, n}$ we can rewrite the superpotenial in terms of a given seed. In particular to write $W$ in terms of a seed associated to a WSC, we have the functions:
 
 ```@docs
 get_superpotential_terms
 checkboard_potential_terms
 ```
 
+#### Examples:
 
-### Newton Okuounkov bodies
+Rewriting $W$ in terms of a given WSC is as simple as
+
+```@example superpotenial
+using WeaklySeparatedCollections # hide
+using Oscar # hide
+rec = rectangle_collection(3, 6)
+get_superpotential_terms(rec)
+```
+
+Here the variable $q$ is ommited, as it is understood that it should be multiplied with the $k$-th term. We may pass a custom seed to the above function. This is useful if we want the variables to have specific names.
+
+```@example superpotenial
+s, _ = extended_rectangle_seed(3, 6)
+get_superpotential_terms(rec, s)
+```
+
+For some WSC's like the checkboard collection, we can make use of closed formulas to obtain the terms of $W$.
+
+```@example superpotenial
+checkboard_potential_terms(3, 6)
+```
+
+Beeing able to rewritte $W$ in terms of a WSC makes it simple to obtain the defining inequalities of its associated Newton Okuounkov bodies as well as the latter itself.
 
 ```@docs
 newton_okounkov_inequalities
 checkboard_inequalities
-checkboard_body
 newton_okounkov_body
+checkboard_body
+```
+
+```@example superpotenial
+    A, b = newton_okounkov_inequalities(rec)
+    println(A, b)
+```
+
+```@example superpotenial
+    A, b = checkboard_inequalities(3, 6)
+    println(A, b)
+```
+
+```@example superpotenial
+    N_rec = newton_okounkov_body(rec)
+```
+
+```@example superpotenial
+    N_rec.pm_polytope.HASSE_DIAGRAM.FACES
+```
+
+```@example superpotenial
+    checkboard_body(3, 6)
 ```
 

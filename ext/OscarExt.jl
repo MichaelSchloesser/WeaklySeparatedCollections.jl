@@ -68,6 +68,11 @@ function myProd(array)
     return isempty(array) ? 1 : prod(array)
 end
 
+@doc raw"""
+    mutate!(seed::Seed, i::Int)
+
+Mutate the `seed` in direction `i` if `i` is the index of a mutable variable.
+"""
 function WSC.mutate!(seed::Seed, i::Int)
 
     if is_frozen(seed, i)
@@ -109,6 +114,11 @@ function WSC.mutate!(seed::Seed, i::Int)
     return seed
 end
 
+@doc raw"""
+    mutate(seed::Seed, i::Int)
+
+Mutate the `seed` in direction `i` if `i` is the index of a mutable variable.
+"""
 function WSC.mutate(seed::Seed, i::Int)
     return mutate!(deepcopy(seed), i)
 end
