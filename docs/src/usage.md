@@ -752,7 +752,11 @@ checkboard_body
 ```
 
 ```@example superpotenial
-    N_rec.pm_polytope.HASSE_DIAGRAM.FACES
+    f_vector(N_rec)
+```
+
+```@example superpotenial
+    vertices(N_rec)
 ```
 
 ```@example superpotenial
