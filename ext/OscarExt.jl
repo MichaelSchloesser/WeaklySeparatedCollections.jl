@@ -312,7 +312,6 @@ function WSC.cyclic_perm_group(n::Int) # C_n as specific permutation group
     return permutation_group(n, [cperm(collect(1:n))] )
 end
 
-
 @doc raw"""
     Base.:^(collection::WSCollection, p::PermGroupElem)
 
@@ -323,25 +322,50 @@ function Base.:^(collection::WSCollection, p::PermGroupElem) # works for D_n and
     return WSC.apply_to_collection(f, collection)
 end
 
+@doc raw"""
+    Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = false)
+
+Return the G-set of the natural action of `D` on the specified WSC's in `seeds`.
+"""
 function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = false) # standard action for gset on WSCollections
     return gset(D, (G, x) -> G^x , seeds; closed = closed)
 end
 
+@doc raw"""
+    Oscar.orbit(D::PermGroup, collection::WSCollection)
+
+Return the orbit of `collection` under the natural action of `D`.
+"""
 function Oscar.orbit(D::PermGroup, collection::WSCollection)
     M = gset(D, [collection])
     return orbit(M, collection)
 end
 
+@doc raw"""
+    Oscar.orbit(collection::WSCollection)
+
+Return the orbit of `collection` under the natural action of the dihedral group.
+"""
 function Oscar.orbit(collection::WSCollection)
     D = WSC.dihedral_perm_group(collection.n)
     M = gset(D, [collection])
     return orbit(M, collection)
 end
 
+@doc raw"""
+    Oscar.stabilizer(D::PermGroup, collection::WSCollection)
+
+Return the stabilizer of `collection` under the natural action of `D`.
+"""
 function Oscar.stabilizer(D::PermGroup, collection::WSCollection)
     return stabilizer(D, collection, ^)
 end
 
+@doc raw"""
+    Oscar.stabilizer(collection::WSCollection)
+
+Return the stabilizer of `collection` under the natural action of the dihedral group.
+"""
 function Oscar.stabilizer(collection::WSCollection)
     D = WSC.dihedral_perm_group(collection.n)
     return stabilizer(D, collection)

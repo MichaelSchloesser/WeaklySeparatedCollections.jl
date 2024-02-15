@@ -568,21 +568,52 @@ There is a natural action of the dihedral group on WSC's (realised as permutatio
 
 !!! note "right action and notation"
     Most computer algebra systems, in particular Oscar, preferr rigth actions over left actions. Thus a permutation $\pi \in S_n$ is applied to $x \in [n]$ from the right.
-    We define $x^\pi := \pi(x)$. As a consequence we need to consider Permutation groups with the opposite product $\pi * \tau := \tau \circ \pi$ where the right hand side is the usual composition of functions. This ensures $x^(\pi * \tau) = (x^\pi)^\tau$.
+    We define $x^\pi := \pi(x)$. As a consequence we need to consider Permutation groups with the opposite product $\pi * \tau := \tau \circ \pi$ where the right hand side is the usual composition of functions. This ensures $x^{\pi * \tau} = (x^\pi)^\tau$.
 
 ```@docs
 Base.:^
 ```
 
-action:
+We extend several Oscar functions to simplify their usage with WSC's. We urge the reader to consult the Oscar documentaion, specifically the sections 
+[Permutation Groups](https://docs.oscar-system.org/stable/Groups/permgroup/) and [Group Actions](https://docs.oscar-system.org/stable/Groups/action/) for questions regarding Oscar functions.
 
-^
+```@docs
+Oscar.gset
+Oscar.orbit
+Oscar.stabilizer
+```
 
-gset
+#### Examples:
 
-orbit
+```@example action
+using WeaklySeparatedCollections # hide
+using Oscar # hide
+s, t = cperm(collect(1:6)), perm([1, 6, 5, 4, 3, 2])
+check = checkboard_collection(3, 6)
 
-stabilizer
+println(check^t, full = true)
+```
+
+```@example action
+check^(s*t) == (check^s)^t
+```
+
+```@example action
+D = dihedral_group(PermGroup, 6)
+
+gset(D, [check])
+```
+
+```@example action
+collect(orbit(check))
+```
+
+```@example action
+S, _ = stabilzer(check)
+collect(S)
+```
+
+
 
 Seed
 

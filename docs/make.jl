@@ -1,6 +1,6 @@
 using Documenter, WeaklySeparatedCollections, Graphs, Oscar
 
-DocMeta.setdocmeta!(WeaklySeparatedCollections, :DocTestSetup, :(using WeaklySeparatedCollections, Graphs); recursive=true)
+DocMeta.setdocmeta!(WeaklySeparatedCollections, :DocTestSetup, :(using WeaklySeparatedCollections, Graphs, Oscar); recursive=true)
 
 makedocs(;
     modules = [
