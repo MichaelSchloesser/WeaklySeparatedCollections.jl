@@ -677,12 +677,12 @@ using Test
 
 
     @test begin 
-        "grid_Seed"
+        "grid_seed"
 
         Q = rectangle_collection(4, 9).quiver
-        grid_Seed(9, 5, 4, Q)
-        grid_Seed(rectangle_collection(4, 9))
-        grid_Seed(rectangle_collection(4, 9), 4, 5) 
+        grid_seed(9, 5, 4, Q)
+        grid_seed(rectangle_collection(4, 9))
+        grid_seed(rectangle_collection(4, 9), 4, 5) 
 
         true
     end
