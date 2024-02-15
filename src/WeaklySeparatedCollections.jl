@@ -23,7 +23,7 @@ export  drawTiling, drawPLG
         
 export  visualizer!
 
-export  Seed, grid_Seed, extended_rectangle_seed, extended_checkboard_seed,
+export  Seed, grid_seed, extended_rectangle_seed, extended_checkboard_seed,
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
         newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
 
@@ -115,13 +115,13 @@ end
 function Seed end
 
 @doc raw"""
-    grid_Seed(n::Int, height::Int, width::Int, quiver::SimpleDiGraph{Int})
-    grid_Seed(collection::WSCollection, height, width)
+    grid_seed(n::Int, height::Int, width::Int, quiver::SimpleDiGraph{Int})
+    grid_seed(collection::WSCollection, height, width)
 
 Return a seed with `n` respectively `collection.n` frozen variables and mutable
 variables arranged on a grid with specified `height` and `width`. 
 """
-function grid_Seed end
+function grid_seed end
 
 @doc raw"""
     extended_checkboard_seed(k::Int, n::Int)

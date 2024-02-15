@@ -609,26 +609,97 @@ collect(orbit(check))
 ```
 
 ```@example action
-S, _ = stabilzer(check)
+S, _ = stabilizer(check)
 collect(S)
 ```
 
+### Seeds
 
+We provide basic funtionality to handle the A-type cluster induced by WSC's
 
+```@docs
 Seed
+```
 
-access, length
+Clustervariables of a seed may be accessed as elements of arrays:
 
-frozen, mutable, mutate!
+```@example seed
+using WeaklySeparatedCollections # hide
+using Oscar # hide
+check = checkboard_collection(3, 6)
+seed = Seed(check)
+seed[5]
+```
 
-special seeds:
-grid_Seed, extended_rectangle_seed, extended_checkboard_seed
+For quality of life:
 
-superpotential:
-get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms
+```@example seed
+length(seed)
+```
 
-newton okounkov bodies:
-newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
+Seeds usually contain frozen which cannot be mutated. Thus we exten `is_frozen` for usage with seeds:
+
+```@docs
+is_frozen(seed::Seed, i::Int)
+```
+
+The remaining variables of a seed can be mutated via 
+
+```@docs
+mutate!
+mutate
+```
+
+#### Examples:
+
+```@example seed
+println(seed, full = true)
+```
+
+```@example seed
+is_frozen(seed, 7)
+```
+
+```@example seed
+mutate!(seed, 7)
+seed[7]
+```
+
+As hinted at earlier, for some WSC's it makes sense to arrange their labels on a (extended) grid. Thus it is only natural to also think of the associated cluster variables as arranged on the same grid. 
+
+```@docs
+grid_seed
+extended_rectangle_seed
+extended_checkboard_seed
+```
+
+#### Examples:
+
+```@example seed
+check = checkboard_collection(3, 6)
+s = grid_seed(check)
+println(s, full = true)
+```
+
+```@example seed
+s, X = extended_rectangle_seed(3, 6)
+X
+```
+
+### Superpotential
+
+```@docs
+get_superpotential_terms
+checkboard_potential_terms
+```
 
 
+### Newton Okuounkov bodies
+
+```@docs
+newton_okounkov_inequalities
+checkboard_inequalities
+checkboard_body
+newton_okounkov_body
+```
 

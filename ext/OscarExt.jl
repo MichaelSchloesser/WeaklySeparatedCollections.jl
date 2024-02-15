@@ -25,7 +25,6 @@ function WSC.Seed(collection::WSCollection)
     return Seed(N, deepcopy(collection.n), deepcopy(collection.quiver))
 end
 
-
 Base.getindex(seed::Seed, i::Int) = getindex(seed.variables, i)
 
 Base.getindex(seed::Seed, v::Vector{Int}) = getindex(seed.variables, v)
@@ -56,6 +55,11 @@ function Base.println(seed::Seed; full::Bool = false)
     print("\n")
 end
 
+@doc raw"""
+    is_frozen(seed::Seed, i::Int)
+
+Return true if the `i-th` clustervariable of `seed` is frozen.
+"""
 function WSC.is_frozen(seed::Seed, i::Int)
     return i <= seed.n_frozen
 end
@@ -111,7 +115,7 @@ end
 
 ################## special seeds ##################
 
-function WSC.grid_Seed(n::Int, height::Int, width::Int, quiver::SimpleDiGraph{Int})
+function WSC.grid_seed(n::Int, height::Int, width::Int, quiver::SimpleDiGraph{Int})
     variable_names::Vector{String} = []
 
     # TODO make frozen actually depend on the labels
@@ -132,14 +136,14 @@ function WSC.grid_Seed(n::Int, height::Int, width::Int, quiver::SimpleDiGraph{In
 end
 
 
-function WSC.grid_Seed(collection::WSCollection, height::Int = collection.n - collection.k, width::Int = collection.k)
-    grid_Seed(collection.n, height, width,  deepcopy(collection.quiver))
+function WSC.grid_seed(collection::WSCollection, height::Int = collection.n - collection.k, width::Int = collection.k)
+    grid_seed(collection.n, height, width,  deepcopy(collection.quiver))
 end
 
 
 function WSC.extended_checkboard_seed(k, n)
     check = checkboard_collection(k, n)
-    check_seed = grid_Seed(check)
+    check_seed = grid_seed(check)
     T = typeof(check_seed[1])
     X = Array{T}(undef, n-k+1, k+1)
 
@@ -158,7 +162,7 @@ end
 
 function WSC.extended_rectangle_seed(k, n)
     rec = rectangle_collection(k, n)
-    rec_seed = grid_Seed(rec)
+    rec_seed = grid_seed(rec)
     T = typeof(rec_seed[1])
     X = Array{T}(undef, n-k+1, k+1)
 
@@ -313,17 +317,17 @@ function WSC.cyclic_perm_group(n::Int) # C_n as specific permutation group
 end
 
 @doc raw"""
-    Base.:^(collection::WSCollection, p::PermGroupElem)
+    ^(collection::WSCollection, p::PermGroupElem)
 
 Let `p` act on `collection` via the natural right action.
 """
 function Base.:^(collection::WSCollection, p::PermGroupElem) # works for D_n and C_n defined via above functions
     f = x -> p(x)
-    return WSC.apply_to_collection(f, collection)
+    return WSC.apply_to_collection(f, deepcopy(collection))
 end
 
 @doc raw"""
-    Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = false)
+    gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = false)
 
 Return the G-set of the natural action of `D` on the specified WSC's in `seeds`.
 """
@@ -332,7 +336,7 @@ function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = fa
 end
 
 @doc raw"""
-    Oscar.orbit(D::PermGroup, collection::WSCollection)
+    orbit(D::PermGroup, collection::WSCollection)
 
 Return the orbit of `collection` under the natural action of `D`.
 """
@@ -342,18 +346,18 @@ function Oscar.orbit(D::PermGroup, collection::WSCollection)
 end
 
 @doc raw"""
-    Oscar.orbit(collection::WSCollection)
+    orbit(collection::WSCollection)
 
 Return the orbit of `collection` under the natural action of the dihedral group.
 """
 function Oscar.orbit(collection::WSCollection)
     D = WSC.dihedral_perm_group(collection.n)
-    M = gset(D, [collection])
+    M = gset(D, ^, [collection])
     return orbit(M, collection)
 end
 
 @doc raw"""
-    Oscar.stabilizer(D::PermGroup, collection::WSCollection)
+    stabilizer(D::PermGroup, collection::WSCollection)
 
 Return the stabilizer of `collection` under the natural action of `D`.
 """
@@ -362,7 +366,7 @@ function Oscar.stabilizer(D::PermGroup, collection::WSCollection)
 end
 
 @doc raw"""
-    Oscar.stabilizer(collection::WSCollection)
+    stabilizer(collection::WSCollection)
 
 Return the stabilizer of `collection` under the natural action of the dihedral group.
 """
