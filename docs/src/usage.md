@@ -720,6 +720,7 @@ checkboard_potential_terms(3, 6)
 ```
 
 Beeing able to rewritte $W$ in terms of a WSC makes it simple to obtain the defining inequalities of its associated Newton Okuounkov bodies as well as the latter itself.
+For details on how to deal with polytopes using Oscar please consult the section [Polyhedra](https://docs.oscar-system.org/stable/PolyhedralGeometry/Polyhedra/intro/) of the Oscar documentaion.
 
 ```@docs
 newton_okounkov_inequalities
