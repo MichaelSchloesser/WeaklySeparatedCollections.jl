@@ -43,7 +43,7 @@ For more details we referr to TODO.
 
 ## Creating WSC's
 
-!!! compat "Vectors instead of sets"
+!!! note "Vectors instead of sets"
     In this package we use vecors in place of sets, although WSC's are by definition sets of $k$-sets. 
     We always assume such vectors to be increasingly ordered and not contain double elements. 
     None of the below methods check these properties and unforseen behavior may arise if they are not fulfilled.
@@ -225,13 +225,11 @@ is_frozen(rec, 4)
 ```
 
 ```@example frozen
-rec = rectangle_collection(3, 6)
 is_mutable(rec, 7)
 ```
 
 ```@example frozen
-rec = rectangle_collection(3, 6)
-is_mutable(rec, 11)
+is_mutable(rec, 8)
 ```
 
 The frozen labels contained in any (maximal) WSC can be obtained via
@@ -442,7 +440,7 @@ list, A = generalized_associahedron(root)
 A
 ```
 
-The obtained Graph may be plottet in 3D using external libraries such as [GraphMakie](https://github.com/MakieOrg/GraphMakie.jl):
+The obtained Graph may be plotted in 3D using external libraries such as [GraphMakie](https://github.com/MakieOrg/GraphMakie.jl):
 
 ```
 max = length(root) - root.n
@@ -463,6 +461,9 @@ graphplot(A, layout = Spring(dim = 3, seed = 1), edge_width = 0.5, node_size = 1
 ## Plotting
 
 Plotting WSC's requires `Luxor` to be installed and loaded as detailed [here](https://michaelschloesser.github.io/WeaklySeparatedCollections.jl/stable/#Extensions).
+
+!!! note "only maximal WSC's supported"
+    plotting is currently only available for maximal weakly separated collections.
 
 In the introduction we learned about plabic tilings as well as plabic graphs as objects living in the plane which are in one to one correspondance to maximal WSC's.
 Thus we can plot a maximal WSC using its corresponding plabic tiling or plabic graph. The functions to accomplish this are:
@@ -517,7 +518,7 @@ visualizer!
 
 Much of the functionality discussed so far is available through this interface, for example to mutate a WSC in the direction of a label we can just click on it.
 
-We shortly explain the contend of the menubar as well as settings.
+We shortly explain the content of the menubar as well as settings.
 
 ### Settings
 
@@ -530,6 +531,8 @@ We shortly explain the contend of the menubar as well as settings.
 - `Draw vertex labels` controls if the labels in the plabic tiling should be drawn or not.
 
 - `Draw face labels` controls whether the labels in the plabic graph are drawn or not.
+
+- `Highlight mutable faces` enables the highlighting of mutable faces of the plabic graph. This only works if the drawmode is set to `Straight`.
 
 - `adjust top label` if checked then a the boundary label of the plabic graph that should be drawn at the top can be chosen through the slider below. This adjusts both the embedding of the plabic graph as well as the corresponding tiling.
 
@@ -557,7 +560,44 @@ Finally under the view submenu all options to disable/enable parts of the gui ar
 
 ## Oscar extension
 
+This extension requires an installation of Oscar [Oscar](https://github.com/oscar-system/Oscar.jl) (see also [Oscar website](https://www.oscar-system.org/install/)).
 
+### The action of the dihedral group
+
+There is a natural action of the dihedral group on WSC's (realised as permutation group) induced by applying permutations to $k$-sets.
+
+!!! note "right action and notation"
+    Most computer algebra systems, in particular Oscar, preferr rigth actions over left actions. Thus a permutation $\pi \in S_n$ is applied to $x \in [n]$ from the right.
+    We define $x^\pi := \pi(x)$. As a consequence we need to consider Permutation groups with the opposite product $\pi * \tau := \tau \circ \pi$ where the right hand side is the usual composition of functions. This ensures $x^(\pi * \tau) = (x^\pi)^\tau$.
+
+```@docs
+Base.:^
+```
+
+action:
+
+^
+
+gset
+
+orbit
+
+stabilizer
+
+Seed
+
+access, length
+
+frozen, mutable, mutate!
+
+special seeds:
+grid_Seed, extended_rectangle_seed, extended_checkboard_seed
+
+superpotential:
+get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms
+
+newton okounkov bodies:
+newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
 
 
 

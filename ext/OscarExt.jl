@@ -312,6 +312,12 @@ function WSC.cyclic_perm_group(n::Int) # C_n as specific permutation group
     return permutation_group(n, [cperm(collect(1:n))] )
 end
 
+
+@doc raw"""
+    Base.:^(collection::WSCollection, p::PermGroupElem)
+
+Let `p` act on `collection` via the natural right action.
+"""
 function Base.:^(collection::WSCollection, p::PermGroupElem) # works for D_n and C_n defined via above functions
     f = x -> p(x)
     return WSC.apply_to_collection(f, collection)
