@@ -1,11 +1,10 @@
-using Documenter, WeaklySeparatedCollections, WeaklySeparatedCollections.OscarExt, Graphs
+using Documenter, WeaklySeparatedCollections, Graphs
 
 DocMeta.setdocmeta!(WeaklySeparatedCollections, :DocTestSetup, :(using WeaklySeparatedCollections, Graphs); recursive=true)
 
 makedocs(;
     modules = [
-        WeaklySeparatedCollections, 
-        WeaklySeparatedCollections.OscarExt
+        WeaklySeparatedCollections
     ],
     pages = [
         "Home" => "index.md" 

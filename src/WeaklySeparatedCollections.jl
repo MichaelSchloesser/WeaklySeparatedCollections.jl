@@ -193,6 +193,8 @@ Return the newton okounkov body of the checkboard graph.
 """
 function checkboard_body end
 
+function Base.:^ end
+
 # not exported:
 function dihedral_perm_group end
 
