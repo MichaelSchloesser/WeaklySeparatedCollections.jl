@@ -560,7 +560,7 @@ Finally under the view submenu all options to disable/enable parts of the gui ar
 
 ## Oscar extension
 
-This extension requires an installation of Oscar [Oscar](https://github.com/oscar-system/Oscar.jl) (see also [Oscar website](https://www.oscar-system.org/install/)).
+This extension requires an installation of Oscar [Oscar](https://github.com/oscar-system/Oscar.jl) (see also the [Oscar website](https://www.oscar-system.org/install/)).
 
 ### The action of the dihedral group
 
@@ -731,12 +731,20 @@ checkboard_body
 
 ```@example superpotenial
     A, b = newton_okounkov_inequalities(rec)
-    println(A, b)
+    A
+```
+
+```@example superpotenial
+    b
 ```
 
 ```@example superpotenial
     A, b = checkboard_inequalities(3, 6)
-    println(A, b)
+    A
+```
+
+```@example superpotenial
+    b
 ```
 
 ```@example superpotenial
