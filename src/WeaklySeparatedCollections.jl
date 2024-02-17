@@ -11,7 +11,7 @@ export  WSCollection,
         intersect, setdiff, union, 
 
         is_frozen, is_mutable, get_mutables, mutate!, mutate,
-        rotate!, reflect!, complement!, swap_colors!, rotate, reflect, complement, swap_colors, 
+        rotate!, reflect!, complements!, swap_colors!, rotate, reflect, complements, swap_colors, 
 
         extend_weakly_separated!, extend_to_collection,
         is_weakly_separated, hash, cliques_missing
@@ -53,7 +53,7 @@ Inside a Jupyter sheet drawing without saving an image is possible by omitting t
 - `labelDirection = "left"`
 
 `toplabel` controls the rotation of the drawing by drawing the specified label at the top.
-`labelDirection` controls whether the "left" (i.e. the usual ones) or "right" (complements)
+`labelDirection` controls whether the "left" (i.e. the usual ones) or "right" (complementss)
 labels are drawn.
 """
 function drawTiling end
@@ -78,7 +78,7 @@ Inside a Jupyter sheet drawing without saving an image is possible by omitting t
 
 `toplabel` controls the rotation of the drawing by drawing the specified label at the top.
 `drawmode` controls how edges are drawn and may be choosen as `"straight"`, `"smooth"` or `"polygonal"`.
-`labelDirection` controls whether the "left" (i.e. the usual ones) or "right" (complements) labels 
+`labelDirection` controls whether the "left" (i.e. the usual ones) or "right" (complementss) labels 
 are drawn.
 """
 function drawPLG end
