@@ -888,12 +888,12 @@ function rotate(collection::WSCollection, amount::Int)
 end
 
 @doc raw"""
-    reflect!(collection::WSCollection, axis::Int = 1) 
+    reflect!(collection::WSCollection, axis::Int = 1)
 
 Reflect `collection` by letting the permutation `x ↦ 2*axis -x` interpreted modulo 
 `n = collection.n` act on the labels of `collection`.
 """
-function reflect!(collection::WSCollection, axis = 1) 
+function reflect!(collection::WSCollection, axis::Int = 1) 
     
     reflect = x -> pmod( Int(2*axis) - x, collection.n)
 
@@ -914,7 +914,7 @@ end
 
 Return the collection whose labels are complementary to those of `collection`.
 """
-function complement!(collection::WSCollection) 
+function complement!(collection::WSCollection)
     n = collection.n
     k = collection.k
     labels = collection.labels
