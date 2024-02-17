@@ -385,9 +385,5 @@ function Oscar.stabilizer(collection::WSCollection)
     return stabilizer(D, collection)
 end
 
-################## other ##################
-
-Oscar.complement(collection::WSCollection) = WSC.complement(collection::WSCollection)
-
 end
 

@@ -910,11 +910,11 @@ function reflect(collection::WSCollection, axis::Int = 1)
 end
 
 @doc raw"""
-    complement!(collection::WSCollection) 
+    complements!(collection::WSCollection) 
 
 Return the collection whose labels are complementary to those of `collection`.
 """
-function complement!(collection::WSCollection)
+function complements!(collection::WSCollection)
     n = collection.n
     k = collection.k
     labels = collection.labels
@@ -948,12 +948,12 @@ function complement!(collection::WSCollection)
 end
 
 @doc raw"""
-    complement(collection::WSCollection) 
+    complements(collection::WSCollection) 
 
-Version of `complement!` that does not modify its argument.
+Version of `complements!` that does not modify its argument.
 """
-function complement(collection::WSCollection)
-    return complement!(deepcopy(collection))
+function complements(collection::WSCollection)
+    return complements!(deepcopy(collection))
 end
 
 @doc raw"""

@@ -615,7 +615,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             function task_to_string(task::String, data)
                 if task == "mutation"
                     return "(mutate: i=$(data[1]), L=$(data[2]))"
-                elseif task == "complement" || task == "swap_colors"
+                elseif task == "complements" || task == "swap_colors"
                     return "($task)"
                 elseif task == "rotate"
                     return "(rotate by: $(data[1]))"
@@ -1072,8 +1072,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                 if task == "mutation"
                     mutate!(G, data[1])
                     update_displays()
-                elseif task == "complement"
-                    complement!(G)
+                elseif task == "complements"
+                    complements!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "swap_colors"
@@ -1130,8 +1130,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                     G = dual_rectangle_collection(data[2], data[3])
                     update_embedding_data()
                     update_displays()
-                elseif task == "complement"
-                    complement!(G)
+                elseif task == "complements"
+                    complements!(G)
                     update_embedding_data()
                     update_displays()
                 elseif task == "swap_colors"
@@ -1329,28 +1329,28 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         add_shortcut!(reflect, "<shift>s")
         add_action!(edit_submenu, "Reflect", reflect)
 
-        # complement
-        complement = Action("complement.action", app) do x    
+        # complements
+        complements = Action("complements.action", app) do x    
             set_mouse_input_blocked!(true)
             
-            push!(undo_list, ("complement", []))
+            push!(undo_list, ("complements", []))
             if length(redo_list) > 0
                 task, data = pop!(redo_list)
-                if task != "complement"
+                if task != "complements"
                     redo_list = Vector()
                 end
             end
 
-            complement!(G)
+            complements!(G)
 
             update_embedding_data()
             update_displays()
-            update_history_strings("complement", [])
+            update_history_strings("complements", [])
 
             set_mouse_input_blocked!(false)
             return nothing
         end
-        add_action!(edit_submenu, "Complement", complement)
+        add_action!(edit_submenu, "Complement", complements)
 
         # swap colors
         swap_colors = Action("swap_colors.action", app) do x    
