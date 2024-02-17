@@ -285,7 +285,7 @@ reflect!
 ```
 
 ```@docs
-complement!
+complements!
 ```
 
 ```@docs
