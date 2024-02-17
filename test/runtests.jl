@@ -156,7 +156,7 @@ using Test
         "dual_rectangle_collection"
         
         drec1 = dual_rectangle_collection(4, 9)
-        drec2 = complement(rectangle_collection(5, 9))
+        drec2 = complements(rectangle_collection(5, 9))
 
         drec1 == drec2
     end
@@ -166,7 +166,7 @@ using Test
         "dual_checkboard_collection"
 
         dcheck1 = dual_checkboard_collection(4, 9)
-        dcheck2 = complement(checkboard_collection(5, 9))
+        dcheck2 = complements(checkboard_collection(5, 9))
 
         dcheck1 == dcheck2
     end
@@ -395,10 +395,10 @@ using Test
 
     
     @test begin
-        "complement"
+        "complements"
 
         rec = rectangle_collection(4, 9)
-        complement(rec)
+        complements(rec)
         true
     end
 
