@@ -890,7 +890,7 @@ end
 @doc raw"""
     reflect!(collection::WSCollection, axis::Int = 1)
 
-Reflect `collection` by letting the permutation `x ↦ 2*axis -x` interpreted modulo 
+Reflect `collection` by letting the permutation `p(x) = 2*axis -x` interpreted modulo 
 `n = collection.n` act on the labels of `collection`.
 """
 function reflect!(collection::WSCollection, axis::Int = 1) 

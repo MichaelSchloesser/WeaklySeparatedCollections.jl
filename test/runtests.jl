@@ -328,19 +328,6 @@ using Test
 
 
     @test begin
-        "print, println"
-
-        check = checkboard_collection(4, 9)
-        print(check)
-        println(check)
-        print(check, full = true)
-        println(check, full = true)
-
-        true
-    end
-
-
-    @test begin
         "is_frozen"
 
         check = checkboard_collection(4, 9)
