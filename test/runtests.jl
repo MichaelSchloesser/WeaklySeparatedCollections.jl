@@ -82,7 +82,7 @@ using Test
         "compute_adjacencies from labels"
 
         labels = checkboard_labels(4, 9)
-        WeaklySeparatedCollections.compute_adjacencies(4, 9, labels)
+        WeaklySeparatedCollections.compute_adjacencies(9, labels)
         true
     end
 
@@ -108,7 +108,7 @@ using Test
         quiver = check.quiver
 
         W, B = WeaklySeparatedCollections.compute_boundaries(labels, quiver)
-        _, W2, B2 = WeaklySeparatedCollections.compute_adjacencies(4, 9, labels)
+        _, W2, B2 = WeaklySeparatedCollections.compute_adjacencies(9, labels)
         (W == W2) && (B == B2)
     end
 

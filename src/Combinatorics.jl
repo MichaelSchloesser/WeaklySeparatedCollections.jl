@@ -315,7 +315,7 @@ function compute_cliques(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}
         end
     end
 
-    for (K, C) in W # remove trivial cliques, and convert to vector
+    for (K, C) in W # remove trivial cliques
         if length(C) < 3
             delete!(W, K)
         end
