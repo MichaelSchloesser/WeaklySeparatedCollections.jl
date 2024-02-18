@@ -281,7 +281,7 @@ rotate!
 ```
 
 ```@docs
-reflect!
+mirror!
 ```
 
 ```@docs
@@ -311,7 +311,7 @@ check.labels
 
 ```@example transformations
 using WeaklySeparatedCollections # hide
-reflect!(check, 1)
+mirror!(check, 1)
 check.labels
 ```
 

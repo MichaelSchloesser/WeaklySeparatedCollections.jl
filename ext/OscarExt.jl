@@ -333,7 +333,7 @@ Let `p` act on `collection` via the natural right action.
 """
 function Base.:^(collection::WSCollection, p::PermGroupElem) # works for D_n and C_n defined via above functions
     f = x -> p(x)
-    return WSC.apply_to_collection(f, deepcopy(collection))
+    return WSC.apply_to_collection!(f, deepcopy(collection))
 end
 
 @doc raw"""

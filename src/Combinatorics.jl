@@ -244,8 +244,8 @@ whose elements are given by `labels`.
 function compute_cliques(labels::Vector{Vector{Int}})
     N = length(labels)
     k = length(labels[1])
-    W = Dict()
-    B = Dict()
+    W::Dict{Vector{Int}, Vector{Vector{Int}}} = Dict()
+    B::Dict{Vector{Int}, Vector{Vector{Int}}} = Dict()
 
     # compute white and black cliques
     for i = 1:N-1
@@ -254,39 +254,33 @@ function compute_cliques(labels::Vector{Vector{Int}})
             K = intersect(labels[i], labels[j])
             if length(K) == k-1 # labels[i] and labels[j] belong to W[K]
 
-                if( haskey(W, K) )
-                    W[K] = push!(W[K], labels[i])
-                    W[K] = push!(W[K], labels[j])
+                if haskey(W, K) 
+                    union!(W[K], [labels[i], labels[j]])
                 else
-                    W[K] = Set([labels[i], labels[j]])
+                    W[K] = [labels[i], labels[j]]
                 end
 
                 L = sort(union(labels[i], labels[j])) # labels[i] and labels[j] also belong to B[L]
-                if( haskey(B, L) )
-                    B[L] = push!(B[L], labels[i])
-                    B[L] = push!(B[L], labels[j])
+                if haskey(B, L) 
+                    union!(B[L], [labels[i], labels[j]])
                 else
-                    B[L] = Set([labels[i], labels[j]])
+                    B[L] = [labels[i], labels[j]]
                 end
 
             end
 
         end
     end
-
-    for (K, C) in W # remove trivial cliques, and convert to vector
+    
+    for (K, C) in W # remove trivial cliques
         if length(C) < 3
             delete!(W, K)
-        else
-            W[K] = collect(C)
         end
     end
 
     for (L, C) in B
         if length(C) < 3
             delete!(B, L)
-        else
-            B[L] = collect(C)
         end
     end 
 
@@ -300,76 +294,73 @@ Return the non trivial black and white cliques of the weakly separated collectio
 whose elements are given by `labels` and whose adjacencies are encoded in `quiver`.
 """
 function compute_cliques(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
-    W = Dict()
-    B = Dict()
+    W::Dict{Vector{Int}, Vector{Vector{Int}}} = Dict()
+    B::Dict{Vector{Int}, Vector{Vector{Int}}} = Dict()
 
     for e in edges(quiver)
         i, j = src(e), dst(e)
         K = intersect(labels[i], labels[j])
         L = sort(union(labels[i], labels[j]))
 
-        if( haskey(W, K) )
-            W[K] = push!(W[K], labels[i])
-            W[K] = push!(W[K], labels[j])
+        if haskey(W, K) 
+            union!(W[K], [labels[i], labels[j]])
         else
-            W[K] = Set([labels[i], labels[j]])
+            W[K] = [labels[i], labels[j]]
         end
 
-        if( haskey(B, L) )
-            B[L] = push!(B[L], labels[i])
-            B[L] = push!(B[L], labels[j])
+        if haskey(B, L) 
+            union!(B[L], [labels[i], labels[j]])
         else
-            B[L] = Set([labels[i], labels[j]])
+            B[L] = [labels[i], labels[j]]
         end
     end
 
     for (K, C) in W # remove trivial cliques, and convert to vector
         if length(C) < 3
             delete!(W, K)
-        else
-            W[K] = collect(C)
         end
     end
 
     for (L, C) in B
         if length(C) < 3
             delete!(B, L)
-        else
-            B[L] = collect(C)
         end
     end 
 
     return W, B
 end
 
+# given the boundary of a clique, add edges (if not both vertices are frozen)
+function add_edges!(Q::SimpleDiGraph{Int}, C::Vector{Int}, n::Int) 
+
+    for l = 1:length(C)-1
+        i, j = C[l], C[l+1]
+        if i > n || j > n
+            add_edge!(Q, i, j)
+        end
+    end
+
+    l = length(C)
+    i, j = C[l], C[1]
+    if i > n || j > n
+        add_edge!(Q, i, j)
+    end
+end
+
 @doc raw"""
-    compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}}) 
+    compute_adjacencies(n::Int, labels::Vector{Vector{Int}}) 
 
 Compute the adjacency graph and face boundaries of the weakly separated collection 
 with elements given by `labels`.
 """
-function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}}) 
+function compute_adjacencies(n::Int, labels::Vector{Vector{Int}}) 
     N = length(labels)
     W, B = compute_cliques(labels)
     labelPos = Dict(labels[i] => i for i = 1:N) # memorize positions of labels
 
     Q = SimpleDiGraph(N, 0)
-
-    function add_edges(C) # given the boundary of a clique, add edges (if not both vertices are frozen)
-
-        for l = 1:length(C)-1
-            i, j = C[l], C[l+1]
-            if i > n || j > n
-                add_edge!(Q, i, j)
-            end
-        end
-
-        l = length(C)
-        i, j = C[l], C[1]
-        if i > n || j > n
-            add_edge!(Q, i, j)
-        end
-    end
+    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
 
     for K in keys(W) # compute boundary and add edges for non trivial white cliques
         C = W[K]
@@ -378,9 +369,9 @@ function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}})
         p = sortperm(C_minus_K) 
         C = (c -> labelPos[c]).(C)
         C = C[p]
-        W[K] = C
+        W2[K] = C
 
-        add_edges(C)
+        add_edges!(Q, C, n)
     end
 
     for L in keys(B) # compute boundary for non trivial black cliques (dont add edges here to avoid 2-cycles)
@@ -389,10 +380,10 @@ function compute_adjacencies(k::Int, n::Int, labels::Vector{Vector{Int}})
         
         p = sortperm(L_minus_C)
         C = (c -> labelPos[c]).(C)
-        B[L] = C[p]
+        B2[L] = C[p]
     end
 
-    return Q, W, B
+    return Q, W2, B2
 end
 
 @doc raw"""
@@ -406,13 +397,16 @@ function compute_boundaries(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{I
     W, B = compute_cliques(labels, quiver)
     labelPos = Dict(labels[i] => i for i = 1:N) # memorize positions of labels
     
+    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
+
     for K in keys(W) # compute boundary 
         C = W[K]
         C_minus_K = (x -> setdiff(x, K)).(C)
         
         p = sortperm(C_minus_K)
         C = (c -> labelPos[c]).(C)
-        W[K] = C[p]
+        W2[K] = C[p]
     end
 
     for L in keys(B) # compute boundary
@@ -421,10 +415,10 @@ function compute_boundaries(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{I
         
         p = sortperm(L_minus_C)
         C = (c -> labelPos[c]).(C)
-        B[L] = C[p]
+        B2[L] = C[p]
     end
 
-    return W, B
+    return W2, B2
 end
 
 @doc raw"""
@@ -470,7 +464,7 @@ If `computeCliques` is set to false, the 2-cells will be set to `missing`.
 """
 function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
     # TODO enfore frozen labels first
-    Q, W, B = compute_adjacencies(k, n, labels)
+    Q, W, B = compute_adjacencies(n, labels)
 
     if computeCliques 
         return WSCollection(k, n, deepcopy(labels), Q, W, B)
@@ -691,6 +685,49 @@ function get_mutables(collection::WSCollection)
     return filter( x -> is_mutable(collection, x), collection.n+1:length(collection))
 end
 
+function updateCliques!(array::Vector{Int}, collection::WSCollection, 
+                        i::Int, I::Vector{Int}, a::Int, b::Int, c::Int, d::Int)
+
+    if length(array) == 1
+        adj = sort(union(I, array))
+        opp = sort(union(adj, [b, d]) )
+        X = collection.whiteCliques
+        Y = collection.blackCliques 
+    else 
+        adj = sort(union(I, array))
+        opp = setdiff(adj, [a, c]) 
+        X = collection.blackCliques
+        Y = collection.whiteCliques
+    end
+    
+    if haskey(Y, opp) # adjacent clique is a triangle and must be merged with the opposite clique
+        A = X[adj]
+        l = findfirst(x -> x == i, A)
+        succ = A[pmod(l+1 ,3)]
+
+        O = Y[opp]
+        l = findfirst(x -> x == succ, O)
+
+        Y[opp] = insert!(O, l, i)
+        delete!(X, adj)
+    else # adjacent clique must be split into a triangle and another (possibly empty) clique
+        A = X[adj]
+
+        if length(A) == 3 # adjacent clique is trangle at the boundary. Just flip colors
+            Y[opp] = A
+            delete!(X, adj)
+        else # split off a triangle from the adjacent clique
+
+         l = findfirst(x -> x == i, A) 
+         m = length(A)
+         Y[opp] = [ A[pmod(l-1, m)], i, A[pmod(l+1, m)] ]
+         X[adj] = deleteat!(A, l)
+        end
+    end
+
+    collection.whiteCliques, collection.blackCliques = length(array) == 1 ? (X, Y) : (Y, X)
+end
+
 @doc raw"""
     mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
 
@@ -746,55 +783,11 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
 
     collection.quiver = G
 
-    # update cliques if mutateCliques = true and cliques are not missing
-    function updateCliques(array)
-        adj, opp, X, Y = Vector(), Vector(), Dict(), Dict()
-
-        if length(array) == 1
-            adj = sort(union(I, array))
-            opp = sort(union(adj, [b, d]) )
-            X = collection.whiteCliques
-            Y = collection.blackCliques 
-        else 
-            adj = sort(union(I, array))
-            opp = setdiff(adj, [a, c]) 
-            X = collection.blackCliques
-            Y = collection.whiteCliques
-        end
-        
-        if haskey(Y, opp) # adjacent clique is a triangle and must be merged with the opposite clique
-            A = X[adj]
-            l = findfirst(x -> x == i, A)
-            succ = A[pmod(l+1 ,3)]
-
-            O = Y[opp]
-            l = findfirst(x -> x == succ, O)
-
-            Y[opp] = insert!(O, l, i)
-            delete!(X, adj)
-        else # adjacent clique must be split into a triangle and another (possibly empty) clique
-            A = X[adj]
-
-            if length(A) == 3 # adjacent clique is trangle at the boundary. Just flip colors
-                Y[opp] = A
-                delete!(X, adj)
-            else # split off a triangle from the adjacent clique
-
-             l = findfirst(x -> x == i, A) 
-             m = length(A)
-             Y[opp] = [ A[pmod(l-1, m)], i, A[pmod(l+1, m)] ]
-             X[adj] = deleteat!(A, l)
-            end
-        end
-
-        collection.whiteCliques, collection.blackCliques = length(array) == 1 ? (X, Y) : (Y, X)
-    end
-
     if mutateCliques && !cliques_missing(collection)
-        updateCliques([a])
-        updateCliques([c])
-        updateCliques([a,b,c])
-        updateCliques([a,c,d])
+        updateCliques!([a], collection, i, I, a, b, c, d)
+        updateCliques!([c], collection, i, I, a, b, c, d)
+        updateCliques!([a,b,c], collection, i, I, a, b, c, d)
+        updateCliques!([a,c,d], collection, i, I, a, b, c, d)
     else
         collection.whiteCliques, collection.blackCliques = missing, missing
     end
@@ -836,26 +829,22 @@ function mutate(collection::WSCollection, label::Vector{Int}, mutateCliques::Boo
 end
 
 
-function apply_to_collection(f, collection::WSCollection) # f: Int -> Int
-
+function apply_to_collection!(f::Function, collection::WSCollection) # f: Int -> Int
+    
     # apply to labels
-    for i = 1:length(collection)
-        collection[i] = sort(f.(collection[i]))
-    end
-
-    W = collection.whiteCliques
-    B = collection.blackCliques
+    F = I -> sort!(f.(I))
+    collection.labels = F.(collection.labels)
 
     # shift clique keys
-    W2 = Dict()
-    B2 = Dict()
+    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
 
-    for (K, C) in W
+    for (K, C) in collection.whiteCliques
         K2 = sort(f.(K))
         W2[K2] = C
     end
 
-    for (L, C) in B
+    for (L, C) in collection.blackCliques
         L2 = sort(f.(L))
         B2[L2] = C
     end
@@ -873,9 +862,8 @@ end
 Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation.
 """
 function rotate!(collection::WSCollection, amount::Int)
-    shift = x -> pmod(x + amount, collection.n)
-
-    return apply_to_collection(shift, collection)
+    shift = x::Int -> pmod(x + amount, collection.n)
+    return apply_to_collection!(shift, collection)
 end
 
 @doc raw"""
@@ -895,8 +883,8 @@ Reflect `collection` by letting the permutation `p(x) = 1 + shift - x` interpret
 `n = collection.n` act on the labels of `collection`.
 """
 function mirror!(collection::WSCollection, shift::Int = 1) 
-    mirrort = x -> pmod( 1 + shift - x, collection.n)
-    return apply_to_collection(mirrort, collection)
+    mirror = x::Int -> pmod( 1 + shift - x, collection.n)
+    return apply_to_collection!(mirror, collection)
 end
 
 @doc raw"""
@@ -917,25 +905,21 @@ Return the collection whose labels are complementary to those of `collection`.
 function complements!(collection::WSCollection)
     n = collection.n
     k = collection.k
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
 
-    complement = A -> setdiff( collect(1:n), A)
-    labels = complement.(labels)
-    collection.labels = labels
+    complement = A::Vector{Int} -> setdiff( collect(1:n), A)
+    collection.labels = complement.(collection.labels)
 
     # take complement of clique keys
-    W2 = Dict()
-    B2 = Dict()
+    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
 
-    for (K, C) in W
-        L = sort(complement(K))
+    for (K, C) in collection.whiteCliques
+        L = complement(K)
         B2[L] = C
     end
 
-    for (L, C) in B
-        K = sort(complement(L))
+    for (L, C) in collection.blackCliques
+        K = complement(L)
         W2[K] = C
     end
 
@@ -970,31 +954,22 @@ function swap_colors!(collection::WSCollection)
 
     n = collection.n
     k = collection.k
-    labels = collection.labels
-    W = collection.whiteCliques
-    B = collection.blackCliques
 
-    shift = x -> pmod(x + k, n)
-    complement = A -> setdiff( collect(1:n), A)
-    labels = complement.(labels)
+    shift = x::Int -> pmod(x + k, n)
+    swap_color = A::Vector{Int} -> setdiff( collect(1:n), shift.(A))
+    collection.labels = swap_color.(collection.labels)
 
-    for i = 1:length(labels)
-        labels[i] = sort(shift.(labels[i]))
-    end
+    # swap colors of clique keys
+    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
 
-    collection.labels = labels
-
-    # take complement of clique keys and shift them
-    W2 = Dict()
-    B2 = Dict()
-
-    for (K, C) in W
-        L = sort(shift.(complement(K)))
+    for (K, C) in collection.whiteCliques
+        L = swap_color(K)
         B2[L] = C
     end
 
-    for (L, C) in B
-        K = sort(shift.(complement(L)))
+    for (L, C) in collection.blackCliques
+        K = swap_color(L)
         W2[K] = C
     end
 
@@ -1026,26 +1001,23 @@ function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})
     N = k*(n-k)+1
 
     # enforce frozen labels in the first n positions
-    frozen::Vector{Vector{Int}} = Vector() 
-    for i = 1:n
-        push!(frozen, frozen_label(k, n, i))
-    end
-
+    frozen = frozen_labels(k, n)
     labels = union(frozen, labels)
 
     if length(labels) == N
-        return Vector{Vector{Int}}(labels)
+        return labels
     end
 
     k_sets = subsets(collect(1:n), k)
 
     for v in k_sets
+        v = Vector{Int}(v)
         if !(v in labels) && is_weakly_separated(n, union(labels, [v]))
             push!(labels, v)
         end
 
         if length(labels) == N
-            return Vector{Vector{Int}}(labels)
+            return labels
         end
     end
 
@@ -1063,11 +1035,7 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
     N = k*(n-k)+1
 
     # enforce frozen labels in the first n positions
-    frozen::Vector{Vector{Int}} = Vector() 
-    for i = 1:n
-        push!(frozen, frozen_label(k, n, i))
-    end
-
+    frozen = frozen_labels(k, n)
     labels1 = union(frozen, labels1)
 
     for v in labels2
@@ -1077,19 +1045,20 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
         end
 
         if length(labels1) == N
-            return Vector{Vector{Int}}(labels1)
+            return labels1
         end
     end
 
     k_sets = subsets(collect(1:n), k)
 
     for v in k_sets
+        v = Vector{Int}(v)
         if !(v in labels1) && is_weakly_separated(n, union(labels1, [v]))
             push!(labels1, v)
         end
 
         if length(labels1) == N
-            return Vector{Vector{Int}}(labels1)
+            return labels1
         end
     end
 
