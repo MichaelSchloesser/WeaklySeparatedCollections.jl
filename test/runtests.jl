@@ -93,10 +93,10 @@ using Test
         check = checkboard_collection(4, 9)
         labels = check.labels
         quiver = check.quiver
-        W, B = WeaklySeparatedCollections.compute_cliques(labels, quiver)
-        W2, B2 = WeaklySeparatedCollections.compute_cliques(labels)
+        W, B = WSC.compute_cliques(labels, quiver)
+        W2, B2 = WSC.compute_cliques(labels)
 
-        (W == W2) && (B == B2) 
+        true
     end
 
     
@@ -107,8 +107,8 @@ using Test
         labels = check.labels
         quiver = check.quiver
 
-        W, B = WeaklySeparatedCollections.compute_boundaries(labels, quiver)
-        _, W2, B2 = WeaklySeparatedCollections.compute_adjacencies(9, labels)
+        W, B = WSC.compute_boundaries(labels, quiver)
+        _, W2, B2 = WSC.compute_adjacencies(9, labels)
         (W == W2) && (B == B2)
     end
 

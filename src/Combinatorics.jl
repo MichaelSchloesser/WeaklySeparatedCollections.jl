@@ -172,7 +172,7 @@ function rectangle_labels(k::Int, n::Int)
         end
     end
 
-    return Vector{Vector{Int}}(labels)
+    return labels
 end
 
 @doc raw"""
@@ -192,7 +192,7 @@ function checkboard_labels(k::Int, n::Int)
         end
     end
 
-    return Vector{Vector{Int}}(labels)
+    return labels
 end
 
 @doc raw"""
@@ -212,7 +212,7 @@ function dual_rectangle_labels(k::Int, n::Int)
         end
     end
 
-    return Vector{Vector{Int}}(labels)
+    return labels
 end
 
 @doc raw"""
@@ -232,7 +232,7 @@ function dual_checkboard_labels(k::Int, n::Int)
         end
     end
 
-    return Vector{Vector{Int}}(labels)
+    return labels
 end
 
 @doc raw"""
@@ -284,7 +284,7 @@ function compute_cliques(labels::Vector{Vector{Int}})
         end
     end 
 
-    return W, B        
+    return W, B
 end
 
 @doc raw"""
