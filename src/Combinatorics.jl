@@ -881,32 +881,32 @@ end
 @doc raw"""
     rotate(collection::WSCollection, amount::Int)
 
-Version of `rotate!` that does not modify its argument. 
+Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation.
+Does not change its input.
 """
 function rotate(collection::WSCollection, amount::Int)
     return rotate!(deepcopy(collection), amount)
 end
 
 @doc raw"""
-    reflect!(collection::WSCollection, axis::Int = 1)
+    mirror!(collection::WSCollection, shift::Int = 1)
 
-Reflect `collection` by letting the permutation `p(x) = 2*axis -x` interpreted modulo 
+Reflect `collection` by letting the permutation `p(x) = 1 + shift - x` interpreted modulo 
 `n = collection.n` act on the labels of `collection`.
 """
-function reflect!(collection::WSCollection, axis::Int = 1) 
-    
-    reflect = x -> pmod( Int(2*axis) - x, collection.n)
-
-    return apply_to_collection(reflect, collection)
+function mirror!(collection::WSCollection, shift::Int = 1) 
+    mirrort = x -> pmod( 1 + shift - x, collection.n)
+    return apply_to_collection(mirrort, collection)
 end
 
 @doc raw"""
-    reflect(collection::WSCollection, axis::Int = 1) 
+    mirror(collection::WSCollection, shift::Int = 1) 
 
-Version of `reflect!` that does not modify its argument.
+Reflect `collection` by letting the permutation `p(x) = 1 + shift - x` interpreted modulo 
+`n = collection.n` act on the labels of `collection`. Does not change its input.
 """
-function reflect(collection::WSCollection, axis::Int = 1)
-    return reflect!(deepcopy(collection), axis)
+function mirror(collection::WSCollection, shift::Int = 1)
+    return mirror!(deepcopy(collection), shift)
 end
 
 @doc raw"""
@@ -950,7 +950,8 @@ end
 @doc raw"""
     complements(collection::WSCollection) 
 
-Version of `complements!` that does not modify its argument.
+Return the collection whose labels are complementary to those of `collection`.
+Does not change its input.
 """
 function complements(collection::WSCollection)
     return complements!(deepcopy(collection))
@@ -1007,7 +1008,9 @@ end
 @doc raw"""
     swap_colors(collection::WSCollection) 
 
-Version of `swap_colors!` that does not modify its argument.
+Return the weakly separated collection whose corresponding plabic graph is obtained
+from the one of `collection` by swapping the colors black and white.
+Does not change its input.
 """
 function swap_colors(collection::WSCollection)
     return swap_colors!(deepcopy(collection))

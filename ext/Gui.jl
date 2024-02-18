@@ -619,8 +619,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                     return "($task)"
                 elseif task == "rotate"
                     return "(rotate by: $(data[1]))"
-                elseif task == "reflect"
-                    return "(reflected at: $(data[1]))"
+                elseif task == "mirror"
+                    return "(mirrored via: x -> $(1+data[1])-x)"
                 elseif task == "load"
                     filename = replace(data[2], "C:\\Users\\Micha\\My Julia Code\\WSCollection-Visualizer\\saved collections\\"=>"")
                     return "(load: $filename)"
@@ -1083,8 +1083,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                 elseif task == "rotate"
                     WSC.rotate!(G, -data[1])
                     update_displays()
-                elseif task == "reflect"
-                    reflect!(G)
+                elseif task == "mirror"
+                    mirror!(G)
                     update_displays()
                 else # task is predefined or load. All handeled the same
                     G = data[1]
@@ -1141,8 +1141,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                 elseif task == "rotate"
                     WSC.rotate!(G, data[1])
                     update_displays()
-                elseif task == "reflect"
-                    reflect!(G)
+                elseif task == "mirror"
+                    mirror!(G)
                     update_displays()
                 else # task == "load"
                     D = FileIO.load(data[2])
@@ -1307,27 +1307,27 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         add_action!(edit_submenu, "Rotate counterclockwise", rotate_counterclockwise)
 
 
-        reflect = Action("reflect.action", app) do x
+        mirror = Action("mirror.action", app) do x
 
             set_mouse_input_blocked!(true)
             
-            push!(undo_list, ("reflect", [1]))
+            push!(undo_list, ("mirror", [1]))
             if length(redo_list) > 0
                 task, data = pop!(redo_list)
-                if task != "reflect" || data[1] != 1
+                if task != "mirror" || data[1] != 1
                     redo_list = Vector()
                 end
             end
 
-            reflect!(G)
+            mirror!(G)
             update_displays()
-            update_history_strings("reflect", [1])
+            update_history_strings("mirror", [1])
         
             set_mouse_input_blocked!(false)
             return nothing
         end
-        add_shortcut!(reflect, "<shift>s")
-        add_action!(edit_submenu, "Reflect", reflect)
+        add_shortcut!(mirror, "<shift>s")
+        add_action!(edit_submenu, "Mirror", mirror)
 
         # complements
         complements = Action("complements.action", app) do x    

@@ -372,11 +372,11 @@ using Test
 
     
     @test begin
-        "reflect"
+        "mirror"
 
         rec = rectangle_collection(4, 9)
-        reflect(rec, 1)
-        reflect(rec, 4)
+        mirror(rec, 1)
+        mirror(rec, 4)
         true
     end
 
