@@ -96,7 +96,26 @@ using Test
         W, B = WSC.compute_cliques(labels, quiver)
         W2, B2 = WSC.compute_cliques(labels)
 
-        true
+
+        flag1 = issetequal(keys(W), keys(W2))
+        if flag1
+            for K in keys(W)
+                if !issetequal(W[K], W2[K])
+                    flag1 = false
+                end
+            end
+        end
+
+        flag2 = issetequal(keys(B), keys(B2))
+        if flag2
+            for L in keys(B)
+                if !issetequal(B[L], B2[L])
+                    flag2 = false
+                end
+            end
+        end
+
+        flag1 && flag2 
     end
 
     
