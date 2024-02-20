@@ -1,6 +1,6 @@
 
 # return a mod b as element in {1, ..., b}
-function pmod(a::Int, b::Int) 
+function pmod(a::T, b::T) where T <: Integer
     c = a % b
     return c > 0 ?  c : c+b
 end
@@ -8,9 +8,9 @@ end
 @doc raw"""
     is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
 
-Test if two vectors `v` and `w` viewed as subsets of `{1 , ..., n }` are weakly separated.
+Test if two vectors `v` and `w` viewed as subsets of `{1 , ..., n}` are weakly separated.
 """
-function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int}) 
+function is_weakly_separated(n, v::Vector{T}, w::Vector{S}) where {T, S <: Integer}
     x = setdiff(v, w)
     y = setdiff(w, v)
     i = 1
@@ -18,32 +18,32 @@ function is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
     # the following trys to finds a < b < c < d contradicting the the ws of v and w
     while !(i in x) && !(i in y) 
         i += 1
-        if(i+3 > n)
+        if i+3 > n
             return true
         end
     end
             
-    if(i in y)
+    if i in y
         (x, y) = (y, x)
     end
     
     while !(i in y)
         i += 1
-        if(i+2 > n)
+        if i+2 > n
             return true
         end
     end
     
     while !(i in x) 
         i += 1
-        if(i+1 > n)
+        if i+1 > n
             return true
         end
     end
     
     while !(i in y) 
         i += 1
-        if(i > n)
+        if i > n
             return true
         end
     end
@@ -56,7 +56,7 @@ end
 
 Test if the vectors contained in `labels` are pairwise weakly separated.
 """
-function is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
+function is_weakly_separated(n, labels::Vector{Vector{T}}) where T <: Integer
     len = length(labels)
     for i = 1:len-1
         for j = i+1:len
@@ -74,15 +74,18 @@ end
 
 Return the `i-th` frozen label.
 """
-function frozen_label(k::Int, n::Int, i::Int) 
-    return sort!([pmod(l+i-1, n) for l = 2-k:1]) 
+function frozen_label(k, n, i, type = Int)
+    return sort!([type(pmod(l+i, n)) for l = 1-k:0])
 end
 
+@doc raw"""
+    super_potential_label(k, n, i)
 
-function super_potential_label(k, n, i)
-    super = [pmod(l+i-1, n) for l = 2-k:1]
-    super[1] = pmod(i-k, n) 
-
+Return the `i-th` (left) label of the superpotential.
+"""
+function super_potential_label(k, n, i, type = Int)
+    super = [type(pmod(l+i, n)) for l = 1-k:0]
+    super[1] = type(pmod(i-k, n))
     sort!(super)
     
     return super
@@ -94,10 +97,10 @@ end
 Return the label of the rectangle graph in row `i`
 and column `j`. 
 """
-function rectangle_label(k::Int, n::Int, i::Int, j::Int)
-    L = collect(i+1:i+j)
-    R = collect(n-k+j+1:n)
-    return union(L, R)
+function rectangle_label(k, n, i, j, type = Int) 
+    L = collect(type, i+1:i+j)
+    R = collect(type, n-k+j+1:n)
+    return union!(L, R)
 end
 
 @doc raw"""
@@ -106,13 +109,15 @@ end
 Return the label of the checkboard graph in row `i`
 and column `j`. 
 """
-function checkboard_label(k::Int, n::Int, i::Int, j::Int)
-    sigma = (x, y) -> pmod(x+y, n)
+function checkboard_label(k, n, i, j, type = Int)
+    
+    sigma_ij = let (n, y) = ( type(n), type(ceil((i+j)/2)) )
+        x -> pmod(x - y, n)
+    end
 
-    sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
-    L = sigma_ij.(collect(i+1:i+j))
-    R = sigma_ij.(collect(n-k+j+1:n))
-    return sort(union(L, R))
+    L = sigma_ij.(collect(type, i+1:i+j))
+    R = sigma_ij.(collect(type, n-k+j+1:n))
+    return sort!(union!(L, R))
 end
 
 @doc raw"""
@@ -121,10 +126,10 @@ end
 Return the label of the dual rectangle graph in row `i`
 and column `j`. 
 """
-function dual_rectangle_label(k::Int, n::Int, i::Int, j::Int)
-    L = collect(1:i)
-    R = collect(i+j+1:k+j)
-    return union(L, R)
+function dual_rectangle_label(k, n, i, j, type = Int)
+    L = collect(type, 1:i)
+    R = collect(type, i+j+1:k+j)
+    return union!(L, R)
 end
 
 @doc raw"""
@@ -133,13 +138,15 @@ end
 Return the label of the dual checkboard graph in row `i`
 and column `j`. 
 """
-function dual_checkboard_label(k::Int, n::Int, i::Int, j::Int)
-    sigma = (x, y) -> pmod(x+y, n)
+function dual_checkboard_label(k, n, i, j, type = Int)
 
-    sigma_ij = x -> sigma(x, -Int(ceil((i+j)/2)))
-    L = sigma_ij.( collect(1:i))
-    R = sigma_ij.( collect(i+j+1:k+j))
-    return sort(union(L, R))
+    sigma_ij = let (n, y) = ( type(n), type(ceil((i+j)/2)) )
+        x -> pmod(x - y, n)
+    end
+
+    L = sigma_ij.( collect(type, 1:i))
+    R = sigma_ij.( collect(type, i+j+1:k+j))
+    return sort!(union!(L, R))
 end
 
 @doc raw"""
@@ -147,12 +154,12 @@ end
 
 Return the frozen labels as a vector.
 """
-function frozen_labels(k::Int, n::Int)
-    return [frozen_label(k, n, i) for i in 1:n]
+function frozen_labels(k, n, type = Int)
+    return [frozen_label(k, n, i, type) for i in 1:n]
 end
 
-function super_potential_labels(k::Int, n::Int)
-    return [super_potential_label(k, n, i) for i in 1:n]
+function super_potential_labels(k, n, type = Int)
+    return [super_potential_label(k, n, i, type) for i in 1:n]
 end
 
 @doc raw"""
@@ -161,14 +168,14 @@ end
 Return the labels of the rectangle graph as a vector. 
 The frozen labels are in positions `1` to `n`.
 """
-function rectangle_labels(k::Int, n::Int)
+function rectangle_labels(k, n, type = Int)
     
     # frozen labels first
-    labels = frozen_labels(k, n)
+    labels = frozen_labels(k, n, type)
 
     for i = 1:n-k-1 # mutable labels
         for j = 1:k-1
-            push!(labels, rectangle_label(k, n, i, j))
+            push!(labels, rectangle_label(k, n, i, j, type))
         end
     end
 
@@ -181,14 +188,14 @@ end
 Return the labels of the checkboard graph as a vector. 
 The frozen labels are in positions `1` to `n`.
 """
-function checkboard_labels(k::Int, n::Int) 
+function checkboard_labels(k, n, type = Int)
 
     # frozen labels first
-    labels = frozen_labels(k, n)
+    labels = frozen_labels(k, n, type)
 
     for i = 1:n-k-1 # mutable labels
         for j = 1:k-1
-            push!(labels, checkboard_label(k, n, i, j))
+            push!(labels, checkboard_label(k, n, i, j, type))
         end
     end
 
@@ -201,14 +208,14 @@ end
 Return the labels of the dual-rectangle graph as a vector. 
 The frozen labels are in positions `1` to `n`.
 """
-function dual_rectangle_labels(k::Int, n::Int) 
+function dual_rectangle_labels(k, n, type = Int)
     
     # frozen labels first
-    labels = frozen_labels(k, n)
+    labels = frozen_labels(k, n, type)
 
     for i = 1:k-1 # mutable labels
         for j = 1:n-k-1
-            push!(labels, dual_rectangle_label(k, n, i, j))
+            push!(labels, dual_rectangle_label(k, n, i, j, type))
         end
     end
 
@@ -221,14 +228,14 @@ end
 Return the labels of the dual-checkboard graph as a vector. 
 The frozen labels are in positions `1` to `n`.
 """
-function dual_checkboard_labels(k::Int, n::Int) 
+function dual_checkboard_labels(k, n, type = Int)
     
     # frozen labels first
-    labels = frozen_labels(k, n)
+    labels = frozen_labels(k, n, type)
 
     for i = 1:k-1 # mutable labels
         for j = 1:n-k-1
-            push!(labels, dual_checkboard_label(k, n, i, j))
+            push!(labels, dual_checkboard_label(k, n, i, j, type))
         end
     end
 
@@ -241,11 +248,11 @@ end
 Return the non trivial black and white cliques of the weakly separated collection 
 whose elements are given by `labels`.
 """
-function compute_cliques(labels::Vector{Vector{Int}})
+function compute_cliques(labels::Vector{Vector{T}}) where T <: Integer
     N = length(labels)
     k = length(labels[1])
-    W::Dict{Vector{Int}, Vector{Vector{Int}}} = Dict()
-    B::Dict{Vector{Int}, Vector{Vector{Int}}} = Dict()
+    W::Dict{Vector{T}, Vector{Vector{T}}} = Dict()
+    B::Dict{Vector{T}, Vector{Vector{T}}} = Dict()
 
     # compute white and black cliques
     for i = 1:N-1
@@ -260,7 +267,7 @@ function compute_cliques(labels::Vector{Vector{Int}})
                     W[K] = [labels[i], labels[j]]
                 end
 
-                L = sort(union(labels[i], labels[j])) # labels[i] and labels[j] also belong to B[L]
+                L = sort!(union(labels[i], labels[j])) # labels[i] and labels[j] also belong to B[L]
                 if haskey(B, L) 
                     union!(B[L], [labels[i], labels[j]])
                 else
@@ -293,14 +300,14 @@ end
 Return the non trivial black and white cliques of the weakly separated collection 
 whose elements are given by `labels` and whose adjacencies are encoded in `quiver`.
 """
-function compute_cliques(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
-    W::Dict{Vector{Int}, Vector{Vector{Int}}} = Dict()
-    B::Dict{Vector{Int}, Vector{Vector{Int}}} = Dict()
+function compute_cliques(labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}) where T <: Integer
+    W::Dict{Vector{T}, Vector{Vector{T}}} = Dict()
+    B::Dict{Vector{T}, Vector{Vector{T}}} = Dict()
 
     for e in edges(quiver)
         i, j = src(e), dst(e)
         K = intersect(labels[i], labels[j])
-        L = sort(union(labels[i], labels[j]))
+        L = sort!(union(labels[i], labels[j]))
 
         if haskey(W, K) 
             union!(W[K], [labels[i], labels[j]])
@@ -331,7 +338,7 @@ function compute_cliques(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}
 end
 
 # given the boundary of a clique, add edges (if not both vertices are frozen)
-function add_edges!(Q::SimpleDiGraph{Int}, C::Vector{Int}, n::Int) 
+function add_edges!(Q::SimpleDiGraph{T}, C::Vector{T}, n) where T <: Integer
 
     for l = 1:length(C)-1
         i, j = C[l], C[l+1]
@@ -353,34 +360,36 @@ end
 Compute the adjacency graph and face boundaries of the weakly separated collection 
 with elements given by `labels`.
 """
-function compute_adjacencies(n::Int, labels::Vector{Vector{Int}}) 
+function compute_adjacencies(n, labels::Vector{Vector{T}}) where T <: Integer
     N = length(labels)
     W, B = compute_cliques(labels)
-    labelPos = Dict(labels[i] => i for i = 1:N) # memorize positions of labels
 
-    Q = SimpleDiGraph(N, 0)
-    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
-    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    positions = let labelPos = Dict(labels[i] => i for i = one(T):T(N)) # memorize positions of labels
+        c -> labelPos[c]
+    end
+
+    Q = SimpleDiGraph{T}(N)
+    W2::Dict{Vector{T}, Vector{T}} = Dict()
+    B2::Dict{Vector{T}, Vector{T}} = Dict()
 
     for K in keys(W) # compute boundary and add edges for non trivial white cliques
-        C = W[K]
-        C_minus_K = (x -> setdiff(x, K)).(C)
-        
-        p = sortperm(C_minus_K) 
-        C = (c -> labelPos[c]).(C)
-        C = C[p]
-        W2[K] = C
+        minus_K = let K = K
+            x -> setdiff(x, K)
+        end
+        p = sortperm(minus_K.(W[K]))
 
-        add_edges!(Q, C, n)
+        W2[K] = (positions.(W[K]))[p]
+
+        add_edges!(Q, W2[K], n)
     end
 
     for L in keys(B) # compute boundary for non trivial black cliques (dont add edges here to avoid 2-cycles)
-        C = B[L]
-        L_minus_C = (x -> setdiff(L, x)).(C)
-        
-        p = sortperm(L_minus_C)
-        C = (c -> labelPos[c]).(C)
-        B2[L] = C[p]
+        L_minus = let L = L
+            x -> setdiff(L, x)
+        end
+        p = sortperm(L_minus.(B[L]))
+
+        B2[L] = positions.(B[L])[p]
     end
 
     return Q, W2, B2
@@ -392,30 +401,33 @@ end
 Compute the face boundaries of the weakly separated collection with elements given 
 by `labels` and adjacency graph `quiver`.
 """
-function compute_boundaries(labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int})
+function compute_boundaries(labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}) where T <: Integer
     N = length(labels)
     W, B = compute_cliques(labels, quiver)
-    labelPos = Dict(labels[i] => i for i = 1:N) # memorize positions of labels
+
+    positions = let labelPos = Dict(labels[i] => i for i = one(T):T(N)) # memorize positions of labels
+        c -> labelPos[c]
+    end
     
-    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
-    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    W2::Dict{Vector{T}, Vector{T}} = Dict()
+    B2::Dict{Vector{T}, Vector{T}} = Dict()
 
     for K in keys(W) # compute boundary 
-        C = W[K]
-        C_minus_K = (x -> setdiff(x, K)).(C)
-        
-        p = sortperm(C_minus_K)
-        C = (c -> labelPos[c]).(C)
-        W2[K] = C[p]
+        minus_K = let K = K
+            x -> setdiff(x, K)
+        end
+        p = sortperm(minus_K.(W[K]))
+
+        W2[K] = (positions.(W[K]))[p]
     end
 
     for L in keys(B) # compute boundary
-        C = B[L]
-        L_minus_C = (x -> setdiff(L, x)).(C)
-        
-        p = sortperm(L_minus_C)
-        C = (c -> labelPos[c]).(C)
-        B2[L] = C[p]
+        L_minus = let L = L
+            x -> setdiff(L, x)
+        end
+        p = sortperm(L_minus.(B[L]))
+
+        B2[L] = positions.(B[L])[p]
     end
 
     return W2, B2
@@ -445,13 +457,13 @@ Optionally the 2-cells can be set to `missing`, to save memory.
                                                               computeCliques::Bool = true)
     WSCollection(collection::WSCollection; computeCliques::Bool = true)
 """
-mutable struct WSCollection
-    k::Int
-    n::Int
-    labels::Vector{Vector{Int}}
-    quiver::SimpleDiGraph{Int}
-    whiteCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} } }
-    blackCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} } }
+mutable struct WSCollection{T <: Integer}
+    k::T
+    n::T
+    labels::Vector{Vector{T}}
+    quiver::SimpleDiGraph{T}
+    whiteCliques::Union{Missing, Dict{Vector{T}, Vector{T} } }
+    blackCliques::Union{Missing, Dict{Vector{T}, Vector{T} } }
 end
 
 @doc raw"""
@@ -462,14 +474,14 @@ computed using only a set of vertex `labels`.
 
 If `computeCliques` is set to false, the 2-cells will be set to `missing`.
 """
-function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}; computeCliques::Bool = true)
+function WSCollection(k, n, labels::Vector{Vector{T}}; computeCliques::Bool = true) where T <: Integer
     # TODO enfore frozen labels first
     Q, W, B = compute_adjacencies(n, labels)
 
     if computeCliques 
-        return WSCollection(k, n, deepcopy(labels), Q, W, B)
+        return WSCollection{T}(k, n, deepcopy(labels), Q, W, B)
     else
-        return WSCollection(k, n, deepcopy(labels), Q, missing, missing)
+        return WSCollection{T}(k, n, deepcopy(labels), Q, missing, missing)
     end
 end
 
@@ -482,7 +494,8 @@ their adjacencies encoded in `quiver`. Faster than just using labels most of the
 
 If `computeCliques` is `false` the black and white 2-cells are set to `missing` instead.
 """
-function WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}; computeCliques::Bool = true)
+function WSCollection(k, n, labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}; computeCliques::Bool = true) where T <: Integer
+    k, n = T(k), T(n)
     # TODO enfore frozen labels first
     if !computeCliques
         return WSCollection(k, n, deepcopy(labels), deepcopy(quiver), missing, missing)
@@ -500,7 +513,7 @@ othererwise returns a deepcopy of `collection`.
 
 If `computeCliques` is `false` the black and white 2-cells are set to `missing` instead.
 """
-function WSCollection(collection::WSCollection; computeCliques::Bool = true)
+function WSCollection(collection::WSCollection; computeCliques::Bool = true) 
     if !computeCliques
         return WSCollection(collection.k, collection.n, deepcopy(collection.labels), deepcopy(collection.quiver), missing, missing)
     else
@@ -520,11 +533,11 @@ Return true if the vertices of `collection1` and `collection2` share the same la
 The order of labels in each collection does not matter.
 """
 function Base.:(==)(collection1::WSCollection, collection2::WSCollection)
-    return issetequal(collection1.labels, collection2.labels)
+    return sort(collection1.labels) == sort(collection2.labels)
 end
 
 
-Base.hash(collection::WSCollection) = hash(Set(collection.labels))
+Base.hash(collection::WSCollection) = hash(sort(collection.labels))
 
 
 @doc raw"""
@@ -532,28 +545,28 @@ Base.hash(collection::WSCollection) = hash(Set(collection.labels))
 
 Return true if `label` is occurs as label of `collection`.
 """
-Base.in(label::Vector{Int}, collection::WSCollection) = label in collection.labels
+Base.in(label::Vector, collection::WSCollection) = label in collection.labels
 
 @doc raw"""
-    getindex(collection::WSCollection, i::Int)
+    getindex(collection::WSCollection, inds...)
 
-Return the element at index `i` in `collection.labels`.
+Return the subset of the labels in `collection` specified `inds` in `collection.labels`.
 """
-Base.getindex(collection::WSCollection, i::Int) = getindex(collection.labels, i)
+Base.getindex(collection::WSCollection, inds...) = getindex(collection.labels, inds...)
 
 @doc raw"""
-    getindex(collection::WSCollection, v::Vector{Int})
-
-Return the element at index `i` in `collection.labels`.
-"""
-Base.getindex(collection::WSCollection, v::Vector{Int}) = getindex(collection.labels, v)
-
-@doc raw"""
-    setindex!(collection::WSCollection, i::Int)
+    setindex!(collection::WSCollection{T}, x::Vector{T}, ind)
 
 Set the element at index `i` in `collection.labels` to `x`.
 """
-Base.setindex!(collection::WSCollection, x::Vector{Int}, i::Int) = setindex!(collection.labels, x, i)
+Base.setindex!(collection::WSCollection{T}, x::Vector{T}, ind) where T <: Integer = setindex!(collection.labels, x, ind)
+
+@doc raw"""
+    setindex!(collection::WSCollection{T}, X::Vector{Vector{T}}, inds...)
+
+Store the elements from X withing the subset of `collection` specified by `inds`.
+"""
+Base.setindex!(collection::WSCollection{T}, X::Vector{Vector{T}}, inds...) where T <: Integer = setindex!(collection.labels, X, inds...)
 
 @doc raw"""
     length(collection::WSCollection)
@@ -599,13 +612,13 @@ function Base.union(collection1::WSCollection, collection2::WSCollection)
 end
 
 
-function Base.show(io::IO, collection::WSCollection)
-    s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels"
+function Base.show(io::IO, collection::WSCollection{T}) where T <: Integer
+    s = "WSCollection{$T} of type ($(collection.k), $(collection.n)) with $(length(collection)) labels"
     print(io, s)
 end
 
-function Base.print(collection::WSCollection; full::Bool = false)
-    s = "WSCollection of type ($(collection.k),$(collection.n)) with $(length(collection)) labels"
+function Base.print(collection::WSCollection{T}; full::Bool = false) where T <: Integer
+    s = "WSCollection{$T} of type ($(collection.k), $(collection.n)) with $(length(collection)) labels"
 
     if full
         s *= ": \n"
@@ -627,8 +640,8 @@ end
 
 Return the weakly separated collection corresponding to the checkboard graph.
 """ 
-function checkboard_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
-    return WSCollection(k, n, checkboard_labels(k, n))
+function checkboard_collection(k, n, type = Int) # TODO use known quiver to speed up computation
+    return WSCollection(k, n, checkboard_labels(k, n, type))
 end
 
 @doc raw"""
@@ -636,8 +649,8 @@ end
 
 Return the weakly separated collection corresponding to the rectangle graph.
 """ 
-function rectangle_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
-    return WSCollection(k, n, rectangle_labels(k, n))
+function rectangle_collection(k, n, type = Int) # TODO use known quiver to speed up computation
+    return WSCollection(k, n, rectangle_labels(k, n, type))
 end
 
 @doc raw"""
@@ -645,8 +658,8 @@ end
 
 Return the weakly separated collection corresponding to the dual-checkboard graph.
 """ 
-function dual_checkboard_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
-    return WSCollection(k, n, dual_checkboard_labels(k, n))
+function dual_checkboard_collection(k, n, type = Int) # TODO use known quiver to speed up computation
+    return WSCollection(k, n, dual_checkboard_labels(k, n, type))
 end
 
 @doc raw"""
@@ -654,8 +667,8 @@ end
 
 Return the weakly separated collection corresponding to the dual-rectangle graph.
 """ 
-function dual_rectangle_collection(k::Int, n::Int) # TODO use known quiver to speed up computation
-    return WSCollection(k, n, dual_rectangle_labels(k, n))
+function dual_rectangle_collection(k, n, type = Int) # TODO use known quiver to speed up computation
+    return WSCollection(k, n, dual_rectangle_labels(k, n, type))
 end
 
 @doc raw"""
@@ -663,7 +676,7 @@ end
 
 Return true if the vertex `i` of `collection` is frozen.
 """
-function is_frozen(collection::WSCollection, i::Int) 
+function is_frozen(collection::WSCollection, i) 
     return i <= collection.n
 end
 
@@ -672,7 +685,7 @@ end
 
 Return true if the vertex `i` of `collection` is mutable.
 """
-function is_mutable(collection::WSCollection, i::Int) 
+function is_mutable(collection::WSCollection, i)
     return !is_frozen(collection, i) && degree(collection.quiver, [i])[1] == 4 
 end
 
@@ -685,16 +698,16 @@ function get_mutables(collection::WSCollection)
     return filter( x -> is_mutable(collection, x), collection.n+1:length(collection))
 end
 
-function updateCliques!(array::Vector{Int}, collection::WSCollection, 
-                        i::Int, I::Vector{Int}, a::Int, b::Int, c::Int, d::Int)
+function updateCliques!(array::Vector{T}, collection::WSCollection{T}, 
+                        i, I::Vector{T}, a::T, b::T, c::T, d::T) where T <: Integer
 
     if length(array) == 1
-        adj = sort(union(I, array))
-        opp = sort(union(adj, [b, d]) )
+        adj = sort!(union(I, array))
+        opp = sort(union(adj, [b, d]))
         X = collection.whiteCliques
         Y = collection.blackCliques 
     else 
-        adj = sort(union(I, array))
+        adj = sort!(union(I, array))
         opp = setdiff(adj, [a, c]) 
         X = collection.blackCliques
         Y = collection.whiteCliques
@@ -708,7 +721,7 @@ function updateCliques!(array::Vector{Int}, collection::WSCollection,
         O = Y[opp]
         l = findfirst(x -> x == succ, O)
 
-        Y[opp] = insert!(O, l, i)
+        Y[opp] = insert!(O, l, T(i))
         delete!(X, adj)
     else # adjacent clique must be split into a triangle and another (possibly empty) clique
         A = X[adj]
@@ -720,7 +733,7 @@ function updateCliques!(array::Vector{Int}, collection::WSCollection,
 
          l = findfirst(x -> x == i, A) 
          m = length(A)
-         Y[opp] = [ A[pmod(l-1, m)], i, A[pmod(l+1, m)] ]
+         Y[opp] = [ A[pmod(l-1, m)], T(i), A[pmod(l+1, m)] ]
          X[adj] = deleteat!(A, l)
         end
     end
@@ -751,7 +764,7 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
     
     I = intersect(N_out_labels[1], N_out_labels[2])
     Iabcd = union(N_out_labels[1], N_out_labels[2])
-    (a, b, c, d) = sort(setdiff(Iabcd, I))
+    (a, b, c, d) = sort!(setdiff(Iabcd, I))
     
     if b in collection.labels[i]   # ensure label of i is Iac
         (a, b, c, d) = (b, c, d, a) 
@@ -829,15 +842,15 @@ function mutate(collection::WSCollection, label::Vector{Int}, mutateCliques::Boo
 end
 
 
-function apply_to_collection!(f::Function, collection::WSCollection) # f: Int -> Int
+function apply_to_collection!(f::Function, collection::WSCollection{T}) where T <: Integer # f: T -> T
     
     # apply to labels
     F = I -> sort!(f.(I))
     collection.labels = F.(collection.labels)
 
     # shift clique keys
-    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
-    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    W2::Dict{Vector{T}, Vector{T}} = Dict()
+    B2::Dict{Vector{T}, Vector{T}} = Dict()
 
     for (K, C) in collection.whiteCliques
         K2 = sort(f.(K))
@@ -861,8 +874,11 @@ end
 
 Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation.
 """
-function rotate!(collection::WSCollection, amount::Int)
-    shift = x::Int -> pmod(x + amount, collection.n)
+function rotate!(collection::WSCollection{T}, amount) where T <: Integer
+
+    shift = let (n, a) = (collection.n, T(amount))
+        x -> pmod(x + a, n)
+    end
     return apply_to_collection!(shift, collection)
 end
 
@@ -872,7 +888,7 @@ end
 Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation.
 Does not change its input.
 """
-function rotate(collection::WSCollection, amount::Int)
+function rotate(collection::WSCollection, amount)
     return rotate!(deepcopy(collection), amount)
 end
 
@@ -882,8 +898,11 @@ end
 Reflect `collection` by letting the permutation `p(x) = 1 + shift - x` interpreted modulo 
 `n = collection.n` act on the labels of `collection`.
 """
-function mirror!(collection::WSCollection, shift::Int = 1) 
-    mirror = x::Int -> pmod( 1 + shift - x, collection.n)
+function mirror!(collection::WSCollection{T}, shift = 2) where T <: Integer
+
+    mirror = let (n, s) = (collection.n, T(shift))
+        x -> pmod(s - x, n)
+    end
     return apply_to_collection!(mirror, collection)
 end
 
@@ -893,7 +912,7 @@ end
 Reflect `collection` by letting the permutation `p(x) = 1 + shift - x` interpreted modulo 
 `n = collection.n` act on the labels of `collection`. Does not change its input.
 """
-function mirror(collection::WSCollection, shift::Int = 1)
+function mirror(collection::WSCollection, shift = 1)
     return mirror!(deepcopy(collection), shift)
 end
 
@@ -902,16 +921,19 @@ end
 
 Return the collection whose labels are complementary to those of `collection`.
 """
-function complements!(collection::WSCollection)
+function complements!(collection::WSCollection{T}) where T <: Integer
     n = collection.n
     k = collection.k
 
-    complement = A::Vector{Int} -> setdiff( collect(1:n), A)
+    complement = let Omega = collect(T, 1:n)
+        A -> setdiff(Omega, A)
+    end
+
     collection.labels = complement.(collection.labels)
 
     # take complement of clique keys
-    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
-    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    W2::Dict{Vector{T}, Vector{T}} = Dict()
+    B2::Dict{Vector{T}, Vector{T}} = Dict()
 
     for (K, C) in collection.whiteCliques
         L = complement(K)
@@ -949,19 +971,25 @@ from the one of `collection` by swapping the colors black and white.
 
 This is the same as taking complements and rotating by `collection.k`.
 """
-function swap_colors!(collection::WSCollection) 
+function swap_colors!(collection::WSCollection{T}) where T <: Integer
     # swapping colors = complement + rotate by k
 
     n = collection.n
     k = collection.k
 
-    shift = x::Int -> pmod(x + k, n)
-    swap_color = A::Vector{Int} -> setdiff( collect(1:n), shift.(A))
+    shift = let (k, n) = (k, n)
+        x -> pmod(x + k, n)
+    end
+
+    swap_color = let Omega = collect(T, 1:n)
+        A -> setdiff( Omega, shift.(A))
+    end
+
     collection.labels = swap_color.(collection.labels)
 
     # swap colors of clique keys
-    W2::Dict{Vector{Int}, Vector{Int}} = Dict()
-    B2::Dict{Vector{Int}, Vector{Int}} = Dict()
+    W2::Dict{Vector{T}, Vector{T}} = Dict()
+    B2::Dict{Vector{T}, Vector{T}} = Dict()
 
     for (K, C) in collection.whiteCliques
         L = swap_color(K)
@@ -997,21 +1025,21 @@ end
 
 Extend `labels` to contain the labels of a maximal weakly separated collection.
 """
-function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})
+function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{T}}) where T <: Integer
     N = k*(n-k)+1
 
     # enforce frozen labels in the first n positions
-    frozen = frozen_labels(k, n)
+    frozen = frozen_labels(k, n, T)
     labels = union(frozen, labels)
 
     if length(labels) == N
         return labels
     end
 
-    k_sets = subsets(collect(1:n), k)
+    k_sets = subsets(1:n, k)
 
     for v in k_sets
-        v = Vector{Int}(v)
+        v = Vector{T}(v)
         if !(v in labels) && is_weakly_separated(n, union(labels, [v]))
             push!(labels, v)
         end
@@ -1031,11 +1059,12 @@ end
 Extend `labels1` to contain the labels of a maximal weakly separated collection.
 Use elements of `labels2` if possible.
 """
-function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
+function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{T}}, 
+                                                  labels2::Vector{Vector{T}}) where T <: Integer
     N = k*(n-k)+1
 
     # enforce frozen labels in the first n positions
-    frozen = frozen_labels(k, n)
+    frozen = frozen_labels(k, n, T)
     labels1 = union(frozen, labels1)
 
     for v in labels2
@@ -1049,10 +1078,10 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
         end
     end
 
-    k_sets = subsets(collect(1:n), k)
+    k_sets = subsets(1:n, k)
 
     for v in k_sets
-        v = Vector{Int}(v)
+        v = Vector{T}(v)
         if !(v in labels1) && is_weakly_separated(n, union(labels1, [v]))
             push!(labels1, v)
         end
@@ -1070,7 +1099,7 @@ end
 Extend `labels` to contain the labels of a maximal weakly separated collection.
 Use labels of `collection` if possible.
 """
-function extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)
+function extend_weakly_separated!(labels::Vector{Vector{T}}, collection::WSCollection{T}) where T <: Integer
     return extend_weakly_separated!(collection.k, collection.n, labels, collection.labels)
 end
 
@@ -1079,7 +1108,7 @@ end
 
 Return a maximal weakly separated collection containing all elements of `labels`.
 """
-function extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})
+function extend_to_collection(k::Int, n::Int, labels::Vector{Vector{T}}) where T <: Integer
     return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels)))
 end
 
@@ -1090,7 +1119,7 @@ end
 Return a maximal weakly separated collection containing all elements of `labels1`.
 Use elements of `labels2` if possible.
 """
-function extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})
+function extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{T}}, labels2::Vector{Vector{T}}) where T <: Integer
     return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels1), labels2))
 end
 
@@ -1100,7 +1129,7 @@ end
 Return a maximal weakly separated collection containing all elements of `labels`.
 Use labels of `collection` if possible.
 """
-function extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)
+function extend_to_collection(labels::Vector{Vector{T}}, collection::WSCollection{T}) where T <: Integer
     return WSCollection(collection.k, collection.n, extend_weakly_separated!(deepcopy(labels), collection))
 end
 
@@ -1111,7 +1140,7 @@ function checkboard_rotation_sequence(k::Int, n::Int)
 
     for i in 1:n-k-1
         for j in 1:k-1
-            if ((i+j) % 2 != 0)
+            if (i+j) % 2 != 0
                 push!(seq, n + (k-1)*(i-1) + j)
             end
         end
@@ -1119,7 +1148,7 @@ function checkboard_rotation_sequence(k::Int, n::Int)
 
     for i in 1:n-k-1
         for j in 1:k-1
-            if ((i+j) % 2 == 0)
+            if (i+j) % 2 == 0
                 push!(seq, n + (k-1)*(i-1) + j)
             end
         end

@@ -106,10 +106,10 @@ integers.
     Seed(cluster_size::Int, n_frozen::Int, quiver::SimpleDiGraph{Int})
     Seed(collection::WSCollection)
 """
-mutable struct Seed
-    n_frozen::Int
-    variables
-    quiver::SimpleDiGraph{Int}
+mutable struct Seed{T, S <: Integer}
+    n_frozen::S
+    variables::Vector{T}
+    quiver::SimpleDiGraph{S}
 end
 
 function Seed end

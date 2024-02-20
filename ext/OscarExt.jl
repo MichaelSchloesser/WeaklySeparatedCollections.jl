@@ -11,16 +11,16 @@ super_potential_label = WSC.super_potential_label
 ################## basic seed functionality ##################
 
 # TODO allow for custom printing
-function WSC.Seed(cluster_size::Int, n_frozen::Int, quiver::SimpleDiGraph{Int})
+function WSC.Seed(cluster_size::T, n_frozen::T, quiver::SimpleDiGraph{T}) where T <: Integer
     R, _ = polynomial_ring(ZZ, cluster_size)
     S = fraction_field(R)
 
-    return Seed(n_frozen, gens(S), deepcopy(quiver))
+    return Seed{elem_type(S), T}(n_frozen, gens(S), deepcopy(quiver))
 end
 
 # TODO add version that prints variables with left/right labels
-function WSC.Seed(collection::WSCollection)
-    N = length(collection)
+function WSC.Seed(collection::WSCollection{T}) where T <: Integer
+    N = T(length(collection))
 
     return Seed(N, deepcopy(collection.n), deepcopy(collection.quiver))
 end
@@ -331,8 +331,10 @@ end
 
 Let `p` act on `collection` via the natural right action.
 """
-function Base.:^(collection::WSCollection, p::PermGroupElem) # works for D_n and C_n defined via above functions
-    f = x -> p(x)
+function Base.:^(collection::WSCollection{T}, p::PermGroupElem) where T <: Integer# works for D_n and C_n defined via above functions
+    f = let p = Vector{T}(p)
+        x -> p[x]
+    end 
     return WSC.apply_to_collection!(f, deepcopy(collection))
 end
 
@@ -341,8 +343,8 @@ end
 
 Return the G-set of the natural action of `D` on the specified WSC's in `seeds`.
 """
-function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = false) # standard action for gset on WSCollections
-    return gset(D, (G, x) -> G^x , seeds; closed = closed)
+function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection{T}}; closed::Bool = false) where T <: Integer # standard action for gset on WSCollections
+    return gset(D, ^ , seeds; closed = closed)
 end
 
 @doc raw"""
