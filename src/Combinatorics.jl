@@ -78,6 +78,7 @@ function frozen_label(k, n, i, type = Int)
     return sort!([type(pmod(l+i, n)) for l = 1-k:0])
 end
 
+
 @doc raw"""
     super_potential_label(k, n, i)
 
@@ -97,7 +98,7 @@ end
 Return the label of the rectangle graph in row `i`
 and column `j`. 
 """
-function rectangle_label(k, n, i, j, type = Int) 
+function rectangle_label(k, n, i, j, type = Int)
     L = collect(type, i+1:i+j)
     R = collect(type, n-k+j+1:n)
     return union!(L, R)
@@ -139,7 +140,7 @@ Return the label of the dual checkboard graph in row `i`
 and column `j`. 
 """
 function dual_checkboard_label(k, n, i, j, type = Int)
-
+    
     sigma_ij = let (n, y) = ( type(n), type(ceil((i+j)/2)) )
         x -> pmod(x - y, n)
     end
@@ -172,7 +173,7 @@ function rectangle_labels(k, n, type = Int)
     
     # frozen labels first
     labels = frozen_labels(k, n, type)
-
+    
     for i = 1:n-k-1 # mutable labels
         for j = 1:k-1
             push!(labels, rectangle_label(k, n, i, j, type))
@@ -441,8 +442,6 @@ Its vertices are labelled by elements of `labels` while `quiver` encodes adjacen
 between the vertices. 
 The 2-cells are colored black or white and contained in `blackCliques` and `whiteCliques`.
 
-Optionally the 2-cells can be set to `missing`, to save memory.
-
 # Attributes
 - `k::Int`
 - `n::Int`
@@ -462,8 +461,8 @@ mutable struct WSCollection{T <: Integer}
     n::T
     labels::Vector{Vector{T}}
     quiver::SimpleDiGraph{T}
-    whiteCliques::Union{Missing, Dict{Vector{T}, Vector{T} } }
-    blackCliques::Union{Missing, Dict{Vector{T}, Vector{T} } }
+    whiteCliques::Dict{Vector{T}, Vector{T}}
+    blackCliques::Dict{Vector{T}, Vector{T}}
 end
 
 @doc raw"""
@@ -472,7 +471,7 @@ end
 Constructor of WSCollection. Adjacencies between its vertices as well as 2-cells are 
 computed using only a set of vertex `labels`.
 
-If `computeCliques` is set to false, the 2-cells will be set to `missing`.
+If `computeCliques` is set to false, the 2-cells will be left empty.
 """
 function WSCollection(k, n, labels::Vector{Vector{T}}; computeCliques::Bool = true) where T <: Integer
     # TODO enfore frozen labels first
@@ -481,7 +480,7 @@ function WSCollection(k, n, labels::Vector{Vector{T}}; computeCliques::Bool = tr
     if computeCliques 
         return WSCollection{T}(k, n, deepcopy(labels), Q, W, B)
     else
-        return WSCollection{T}(k, n, deepcopy(labels), Q, missing, missing)
+        return WSCollection{T}(k, n, deepcopy(labels), Q, Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
     end
 end
 
@@ -492,34 +491,35 @@ end
 Constructor of WSCollection. The 2-cells are computed from vertex `labels` as well as the
 their adjacencies encoded in `quiver`. Faster than just using labels most of the time.
 
-If `computeCliques` is `false` the black and white 2-cells are set to `missing` instead.
+If `computeCliques` is `false` the black and white 2-cells are are left empty instead.
 """
 function WSCollection(k, n, labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}; computeCliques::Bool = true) where T <: Integer
     k, n = T(k), T(n)
     # TODO enfore frozen labels first
     if !computeCliques
-        return WSCollection(k, n, deepcopy(labels), deepcopy(quiver), missing, missing)
+        return WSCollection{T}(k, n, deepcopy(labels), deepcopy(quiver), Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
     else
         W, B = compute_boundaries(labels, quiver)
-        return WSCollection(k, n, deepcopy(labels), deepcopy(quiver), W, B)
+        return WSCollection{T}(k, n, deepcopy(labels), deepcopy(quiver), W, B)
     end
 end
 
 @doc raw"""
     WSCollection(collection::WSCollection; computeCliques::Bool = true)
 
-Constructor of WSCollection. Computes 2-cells of `collection` if the are missing, 
+Constructor of WSCollection. Computes 2-cells of `collection` if the are empty, 
 othererwise returns a deepcopy of `collection`.
 
-If `computeCliques` is `false` the black and white 2-cells are set to `missing` instead.
+If `computeCliques` is `false` the black and white 2-cells are left empty instead.
 """
-function WSCollection(collection::WSCollection; computeCliques::Bool = true) 
+function WSCollection(collection::WSCollection{T}; computeCliques::Bool = true) where T <: Integer
     if !computeCliques
-        return WSCollection(collection.k, collection.n, deepcopy(collection.labels), deepcopy(collection.quiver), missing, missing)
+        return WSCollection{T}(collection.k, collection.n, deepcopy(collection.labels), deepcopy(collection.quiver), 
+                            Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
     else
-        if ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+        if isempty(collection.whiteCliques) || isempty(collection.blackCliques)
             W, B = compute_boundaries(collection.labels, collection.quiver)
-            return WSCollection(collection.k, collection.n, deepcopy(collection.labels), deepcopy(collection.quiver), W, B)
+            return WSCollection{T}(collection.k, collection.n, deepcopy(collection.labels), deepcopy(collection.quiver), W, B)
         else
             return deepcopy(collection)
         end
@@ -576,12 +576,12 @@ Return the length of `collection.labels`.
 Base.length(collection::WSCollection) = length(collection.labels)
 
 @doc raw"""
-    cliques_missing(collection::WSCollection)
+    cliques_empty(collection::WSCollection)
 
-Return true if the white or black cliques in `collection` are missing. 
+Return true if the white or black cliques in `collection` are empty. 
 """
-function cliques_missing(collection::WSCollection)
-    return ismissing(collection.whiteCliques) || ismissing(collection.blackCliques)
+function cliques_empty(collection::WSCollection)
+    return isempty(collection.whiteCliques) || isempty(collection.blackCliques)
 end
 
 @doc raw"""
@@ -746,9 +746,9 @@ end
 
 Mutate the `collection` in direction `i` if `i` is a mutable vertex of `collection`.
 
-If `mutateCliques` is set to false, the 2-cells are set to missing.
+If `mutateCliques` is set to false, the 2-cells are emptied.
 """
-function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
+function mutate!(collection::WSCollection{T}, i::Int, mutateCliques::Bool = true) where T <: Integer
 
     if !is_mutable(collection, i)
         return error("vertex $i with label $(collection.labels[i]) of the given WSCollection is not mutable!")
@@ -757,20 +757,19 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
     G = collection.quiver
     
     # exchange label of i
-    N_in = collect(inneighbors(G, i))
-    N_out = collect(outneighbors(G, i))
+    N_in::SVector{2, Int} = collect(inneighbors(G, i))
+    N_out::SVector{2, Int} = collect(outneighbors(G, i))
 
     N_out_labels = collection[N_out]
     
     I = intersect(N_out_labels[1], N_out_labels[2])
-    Iabcd = union(N_out_labels[1], N_out_labels[2])
-    (a, b, c, d) = sort!(setdiff(Iabcd, I))
+    (a, b, c, d) = sort!(setdiff(union(N_out_labels[1], N_out_labels[2]), I))
     
     if b in collection.labels[i]   # ensure label of i is Iac
         (a, b, c, d) = (b, c, d, a) 
     end
     
-    collection[i] = sort(union(I, [b,d])) # exchange Iac for Ibd
+    collection[i] = sort!(union(I, [b,d])) # exchange Iac for Ibd
 
     # mutate quiver
     for j in N_in # add/remove edges according to quiver mutation
@@ -796,13 +795,15 @@ function mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
 
     collection.quiver = G
 
-    if mutateCliques && !cliques_missing(collection)
+    if mutateCliques && !cliques_empty(collection)
         updateCliques!([a], collection, i, I, a, b, c, d)
         updateCliques!([c], collection, i, I, a, b, c, d)
         updateCliques!([a,b,c], collection, i, I, a, b, c, d)
         updateCliques!([a,c,d], collection, i, I, a, b, c, d)
-    else
-        collection.whiteCliques, collection.blackCliques = missing, missing
+        
+    elseif !cliques_empty(collection)
+        collection.whiteCliques = Dict{Vector{T}, Vector{T}}()
+        collection.blackCliques = Dict{Vector{T}, Vector{T}}()
     end
 
     return collection

@@ -40,8 +40,8 @@ function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 50
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -123,8 +123,8 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     labelDirection = "left")
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -248,8 +248,8 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -411,8 +411,8 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -589,8 +589,8 @@ function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -671,8 +671,8 @@ function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -793,8 +793,8 @@ function drawPLG_straight(collection::WSCollection, width::Int = 500, height::In
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -956,8 +956,8 @@ function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)

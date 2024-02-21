@@ -14,7 +14,7 @@ export  WSCollection,
         rotate!, mirror!, complements!, swap_colors!, rotate, mirror, complements, swap_colors, 
 
         extend_weakly_separated!, extend_to_collection,
-        is_weakly_separated, hash, cliques_missing
+        is_weakly_separated, hash, cliques_empty
 
 export  BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, 
         HEURISTIC, NUMBER_WRONG_LABELS, MIN_LABEL_DIST, MIN_LABEL_DIST_EXPERIMENTAL, Astar, find_label
@@ -29,8 +29,10 @@ export  Seed, grid_seed, extended_rectangle_seed, extended_checkboard_seed,
 
 import Graphs: SimpleGraph, SimpleDiGraph, nv, edges, src, dst, has_edge, add_edge!, add_vertex!, rem_edge!, inneighbors, outneighbors, degree
 
-using IterTools
+import IterTools: subsets
 using DataStructures
+using StaticArrays
+import StaticArrays: sacollect
 
 include("Combinatorics.jl")
 include("Searching_algorithms.jl")

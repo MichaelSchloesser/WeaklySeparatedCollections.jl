@@ -298,18 +298,18 @@ using Test
 
 
     @test begin
-        "cliques missing, true example"
+        "cliques empty, true example"
 
         check = WSCollection(checkboard_collection(4, 9), computeCliques = false)
-        cliques_missing(check)
+        cliques_empty(check)
     end
 
 
     @test begin
-        "cliques missing, false example"
+        "cliques empty, false example"
 
         check = checkboard_collection(4, 9)
-        !cliques_missing(check)
+        !cliques_empty(check)
     end
 
 
