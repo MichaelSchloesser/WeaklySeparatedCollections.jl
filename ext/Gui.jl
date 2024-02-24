@@ -20,7 +20,7 @@ LPoint = Luxor.Point
 norm = P -> sqrt(P.x^2 + P.y^2)
 
 function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
-    const scale_factor = 2.4
+    scale_factor = 2.4
 
     main() do app::Application
         

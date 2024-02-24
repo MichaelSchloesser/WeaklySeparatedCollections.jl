@@ -545,7 +545,7 @@ Base.hash(collection::WSCollection) = hash(sort(collection.labels))
 
 Return true if `label` is occurs as label of `collection`.
 """
-Base.in(label::Vector, collection::WSCollection) = label in collection.labels
+Base.in(label::Vector{T}, collection::WSCollection{T}) where T <: Integer = label in collection.labels
 
 @doc raw"""
     getindex(collection::WSCollection, inds...)

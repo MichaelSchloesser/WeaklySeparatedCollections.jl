@@ -3,7 +3,7 @@ module WeaklySeparatedCollections
 
 export  WSCollection,
 
-        frozen_label, checkboard_label, rectangle_label, checkboard_label, dual_rectangle_label,
+        frozen_label, checkboard_label, rectangle_label, dual_checkboard_label, dual_rectangle_label,
         frozen_labels, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels,
         checkboard_collection, rectangle_collection, dual_checkboard_collection, dual_rectangle_collection,
 
