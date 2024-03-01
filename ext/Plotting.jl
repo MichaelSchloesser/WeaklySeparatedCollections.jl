@@ -6,12 +6,13 @@ using Colors
 import Graphs: all_neighbors, outneighbors
 import WeaklySeparatedCollections as WSC
 
-pmod = WeaklySeparatedCollections.pmod
 norm = P -> sqrt(P.x^2 + P.y^2)
 LPoint = Luxor.Point
-const scale_factor = 2.4
+const scale_factor = 
 
 # TODO add support for non maximal wscs
+
+# sadly we cant really optimize these functions. The drawing itself takes orders of magnitude more time than anyting else
 
 function embedding_data(collection::WSCollection, width::Int, height::Int, topLabel = nothing)
     n = collection.n
@@ -21,16 +22,19 @@ function embedding_data(collection::WSCollection, width::Int, height::Int, topLa
     B = collection.blackCliques
     
     s = 1
-    reference_polygon = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
-    tau = i -> s*sum( reference_polygon[labels[i]] )
+    @fastmath reference_polygon = [LPoint( sin(i*2*pi/n), -cos(i*2*pi/n) ) for i = 0:n-1 ]
+    @views tau = i -> s*sum( reference_polygon[labels[i]] )
 
     # autoselect scale such that plabic tiling fits into window
-    r = norm(sum(reference_polygon[1:k]))
-    s = min(width, height)/(scale_factor*r) 
+    @views r = norm(sum(reference_polygon[1:k]))
+    s = min(width, height)/(2.4*r) 
 
     if !isnothing(topLabel)
-        new_angle = acos( -sum(reference_polygon[1:k]).y/norm(sum(reference_polygon[1:k])) ) - (k-topLabel+0.5)*2*pi/n
-        reference_polygon = [LPoint( sin(i*2*pi/n - new_angle), -cos(i*2*pi/n - new_angle) ) for i = 0:n-1 ]
+        @fastmath @views new_angle = acos( -sum(reference_polygon[1:k]).y / norm(sum(reference_polygon[1:k])) ) - (k-topLabel+1.5)*2*pi/n
+
+        for i in 1:n
+            @fastmath reference_polygon[i] = LPoint( sin(i*2*pi/n - new_angle), -cos(i*2*pi/n - new_angle))
+        end
     end
 
     return n, k, labels, W, B, r, s, reference_polygon, tau
@@ -40,8 +44,8 @@ function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 50
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -64,7 +68,7 @@ function WSC.drawTiling(collection::WSCollection, title::String, width::Int = 50
         end
 
         for i = 1:n
-            line(tau(i), tau(pmod(i+1, n)), :stroke)
+            line(tau(i), tau(mod1(i+1, n)), :stroke)
         end
         
         # draw vertices + labels
@@ -123,8 +127,8 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     labelDirection = "left")
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -138,15 +142,15 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
         
         # outer edges and boundary vertices
         fontsize( div(r*s, 10))
-        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_label = i -> sort([mod1(l+i-1, n) for l = 1:k])
         frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
 
         for i = 1:n 
-            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
+            p1, p2 = frozen_tau(i), frozen_tau(mod1(i+1, n))
             r2 = norm(p1 + p2)
             line((p1 + p2)/2, r*s*(p1 + p2)/r2, :stroke)
             
-            text( "$(pmod(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
+            text( "$(mod1(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
         circle(LPoint(0,0), s*r, :stroke)
@@ -159,7 +163,7 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
             c = sum(w)/len_w # LPoint in face. 
             
             for i = 1:len_w # draw lines from c to edge midPoints
-                line(c, (w[i] + w[pmod(i+1, len_w)])/2,  :stroke)
+                line(c, (w[i] + w[mod1(i+1, len_w)])/2,  :stroke)
             end
 
             sethue("white") # draw white vertex
@@ -174,7 +178,7 @@ function drawPLG_poly(collection::WSCollection, title::String, width::Int = 500,
             c = sum(b)/len_b # LPoint in face. 
 
             for i = 1:len_b # draw lines from c to edge midPoints
-                line(c, (b[i] + b[pmod(i+1, len_b)])/2,  :stroke)
+                line(c, (b[i] + b[mod1(i+1, len_b)])/2,  :stroke)
             end
 
             circle(c, s/8, :fill) # draw black vertex
@@ -248,8 +252,8 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -263,12 +267,12 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
         
         # outer edges and boundary vertices
         fontsize( div(r*s, 10))
-        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_label = i -> sort([mod1(l+i-1, n) for l = 1:k])
         frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
         
         for i = 1:n 
-            l1, l2 = frozen_label(i), frozen_label(pmod(i+1, n))
-            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
+            l1, l2 = frozen_label(i), frozen_label(mod1(i+1, n))
+            p1, p2 = frozen_tau(i), frozen_tau(mod1(i+1, n))
             r2 = norm(p1 + p2)
 
             adj = intersect(l1, l2)
@@ -285,7 +289,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
                 line(r*s*(p1 + p2)/r2, p3, :stroke)
             end
             
-            text( "$(pmod(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
+            text( "$(mod1(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
         end
 
         circle(LPoint(0,0), s*r, :stroke)
@@ -322,7 +326,7 @@ function drawPLG_straight(collection::WSCollection, title::String, width::Int = 
             p1 = sum(tau.(w))/len_w # LPoint in face. 
             
             for i = 1:len_w 
-                opp = sort(union(labels[w[i]], labels[w[pmod(i+1,len_w)]]))
+                opp = sort(union(labels[w[i]], labels[w[mod1(i+1,len_w)]]))
                 if haskey(B, opp)
                     b = B[opp]
                     len_b = length(b)
@@ -411,8 +415,8 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
     labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -426,12 +430,12 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
 
         # outer edges and boundary vertices
         fontsize( div(r*s, 10))
-        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_label = i -> sort([mod1(l+i-1, n) for l = 1:k])
         frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
 
         for i = 1:n 
-            l1, l2 = frozen_label(i), frozen_label(pmod(i+1, n))
-            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
+            l1, l2 = frozen_label(i), frozen_label(mod1(i+1, n))
+            p1, p2 = frozen_tau(i), frozen_tau(mod1(i+1, n))
             p3 = midpoint(p1, p2)
             r2 = norm(p1 + p2)
 
@@ -455,7 +459,7 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
                 strokepath()
             end
             
-            text( "$(pmod(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
+            text( "$(mod1(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
         circle(LPoint(0,0), s*r, :stroke)
@@ -467,9 +471,9 @@ function drawPLG_smooth(collection::WSCollection, title::String, width::Int = 50
             p1 = sum(tau.(w))/len_w # LPoint in face. 
             
             for i = 1:len_w 
-                opp = sort(union(labels[w[i]], labels[w[pmod(i+1,len_w)]]))
+                opp = sort(union(labels[w[i]], labels[w[mod1(i+1,len_w)]]))
                 if haskey(B, opp)
-                    p2 = midpoint(tau(w[i]), tau(w[pmod(i+1,len_w)]) )
+                    p2 = midpoint(tau(w[i]), tau(w[mod1(i+1,len_w)]) )
                     b = B[opp]
                     len_b = length(b)
                     p3 = sum(tau.(b))/len_b
@@ -589,8 +593,8 @@ function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, 
     highlightMutables::Bool = true, labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -613,7 +617,7 @@ function WSC.drawTiling(collection::WSCollection, width::Int = 500, height::Int 
         end
 
         for i = 1:n
-            line(tau(i), tau(pmod(i+1, n)), :stroke)
+            line(tau(i), tau(mod1(i+1, n)), :stroke)
         end
         
         # draw vertices + labels
@@ -671,8 +675,8 @@ function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -686,15 +690,15 @@ function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 
         
         # outer edges and boundary vertices
         fontsize( div(r*s, 10))
-        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_label = i -> sort([mod1(l+i-1, n) for l = 1:k])
         frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
 
         for i = 1:n
-            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
+            p1, p2 = frozen_tau(i), frozen_tau(mod1(i+1, n))
             r2 = norm(p1 + p2)
             line((p1 + p2)/2, r*s*(p1 + p2)/r2, :stroke)
             
-            text( "$(pmod(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
+            text( "$(mod1(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
         circle(LPoint(0,0), s*r, :stroke)
@@ -707,7 +711,7 @@ function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 
             c = sum(w)/len_w # LPoint in face. 
             
             for i = 1:len_w # draw lines from c to edge midPoints
-                line(c, (w[i] + w[pmod(i+1, len_w)])/2,  :stroke)
+                line(c, (w[i] + w[mod1(i+1, len_w)])/2,  :stroke)
             end
 
             sethue("white") # draw white vertex
@@ -722,7 +726,7 @@ function drawPLG_poly(collection::WSCollection, width::Int = 500, height::Int = 
             c = sum(b)/len_b # LPoint in face. 
 
             for i = 1:len_b # draw lines from c to edge midPoints
-                line(c, (b[i] + b[pmod(i+1, len_b)])/2,  :stroke)
+                line(c, (b[i] + b[mod1(i+1, len_b)])/2,  :stroke)
             end
 
             circle(c, s/8, :fill) # draw black vertex
@@ -793,8 +797,8 @@ function drawPLG_straight(collection::WSCollection, width::Int = 500, height::In
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -808,12 +812,12 @@ function drawPLG_straight(collection::WSCollection, width::Int = 500, height::In
 
         # outer edges and boundary vertices
         fontsize( div(r*s, 10))
-        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
-        frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
+        frozen_label = i -> WSC.frozen_label(k, n, i)
+        @fastmath @views frozen_tau = l -> s*sum( reference_polygon[l] )
 
         for i = 1:n 
-            l1, l2 = frozen_label(i), frozen_label(pmod(i+1, n))
-            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
+            l1, l2 = frozen_label(i), frozen_label(mod1(i+1, n))
+            p1, p2 = frozen_tau(l1), frozen_tau(l2)
             r2 = norm(p1 + p2)
 
             adj = intersect(l1, l2)
@@ -830,7 +834,7 @@ function drawPLG_straight(collection::WSCollection, width::Int = 500, height::In
                 line(r*s*(p1 + p2)/r2, p3, :stroke)
             end
             
-            text( "$(pmod(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
+            text( "$(mod1(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
         end
 
         circle(LPoint(0,0), s*r, :stroke)
@@ -867,7 +871,7 @@ function drawPLG_straight(collection::WSCollection, width::Int = 500, height::In
             p1 = sum(tau.(w))/len_w # LPoint in face. 
             
             for i = 1:len_w 
-                opp = sort(union(labels[w[i]], labels[w[pmod(i+1,len_w)]]))
+                opp = sort(union(labels[w[i]], labels[w[mod1(i+1,len_w)]]))
                 if haskey(B, opp)
                     b = B[opp]
                     len_b = length(b)
@@ -956,8 +960,8 @@ function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int 
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") 
 
-    if cliques_missing(collection)
-        error("cliques needed for drawing are missing!")
+    if cliques_empty(collection)
+        error("cliques needed for drawing are empty!")
     end
 
     n, k, labels, W, B, r, s, reference_polygon, tau = embedding_data(collection, width, height, topLabel)
@@ -971,12 +975,12 @@ function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int 
 
         # outer edges and boundary vertices
         fontsize( div(r*s, 10))
-        frozen_label = i -> sort([pmod(l+i-1, n) for l = 1:k])
+        frozen_label = i -> sort([mod1(l+i-1, n) for l = 1:k])
         frozen_tau = i -> s*sum( reference_polygon[frozen_label(i)] )
 
         for i = 1:n 
-            l1, l2 = frozen_label(i), frozen_label(pmod(i+1, n))
-            p1, p2 = frozen_tau(i), frozen_tau(pmod(i+1, n))
+            l1, l2 = frozen_label(i), frozen_label(mod1(i+1, n))
+            p1, p2 = frozen_tau(i), frozen_tau(mod1(i+1, n))
             p3 = midpoint(p1, p2)
             r2 = norm(p1 + p2)
 
@@ -1000,7 +1004,7 @@ function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int 
                 strokepath()
             end
             
-            text( "$(pmod(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
+            text( "$(mod1(i+k,n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
         circle(LPoint(0,0), s*r, :stroke)
@@ -1012,9 +1016,9 @@ function drawPLG_smooth(collection::WSCollection, width::Int = 500, height::Int 
             p1 = sum(tau.(w))/len_w # LPoint in face. 
             
             for i = 1:len_w 
-                opp = sort(union(labels[w[i]], labels[w[pmod(i+1,len_w)]]))
+                opp = sort(union(labels[w[i]], labels[w[mod1(i+1,len_w)]]))
                 if haskey(B, opp)
-                    p2 = midpoint(tau(w[i]), tau(w[pmod(i+1,len_w)]) )
+                    p2 = midpoint(tau(w[i]), tau(w[mod1(i+1,len_w)]) )
                     b = B[opp]
                     len_b = length(b)
                     p3 = sum(tau.(b))/len_b

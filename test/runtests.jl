@@ -17,7 +17,7 @@ using Test
         
         v = [1,2,3,5,6,9]
         w = [1,2,4,5,7,8]
-        is_weakly_separated(9, v, w) == false
+        is_weakly_separated(v, w) == false
     end
 
     @test begin
@@ -25,7 +25,7 @@ using Test
 
         v = [1,2,3,5,6,9]
         w = [1,2,3,5,7,8]
-        is_weakly_separated(9, v, w) == true
+        is_weakly_separated(v, w) == true
     end
 
     
@@ -41,7 +41,7 @@ using Test
         "is_weakly_separated for rectangle_labels"
 
         labels = rectangle_labels(4, 9)
-        is_weakly_separated(9, labels)
+        is_weakly_separated(labels)
     end
 
 
@@ -49,7 +49,7 @@ using Test
         "is_weakly_separated for dual_checkboard_labels"
 
         labels = dual_checkboard_labels(4, 9)
-        is_weakly_separated(9, labels)
+        is_weakly_separated(labels)
     end
 
 
@@ -57,7 +57,7 @@ using Test
         "is_weakly_separated for dual_rectangle_labels"
 
         labels = dual_rectangle_labels(4, 9)
-        is_weakly_separated(9, labels)
+        is_weakly_separated(labels)
     end
 
 
@@ -65,7 +65,7 @@ using Test
         "is_weakly_separated for checkboard_labels"
 
         labels = checkboard_labels(4, 9)
-        is_weakly_separated(9, labels)
+        is_weakly_separated(labels)
     end
 
     
@@ -262,14 +262,14 @@ using Test
     end
     
 
-    @test begin
-        "setindex!: collection"
+    # @test begin
+    #     "setindex!: collection"
 
-        check = checkboard_collection(4, 9)
-        check[10] = check.labels[11]
+    #     check = checkboard_collection(4, 9)
+    #     check[10] = check.labels[11]
 
-        true
-    end
+    #     true
+    # end
 
 
     @test begin
@@ -298,18 +298,18 @@ using Test
 
 
     @test begin
-        "cliques missing, true example"
+        "cliques empty, true example"
 
         check = WSCollection(checkboard_collection(4, 9), computeCliques = false)
-        cliques_missing(check)
+        cliques_empty(check)
     end
 
 
     @test begin
-        "cliques missing, false example"
+        "cliques empty, false example"
 
         check = checkboard_collection(4, 9)
-        !cliques_missing(check)
+        !cliques_empty(check)
     end
 
 
@@ -493,9 +493,13 @@ using Test
 
         check = checkboard_collection(3, 6)
         rec = rectangle_collection(3, 6)
-        BFS(check, rec)
-        
-        true
+        seq = BFS(check, rec)
+
+        for m in seq
+            mutate!(check, m)
+        end
+
+        check == rec
     end
 
 
@@ -504,9 +508,13 @@ using Test
 
         check = checkboard_collection(3, 6)
         rec = rectangle_collection(3, 6)
-        BFS(check, rec, limitSearchSpace = true)
+        seq = BFS(check, rec, limitSearchSpace = true)
         
-        true
+        for m in seq
+            mutate!(check, m)
+        end
+
+        check == rec
     end
 
 
@@ -515,9 +523,13 @@ using Test
 
         check = checkboard_collection(3, 6)
         rec = rectangle_collection(3, 6)
-        DFS(check, rec)
+        seq = DFS(check, rec)
         
-        true
+        for m in seq
+            mutate!(check, m)
+        end
+
+        check == rec
     end
 
 
@@ -526,9 +538,13 @@ using Test
 
         check = checkboard_collection(3, 6)
         rec = rectangle_collection(3, 6)
-        DFS(check, rec, limitSearchSpace = true)
+        seq = DFS(check, rec, limitSearchSpace = true)
         
-        true
+        for m in seq
+            mutate!(check, m)
+        end
+
+        check == rec
     end
     
 
@@ -544,7 +560,7 @@ using Test
 
 
     @test begin 
-        "diff_len"
+        "setdiff_length"
 
         function old_diff_len(w, x)
             d = 0
@@ -559,7 +575,7 @@ using Test
         w = [24,625,3,21,76,34,76,2,1,8]
         x = [4,38,76,2,9,0,1,12,3,22,14]
 
-        WSC.diff_len(w, x) == old_diff_len(w, x)
+        WSC.setdiff_length(w, x) == old_diff_len(w, x)
     end
 
 
@@ -601,9 +617,13 @@ using Test
 
         check = checkboard_collection(3, 7)
         rec = rectangle_collection(3, 7)
+        seq = Astar(check, rec)
 
-        Astar(check, rec)
-        true
+        for m in seq
+            mutate!(check, m)
+        end
+
+        check == rec
     end
 
 
@@ -611,11 +631,14 @@ using Test
         "find_label"
 
         check = checkboard_collection(4, 9)
-        
         label = WSC.super_potential_label(4, 9, 3)
+        seq = find_label(check, label)
 
-        find_label(check, label)
-        true
+        for m in seq
+            mutate!(check, m)
+        end
+
+        check[seq[end]] == label
     end
     
 
@@ -711,19 +734,12 @@ using Test
 
 
     @test begin 
-        "extended_rectangle_seed"
-
-        get_superpotential_terms(checkboard_collection(3, 6))
-        true
-    end
-
-
-    @test begin 
         "checkboard_potential_terms"
 
-        T1 = get_superpotential_terms(checkboard_collection(3, 6))
+        seed, _ = extended_checkboard_seed(3, 6)
+        T1 = get_superpotential_terms(checkboard_collection(3, 6), seed)
         T2 = checkboard_potential_terms(3, 6)
-        true
+        T1 == T2
     end
 
 

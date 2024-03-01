@@ -3,7 +3,7 @@ module WeaklySeparatedCollections
 
 export  WSCollection,
 
-        frozen_label, checkboard_label, rectangle_label, checkboard_label, dual_rectangle_label,
+        frozen_label, checkboard_label, rectangle_label, dual_checkboard_label, dual_rectangle_label,
         frozen_labels, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels,
         checkboard_collection, rectangle_collection, dual_checkboard_collection, dual_rectangle_collection,
 
@@ -14,10 +14,10 @@ export  WSCollection,
         rotate!, mirror!, complements!, swap_colors!, rotate, mirror, complements, swap_colors, 
 
         extend_weakly_separated!, extend_to_collection,
-        is_weakly_separated, hash, cliques_missing
+        is_weakly_separated, hash, cliques_empty
 
 export  BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, 
-        HEURISTIC, NUMBER_WRONG_LABELS, MIN_LABEL_DIST, MIN_LABEL_DIST_EXPERIMENTAL, Astar, find_label
+        Astar, find_label
 
 export  drawTiling, drawPLG
         
@@ -27,9 +27,9 @@ export  Seed, grid_seed, extended_rectangle_seed, extended_checkboard_seed,
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
         newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
 
-import Graphs: SimpleGraph, SimpleDiGraph, nv, edges, src, dst, has_edge, add_edge!, add_vertex!, rem_edge!, inneighbors, outneighbors, degree
+import Graphs: SimpleGraph, SimpleDiGraph, nv, ne, edges, src, dst, has_edge, add_edge!, add_vertex!, rem_edge!, inneighbors, outneighbors, degree
 
-using IterTools
+import IterTools: subsets
 using DataStructures
 
 include("Combinatorics.jl")
@@ -106,10 +106,10 @@ integers.
     Seed(cluster_size::Int, n_frozen::Int, quiver::SimpleDiGraph{Int})
     Seed(collection::WSCollection)
 """
-mutable struct Seed
+mutable struct Seed{T, S <: Integer}
     n_frozen::Int
-    variables
-    quiver::SimpleDiGraph{Int}
+    variables::Vector{T}
+    quiver::SimpleDiGraph{S}
 end
 
 function Seed end
