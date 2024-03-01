@@ -1,8 +1,6 @@
 
-# return a mod b as element in {1, ..., b}
-function pmod(a::T, b::T) where T <: Integer
-    c = a % b
-    return c > 0 ?  c : c+b
+function myDegree(Q, i) # shouldnt allocate for mutable vertices
+    return length(inneighbors(Q, i)) + length(outneighbors(Q, i))
 end
 
 @doc raw"""
@@ -10,57 +8,48 @@ end
 
 Test if two vectors `v` and `w` viewed as subsets of `{1 , ..., n}` are weakly separated.
 """
-function is_weakly_separated(n, v::Vector{T}, w::Vector{S}) where {T, S <: Integer}
+function is_weakly_separated(v::Vector{T}, w::Vector{S}) where {T, S <: Integer}
+    n = max( maximum(v), maximum(w))
     x = setdiff(v, w)
     y = setdiff(w, v)
     i = 1
     
-    # the following trys to finds a < b < c < d contradicting the the ws of v and w
+    # the following trys to find a < b < c < d contradicting the the ws of v and w
     while !(i in x) && !(i in y) 
         i += 1
-        if i+3 > n
-            return true
-        end
+        i+3 > n && return true
     end
-            
-    if i in y
-        (x, y) = (y, x)
-    end
+    
+    i in y && ( (x, y) = (y, x) )
     
     while !(i in y)
         i += 1
-        if i+2 > n
-            return true
-        end
+        i+2 > n && return true
     end
     
     while !(i in x) 
         i += 1
-        if i+1 > n
-            return true
-        end
+        i+1 > n && return true
     end
     
     while !(i in y) 
         i += 1
-        if i > n
-            return true
-        end
+        i > n && return true
     end
     # if we get here, a, b, c, d have been found so v and w are not weakly separated
     return false
 end
 
 @doc raw"""
-    is_weakly_separated(n::Int, labels::Vector{Vector{Int}})
+    is_weakly_separated(labels::Vector{Vector{Int}})
 
 Test if the vectors contained in `labels` are pairwise weakly separated.
 """
-function is_weakly_separated(n, labels::Vector{Vector{T}}) where T <: Integer
+function is_weakly_separated(labels::Vector{Vector{T}}) where T <: Integer
     len = length(labels)
     for i = 1:len-1
         for j = i+1:len
-            if !is_weakly_separated(n, labels[i], labels[j])
+            if !is_weakly_separated(labels[i], labels[j])
                 return false
             end
         end
@@ -74,8 +63,9 @@ end
 
 Return the `i-th` frozen label.
 """
-function frozen_label(k, n, i, type = Int)
-    return sort!([type(pmod(l+i, n)) for l = 1-k:0])
+function frozen_label(k::Int, n::Int, i::Int, T::Type = Int)
+    it = 1+i > k ? (1-k+i:i) : Iterators.flatten(( 1:i, n+i+1-k:n ))
+    return collect(T, it)
 end
 
 
@@ -84,12 +74,22 @@ end
 
 Return the `i-th` (left) label of the superpotential.
 """
-function super_potential_label(k, n, i, type = Int)
-    super = [type(pmod(l+i, n)) for l = 1-k:0]
-    super[1] = type(pmod(i-k, n))
-    sort!(super)
-    
-    return super
+function super_potential_label(k::Int, n::Int, i::Int, T::Type = Int)
+
+    if i > k
+        res = collect(T, 1-k+i:i)
+        res[1] = i-k
+        return res
+    elseif i < k
+        it = Iterators.flatten(( 1:i+1, n+i+2-k:n ))
+        res = collect(T, it)
+        res[i+1] = n+i-k
+        return res
+    else   
+        res = collect(T, 2:k+1)
+        res[k] = n
+        return res
+    end
 end
 
 @doc raw"""
@@ -98,10 +98,8 @@ end
 Return the label of the rectangle graph in row `i`
 and column `j`. 
 """
-function rectangle_label(k, n, i, j, type = Int)
-    L = collect(type, i+1:i+j)
-    R = collect(type, n-k+j+1:n)
-    return union!(L, R)
+function rectangle_label(k::Int, n::Int, i::Int, j::Int, T::Type = Int) 
+    return collect(T, Iterators.flatten((i+1:i+j, n-k+j+1:n)))
 end
 
 @doc raw"""
@@ -110,15 +108,33 @@ end
 Return the label of the checkboard graph in row `i`
 and column `j`. 
 """
-function checkboard_label(k, n, i, j, type = Int)
-    
-    sigma_ij = let (n, y) = ( type(n), type(ceil((i+j)/2)) )
-        x -> pmod(x - y, n)
+function checkboard_label(k::Int, n::Int, i::Int, j::Int, T::Type = Int)
+    y = cld(i+j, 2)
+
+    if i == 0 || j == 0 || j == k || i == n-k
+        a = i+1 - y
+        b = i+j - y
+        c = n - k + j+1 - y
+        d = n - y
+
+        it = Iterators.map( x-> mod1(x, n), Iterators.flatten(( a:b, c:d )))
+        return sort!(collect(T, it))
     end
 
-    L = sigma_ij.(collect(type, i+1:i+j))
-    R = sigma_ij.(collect(type, n-k+j+1:n))
-    return sort!(union!(L, R))
+    a = mod1(i+1 - y, n)
+    b = mod1(i+j - y, n)
+    c = mod1(-k+j+1 - y, n)
+    d = mod1(-y, n)
+
+    if a > b
+        it = Iterators.flatten((1:b , c:d, a:n))
+    elseif c > d
+        it = Iterators.flatten((1:d , a:b, c:n))
+    else
+        it = Iterators.flatten((a:b, c:d))
+    end
+
+    return collect(T, it)
 end
 
 @doc raw"""
@@ -127,10 +143,8 @@ end
 Return the label of the dual rectangle graph in row `i`
 and column `j`. 
 """
-function dual_rectangle_label(k, n, i, j, type = Int)
-    L = collect(type, 1:i)
-    R = collect(type, i+j+1:k+j)
-    return union!(L, R)
+function dual_rectangle_label(k::Int, n::Int, i::Int, j::Int, T::Type = Int) # n is unnecessary, but included for consistency
+    return collect(T, Iterators.flatten( (1:i, i+j+1:k+j) ))
 end
 
 @doc raw"""
@@ -139,15 +153,33 @@ end
 Return the label of the dual checkboard graph in row `i`
 and column `j`. 
 """
-function dual_checkboard_label(k, n, i, j, type = Int)
-    
-    sigma_ij = let (n, y) = ( type(n), type(ceil((i+j)/2)) )
-        x -> pmod(x - y, n)
+function dual_checkboard_label(k::Int, n::Int, i::Int, j::Int, T::Type = Int) 
+    y = cld(i+j, 2)
+
+    if i == 0 || j == 0 || i == k || j == n-k
+        a = 1 - y
+        b = i - y
+        c = i+j+1 - y
+        d = k+j - y
+
+        it = Iterators.map( x-> mod1(x, n), Iterators.flatten(( a:b, c:d )))
+        return sort!(collect(T, it))
     end
 
-    L = sigma_ij.( collect(type, 1:i))
-    R = sigma_ij.( collect(type, i+j+1:k+j))
-    return sort!(union!(L, R))
+    a = mod1(1 - y, n)
+    b = mod1(i - y, n)
+    c = mod1(i+j+1 - y, n)
+    d = mod1(k+j - y, n)
+
+    if a > b
+        it = Iterators.flatten((1:b , c:d, a:n))
+    elseif c > d
+        it = Iterators.flatten((1:d , a:b, c:n))
+    else
+        it = Iterators.flatten((c:d, a:b))
+    end
+
+    return collect(T, it)
 end
 
 @doc raw"""
@@ -155,12 +187,12 @@ end
 
 Return the frozen labels as a vector.
 """
-function frozen_labels(k, n, type = Int)
-    return [frozen_label(k, n, i, type) for i in 1:n]
+function frozen_labels(k::Int, n::Int, T::Type = Int)
+    return [frozen_label(k, n, i, T) for i in 1:n]
 end
 
-function super_potential_labels(k, n, type = Int)
-    return [super_potential_label(k, n, i, type) for i in 1:n]
+function super_potential_labels(k::Int, n::Int, T::Type = Int)
+    return [super_potential_label(k, n, i, T) for i in 1:n]
 end
 
 @doc raw"""
@@ -169,18 +201,20 @@ end
 Return the labels of the rectangle graph as a vector. 
 The frozen labels are in positions `1` to `n`.
 """
-function rectangle_labels(k, n, type = Int)
-    
-    # frozen labels first
-    labels = frozen_labels(k, n, type)
-    
-    for i = 1:n-k-1 # mutable labels
-        for j = 1:k-1
-            push!(labels, rectangle_label(k, n, i, j, type))
-        end
+function rectangle_labels(k::Int, n::Int, T::Type = Int) 
+    it = Iterators.product(1:k-1, 1:n-k-1)
+    N = k*(n-k)+1
+    res = Vector{Vector{T}}(undef, N)
+
+    for i in 1:n
+        @inbounds res[i] = frozen_label(k, n, i, T)
     end
 
-    return labels
+    for x in it
+        @inbounds res[n + (x[2]-1)*(k-1) + x[1]] = rectangle_label(k, n, x[2], x[1], T)
+    end
+
+    return res
 end
 
 @doc raw"""
@@ -189,18 +223,20 @@ end
 Return the labels of the checkboard graph as a vector. 
 The frozen labels are in positions `1` to `n`.
 """
-function checkboard_labels(k, n, type = Int)
+function checkboard_labels(k::Int, n::Int, T::Type = Int) 
+    it = Iterators.product(1:k-1, 1:n-k-1)
+    N = k*(n-k)+1
+    res = Vector{Vector{T}}(undef, N)
 
-    # frozen labels first
-    labels = frozen_labels(k, n, type)
-
-    for i = 1:n-k-1 # mutable labels
-        for j = 1:k-1
-            push!(labels, checkboard_label(k, n, i, j, type))
-        end
+    for i in 1:n
+        @inbounds res[i] = frozen_label(k, n, i, T)
+    end
+    
+    for x in it
+        @inbounds res[n + (x[2]-1)*(k-1) + x[1]] = checkboard_label(k, n, x[2], x[1], T)
     end
 
-    return labels
+    return res
 end
 
 @doc raw"""
@@ -209,18 +245,20 @@ end
 Return the labels of the dual-rectangle graph as a vector. 
 The frozen labels are in positions `1` to `n`.
 """
-function dual_rectangle_labels(k, n, type = Int)
-    
-    # frozen labels first
-    labels = frozen_labels(k, n, type)
+function dual_rectangle_labels(k::Int, n::Int, T::Type = Int)
+    it = Iterators.product(1:n-k-1, 1:k-1)
+    N = k*(n-k)+1
+    res = Vector{Vector{T}}(undef, N)
 
-    for i = 1:k-1 # mutable labels
-        for j = 1:n-k-1
-            push!(labels, dual_rectangle_label(k, n, i, j, type))
-        end
+    for i in 1:n
+        @inbounds res[i] = frozen_label(k, n, i, T)
     end
 
-    return labels
+    for x in it
+        @inbounds res[n + (x[2]-1)*(n-k-1) + x[1]] = dual_rectangle_label(k, n, x[2], x[1], T)
+    end
+
+    return res
 end
 
 @doc raw"""
@@ -229,18 +267,186 @@ end
 Return the labels of the dual-checkboard graph as a vector. 
 The frozen labels are in positions `1` to `n`.
 """
-function dual_checkboard_labels(k, n, type = Int)
-    
-    # frozen labels first
-    labels = frozen_labels(k, n, type)
+function dual_checkboard_labels(k::Int, n::Int, T::Type = Int)
+    it = Iterators.product(1:n-k-1, 1:k-1)
+    N = k*(n-k)+1
+    res = Vector{Vector{T}}(undef, N)
 
-    for i = 1:k-1 # mutable labels
-        for j = 1:n-k-1
-            push!(labels, dual_checkboard_label(k, n, i, j, type))
+    for i in 1:n
+        @inbounds res[i] = frozen_label(k, n, i, T)
+    end
+
+    for x in it
+        @inbounds res[n + (x[2]-1)*(n-k-1) + x[1]] = dual_checkboard_label(k, n, x[2], x[1], T)
+    end
+
+    return res
+end
+
+#### some helper functions ####
+
+function intersect_neighbors!(res::Vector{T}, a::Vector{T}, b::Vector{T}) where T <: Integer
+    len = length(a)
+    y = 1
+
+    for x in 1:len
+        @inbounds a[x] == b[x] || (y = x; break)
+        res[x] = a[x]
+    end
+
+    if a[y] < b[y]
+        for x in y+1:len
+            @inbounds res[x-1] = a[x]
+        end
+    else
+        for x in y+1:len
+            @inbounds res[x-1] = b[x]
         end
     end
 
-    return labels
+    return res
+end
+
+function intersect_opposing!(res::Vector{T}, a::Vector{T}, b::Vector{T}) where T <: Integer
+    x = 1
+    len = length(a)
+
+    for i in 1:len
+        @inbounds a[i] == b[i] || (x = i; break)
+        res[i] = a[i]
+    end
+
+    if a[x] < b[x] # first difference is in a
+
+        for i in x+1:len
+            @inbounds a[i] == b[i-1] || (x = i; break)
+            res[i-1] = a[i]
+        end
+
+        if a[x] < b[x-1] # found both differences in a
+
+            for i in x+1:len
+                @inbounds res[i-2] = a[i]
+            end
+        else # there could be one more diff
+
+            y = 0
+            for i in x+1:len
+                @inbounds a[i-1] == b[i-1] || (y = i; break)
+                @inbounds res[i-2] = b[i-1]
+            end
+
+            y == 0 && return res
+
+            # b[x-1] < a[x-1] othererwise not weakly separated
+            for i in y+1:len+1
+                @inbounds res[i-3] = b[i-1]
+            end
+        end
+    else # first difference is in b
+
+        for i in x+1:len
+            @inbounds b[i] == a[i-1] || (x = i; break)
+            res[i-1] = b[i]
+        end
+
+        if b[x] < a[x-1] # found both differences in b
+            
+            for i in x+1:len
+                @inbounds res[i-2] = b[i]
+            end
+        else # there could be one more diff
+            
+            y = 0
+            for i in x+1:len
+                @inbounds b[i-1] == a[i-1] || (y = i; break)
+                @inbounds res[i-2] = a[i-1]
+            end
+
+            y == 0 && return res
+                
+            # a[x-1] < b[x-1] othererwise not weakly separated
+            for i in y+1:len+1
+                @inbounds res[i-3] = a[i-1]
+            end
+        end
+    end
+
+    return res
+end
+
+function intersect_neighbors_which!(res::Vector{T}, a::Vector{T}, b::Vector{T}) where T <: Integer
+    len = length(a)
+    y = 1
+
+    for x in 1:len
+        @inbounds a[x] == b[x] || (y = x; break)
+        res[x] = a[x]
+    end
+
+    if a[y] < b[y]
+        for x in y+1:len
+            @inbounds res[x-1] = a[x]
+        end
+        return 2
+    else
+        for x in y+1:len
+            @inbounds res[x-1] = b[x]
+        end
+        return 1
+    end
+end
+
+function combine_neighbors!(res::Vector{T}, a::Vector{T}, b::Vector{T}) where T <: Integer
+    x = 1
+    len = length(a)
+
+    for i in 1:len
+        @inbounds a[i] == b[i] || (x = i; break)
+        @inbounds res[i] = a[i]
+    end
+
+    if a[x] < b[x]
+        
+        res[x] = a[x]
+        for i in x:len
+            res[i+1] = b[i]
+        end
+    else
+
+        res[x] = b[x]
+        for i in x:len
+            res[i+1] = a[i]
+        end
+    end
+
+    return res
+end
+
+function is_contained(a::Vector{T}, b::Vector{T}) where T <: Integer
+    x = 0
+    len = length(a)
+
+    for i in 1:len
+        a[i] == b[i] || (x = i; break)
+    end
+
+    x == 0 && return true
+    a[x] < b[x] && return false
+
+    for i in x:len
+        a[i] == b[i+1] || return false
+    end
+
+    return true
+end
+
+function add_two!(W::Vector{Vector{T}}, a::Vector{T}, b::Vector{T}) where T <: Integer
+    bool1 = a in W
+    bool2 = b in W
+
+    bool1 ? W : push!(W, a)
+    bool2 ? W : push!(W, b)
 end
 
 @doc raw"""
@@ -252,45 +458,38 @@ whose elements are given by `labels`.
 function compute_cliques(labels::Vector{Vector{T}}) where T <: Integer
     N = length(labels)
     k = length(labels[1])
-    W::Dict{Vector{T}, Vector{Vector{T}}} = Dict()
-    B::Dict{Vector{T}, Vector{Vector{T}}} = Dict()
+    W = Dict{Vector{T}, Vector{Vector{T}}}()
+    B = Dict{Vector{T}, Vector{Vector{T}}}()
+
+    sizehint!(W, 2*N)
+    sizehint!(B, 2*N)
+
+    K = Vector{T}(undef, k-1)
+    L = Vector{T}(undef, k+1)
 
     # compute white and black cliques
     for i = 1:N-1
         for j = i+1:N
+            
+            l = intersect_neighbors_which!(K, labels[i], labels[j])
+            if is_contained(K, labels[(i, j)[l]]) # => |K| = k-1
 
-            K = intersect(labels[i], labels[j])
-            if length(K) == k-1 # labels[i] and labels[j] belong to W[K]
+                # labels[i] and labels[j] belong to W[K]
+                index = Base.ht_keyindex(W, K)
+                index < 0 ? W[copy(K)] = [labels[i], labels[j]] : add_two!(W.vals[index], labels[i], labels[j])
 
-                if haskey(W, K) 
-                    union!(W[K], [labels[i], labels[j]])
-                else
-                    W[K] = [labels[i], labels[j]]
-                end
-
-                L = sort!(union(labels[i], labels[j])) # labels[i] and labels[j] also belong to B[L]
-                if haskey(B, L) 
-                    union!(B[L], [labels[i], labels[j]])
-                else
-                    B[L] = [labels[i], labels[j]]
-                end
-
+                # labels[i] and labels[j] also belong to B[L]
+                combine_neighbors!(L, labels[i], labels[j]) 
+                index = Base.ht_keyindex(B, L)
+                index < 0 ? B[copy(L)] = [labels[i], labels[j]] : add_two!(B.vals[index], labels[i], labels[j])
             end
 
         end
     end
     
-    for (K, C) in W # remove trivial cliques
-        if length(C) < 3
-            delete!(W, K)
-        end
-    end
-
-    for (L, C) in B
-        if length(C) < 3
-            delete!(B, L)
-        end
-    end 
+    # remove trivial cliques
+    filter!( ((key, val),) -> length(val) > 2, W)
+    filter!( ((key, val),) -> length(val) > 2, B)
 
     return W, B
 end
@@ -302,57 +501,103 @@ Return the non trivial black and white cliques of the weakly separated collectio
 whose elements are given by `labels` and whose adjacencies are encoded in `quiver`.
 """
 function compute_cliques(labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}) where T <: Integer
-    W::Dict{Vector{T}, Vector{Vector{T}}} = Dict()
-    B::Dict{Vector{T}, Vector{Vector{T}}} = Dict()
+    k = length(labels[1])
+    W = Dict{Vector{T}, Vector{Vector{T}}}()
+    B = Dict{Vector{T}, Vector{Vector{T}}}()
+
+    sizehint!(W, ne(quiver))
+    sizehint!(B, ne(quiver))
+
+    K = Vector{T}(undef, k-1)
+    L = Vector{T}(undef, k+1)
 
     for e in edges(quiver)
         i, j = src(e), dst(e)
-        K = intersect(labels[i], labels[j])
-        L = sort!(union(labels[i], labels[j]))
 
-        if haskey(W, K) 
-            union!(W[K], [labels[i], labels[j]])
-        else
-            W[K] = [labels[i], labels[j]]
-        end
+        l = intersect_neighbors_which!(K, labels[i], labels[j])
+            
+        if is_contained(K, labels[(i, j)[l]]) # => |K| = k-1
 
-        if haskey(B, L) 
-            union!(B[L], [labels[i], labels[j]])
-        else
-            B[L] = [labels[i], labels[j]]
-        end
-    end
+            # labels[i] and labels[j] belong to W[K]
+            index = Base.ht_keyindex(W, K)
+            index < 0 ? W[copy(K)] = [labels[i], labels[j]] : add_two!(W.vals[index], labels[i], labels[j])
 
-    for (K, C) in W # remove trivial cliques
-        if length(C) < 3
-            delete!(W, K)
+            # labels[i] and labels[j] also belong to B[L]
+            combine_neighbors!(L, labels[i], labels[j]) 
+            index = Base.ht_keyindex(B, L)
+            index < 0 ? B[copy(L)] = [labels[i], labels[j]] : add_two!(B.vals[index], labels[i], labels[j])
         end
     end
 
-    for (L, C) in B
-        if length(C) < 3
-            delete!(B, L)
-        end
-    end 
+    # there are no trivial cliques generated this way
 
     return W, B
 end
 
+#### helper functions ####
+
+function findindex(a, val)
+    for i in 1:length(a)
+        a[i] == val && return i
+    end
+
+    return 0
+end
+
+function first_diff(x, a)
+    len = length(x)
+    for i in 1:len-1
+        @inbounds x[i] == a[i] || return x[i]
+    end
+
+    return x[len]
+end
+
 # given the boundary of a clique, add edges (if not both vertices are frozen)
-function add_edges!(Q::SimpleDiGraph{T}, C::Vector{T}, n) where T <: Integer
+function add_edges!(Q::SimpleDiGraph, C, n) 
+    len = length(C)
 
-    for l = 1:length(C)-1
-        i, j = C[l], C[l+1]
-        if i > n || j > n
-            add_edge!(Q, i, j)
-        end
+    for l = 1:len-1
+        @inbounds (C[l] > n || C[l+1] > n) && add_edge!(Q, C[l], C[l+1])
     end
 
-    l = length(C)
-    i, j = C[l], C[1]
-    if i > n || j > n
-        add_edge!(Q, i, j)
+    (C[len] > n || C[1] > n) && add_edge!(Q, C[len], C[1])
+end
+
+function white_clique_pos(K, C, labels::Vector{Vector{T}}) where T <: Integer
+    len = length(C)
+    res = Vector{T}(undef, len)
+    p = Vector{Int}(undef, len)
+
+    for i in 1:len
+        @inbounds res[i] = first_diff(C[i], K)
+    end	
+
+    sortperm!(p, res)
+
+    for i in 1:len
+        @inbounds res[i] = findindex(labels, C[p[i]])
     end
+
+    return res
+end
+
+function black_clique_pos(L, C, labels::Vector{Vector{T}}) where T <: Integer
+    len = length(C)
+    res = Vector{T}(undef, len)
+    p = Vector{Int}(undef, len)
+
+    for i in 1:len
+        @inbounds res[i] = first_diff(L, C[i])
+    end	
+
+    sortperm!(p, res)
+
+    for i in 1:len
+        @inbounds res[i] = findindex(labels, C[p[i]])
+    end
+
+    return res
 end
 
 @doc raw"""
@@ -361,36 +606,27 @@ end
 Compute the adjacency graph and face boundaries of the weakly separated collection 
 with elements given by `labels`.
 """
-function compute_adjacencies(n, labels::Vector{Vector{T}}) where T <: Integer
+function compute_adjacencies(n::Int, labels::Vector{Vector{T}}) where T <: Integer
     N = length(labels)
     W, B = compute_cliques(labels)
 
-    positions = let labelPos = Dict(labels[i] => i for i = one(T):T(N)) # memorize positions of labels
-        c -> labelPos[c]
-    end
-
     Q = SimpleDiGraph{T}(N)
-    W2::Dict{Vector{T}, Vector{T}} = Dict()
-    B2::Dict{Vector{T}, Vector{T}} = Dict()
+    W2 = Dict{Vector{T}, Vector{T}}()
+    B2 = Dict{Vector{T}, Vector{T}}()
 
-    for K in keys(W) # compute boundary and add edges for non trivial white cliques
-        minus_K = let K = K
-            x -> setdiff(x, K)
-        end
-        p = sortperm(minus_K.(W[K]))
+    sizehint!(W2, length(W))
+    sizehint!(B2, length(B))
 
-        W2[K] = (positions.(W[K]))[p]
-
-        add_edges!(Q, W2[K], n)
+    # compute boundary and add edges for non trivial white cliques
+    for (K, C) in W 
+        clique_pos = white_clique_pos(K, C, labels)
+        W2[K] = clique_pos
+        add_edges!(Q, clique_pos, n)
     end
 
-    for L in keys(B) # compute boundary for non trivial black cliques (dont add edges here to avoid 2-cycles)
-        L_minus = let L = L
-            x -> setdiff(L, x)
-        end
-        p = sortperm(L_minus.(B[L]))
-
-        B2[L] = positions.(B[L])[p]
+    # compute boundary for non trivial black cliques (dont add edges here to avoid 2-cycles)
+    for (L, C) in B 
+        B2[L] = black_clique_pos(L, C, labels)
     end
 
     return Q, W2, B2
@@ -403,32 +639,22 @@ Compute the face boundaries of the weakly separated collection with elements giv
 by `labels` and adjacency graph `quiver`.
 """
 function compute_boundaries(labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}) where T <: Integer
-    N = length(labels)
     W, B = compute_cliques(labels, quiver)
-
-    positions = let labelPos = Dict(labels[i] => i for i = one(T):T(N)) # memorize positions of labels
-        c -> labelPos[c]
-    end
     
-    W2::Dict{Vector{T}, Vector{T}} = Dict()
-    B2::Dict{Vector{T}, Vector{T}} = Dict()
+    W2 = Dict{Vector{Int}, Vector{Int}}()
+    B2 = Dict{Vector{Int}, Vector{Int}}()
 
-    for K in keys(W) # compute boundary 
-        minus_K = let K = K
-            x -> setdiff(x, K)
-        end
-        p = sortperm(minus_K.(W[K]))
+    sizehint!(W2, length(W))
+    sizehint!(B2, length(B))
 
-        W2[K] = (positions.(W[K]))[p]
+    # compute boundary and add edges for non trivial white cliques
+    for (K, C) in W 
+        W2[K] = white_clique_pos(K, C, labels)
     end
 
-    for L in keys(B) # compute boundary
-        L_minus = let L = L
-            x -> setdiff(L, x)
-        end
-        p = sortperm(L_minus.(B[L]))
-
-        B2[L] = positions.(B[L])[p]
+    # compute boundary for non trivial black cliques (dont add edges here to avoid 2-cycles)
+    for (L, C) in B 
+        B2[L] = black_clique_pos(L, C, labels)
     end
 
     return W2, B2
@@ -445,24 +671,76 @@ The 2-cells are colored black or white and contained in `blackCliques` and `whit
 # Attributes
 - `k::Int`
 - `n::Int`
-- `labels::Vector{Vector{Int}}`
-- `quiver::SimpleDiGraph{Int}`
-- `whiteCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} }}`
-- `blackCliques::Union{Missing, Dict{Vector{Int}, Vector{Int} }}`
+- `labels::Vector{Vector{T}}`
+- `quiver::SimpleDiGraph{T}`
+- `whiteCliques::Dict{Vector{T}, Vector{T}}`
+- `blackCliques::Dict{Vector{T}, Vector{T}}`
 
 # Constructors
-    WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, computeCliques::Bool = true)
-    WSCollection(k::Int, n::Int, labels::Vector{Vector{Int}}, quiver::SimpleDiGraph{Int}, 
-                                                              computeCliques::Bool = true)
-    WSCollection(collection::WSCollection; computeCliques::Bool = true)
+    WSCollection(k::Int, n::Int, labels::Vector{Vector{T}}, 
+                computeCliques::Bool = true, frozenFirst::Bool = true)
+
+    WSCollection(k::Int, n::Int, labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}, 
+                computeCliques::Bool = true, frozenFirst::Bool = true)
+
+    WSCollection(C::WSCollection; computeCliques::Bool = true)
 """
 mutable struct WSCollection{T <: Integer}
-    k::T
-    n::T
+    k::Int
+    n::Int
     labels::Vector{Vector{T}}
     quiver::SimpleDiGraph{T}
     whiteCliques::Dict{Vector{T}, Vector{T}}
     blackCliques::Dict{Vector{T}, Vector{T}}
+end
+
+function copy_labels(C::WSCollection{T}) where T <: Integer
+    N = length(C)
+
+    new_labels = Vector{Vector{T}}(undef, N)
+    for i in 1:N
+        @inbounds new_labels[i] = copy(C.labels[i])
+    end
+
+    return new_labels
+end
+
+function Base.deepcopy(C::WSCollection{T}) where T <: Integer
+    labels = copy_labels(C)
+    Q = SimpleDiGraph(C.quiver)
+
+    W = Dict{Vector{T}, Vector{T}}()
+    B = Dict{Vector{T}, Vector{T}}()
+    sizehint!(W, length(C.whiteCliques))
+    sizehint!(B, length(C.blackCliques))
+
+    for (K, C) in C.whiteCliques
+        W[copy(K)] = copy(C)
+    end
+
+    for (L, C) in C.blackCliques
+        B[copy(L)] = copy(C)
+    end
+
+    return WSCollection(C.k, C.n, labels, Q, W, B)
+end
+
+function frozen_first(k::Int, n::Int, labels::Vector{Vector{T}}) where T <: Integer
+    N = length(labels)
+    res = Vector{Vector{T}}(undef, N)
+
+    for i in 1:n
+        res[i] = frozen_label(k, n, i, T)
+    end
+
+    frozen = @view res[1:n]
+
+    x = n+1
+    for i in 1:N
+        labels[i] in frozen || ( res[x] = labels[i]; x += 1)
+    end
+
+    return res
 end
 
 @doc raw"""
@@ -473,14 +751,16 @@ computed using only a set of vertex `labels`.
 
 If `computeCliques` is set to false, the 2-cells will be left empty.
 """
-function WSCollection(k, n, labels::Vector{Vector{T}}; computeCliques::Bool = true) where T <: Integer
-    # TODO enfore frozen labels first
-    Q, W, B = compute_adjacencies(n, labels)
+function WSCollection(k::Int, n::Int, labels::Vector{Vector{T}}; 
+                        computeCliques::Bool = true, frozenFirst::Bool = true) where T <: Integer
+
+    new_labels = frozenFirst ? frozen_first(k, n, labels) : labels
+    Q, W, B = compute_adjacencies(n, new_labels)
 
     if computeCliques 
-        return WSCollection{T}(k, n, deepcopy(labels), Q, W, B)
+        return WSCollection{T}(k, n, new_labels, Q, W, B)
     else
-        return WSCollection{T}(k, n, deepcopy(labels), Q, Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
+        return WSCollection{T}(k, n, new_labels, Q, Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
     end
 end
 
@@ -493,136 +773,143 @@ their adjacencies encoded in `quiver`. Faster than just using labels most of the
 
 If `computeCliques` is `false` the black and white 2-cells are are left empty instead.
 """
-function WSCollection(k, n, labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}; computeCliques::Bool = true) where T <: Integer
-    k, n = T(k), T(n)
-    # TODO enfore frozen labels first
+function WSCollection(k::Int, n::Int, labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}; 
+                        computeCliques::Bool = true, frozenFirst::Bool = true) where T <: Integer
+
+    new_labels = frozenFirst ? frozen_first(k, n, labels) : labels
+
     if !computeCliques
-        return WSCollection{T}(k, n, deepcopy(labels), deepcopy(quiver), Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
+        return WSCollection{T}(k, n, new_labels, quiver, Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
     else
-        W, B = compute_boundaries(labels, quiver)
-        return WSCollection{T}(k, n, deepcopy(labels), deepcopy(quiver), W, B)
+        W, B = compute_boundaries(new_labels, quiver)
+        return WSCollection{T}(k, n, new_labels, quiver, W, B)
     end
 end
 
 @doc raw"""
-    WSCollection(collection::WSCollection; computeCliques::Bool = true)
+    WSCollection(C::WSCollection; computeCliques::Bool = true)
 
-Constructor of WSCollection. Computes 2-cells of `collection` if the are empty, 
-othererwise returns a deepcopy of `collection`.
+Constructor of WSCollection. Computes 2-cells of `C` if the are empty, 
+othererwise returns a deepcopy of `C`.
 
 If `computeCliques` is `false` the black and white 2-cells are left empty instead.
 """
-function WSCollection(collection::WSCollection{T}; computeCliques::Bool = true) where T <: Integer
+function WSCollection(C::WSCollection{T}; computeCliques::Bool = true) where T <: Integer
+
+    if computeCliques && !isempty(C.whiteCliques) && !isempty(C.blackCliques)
+        return deepcopy(C)
+    end
+
+    labels = copy_labels(C)
+    Q = SimpleDiGraph(C.quiver)
+
     if !computeCliques
-        return WSCollection{T}(collection.k, collection.n, deepcopy(collection.labels), deepcopy(collection.quiver), 
-                            Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
+
+        W, B = Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}()
+        return WSCollection{T}(C.k, C.n, labels, Q, W, B)
     else
-        if isempty(collection.whiteCliques) || isempty(collection.blackCliques)
-            W, B = compute_boundaries(collection.labels, collection.quiver)
-            return WSCollection{T}(collection.k, collection.n, deepcopy(collection.labels), deepcopy(collection.quiver), W, B)
-        else
-            return deepcopy(collection)
-        end
+        
+        W, B = compute_boundaries(C.labels, C.quiver)
+        return WSCollection(C.k, C.n, labels, Q, W, B)
     end
 end
 
 @doc raw"""
-    (==)(collection1::WSCollection, collection2::WSCollection)
+    in(label::Vector{Int}, C::WSCollection)
 
-Return true if the vertices of `collection1` and `collection2` share the same labels.
+Return true if `label` is occurs as label of `C`.
+"""
+Base.in(label::Vector{T}, C::WSCollection{T}) where T <: Integer = label in C.labels
+
+@doc raw"""
+    getindex(C::WSCollection, inds...)
+
+Return the subset of the labels in `C` specified `inds` in `C.labels`.
+"""
+Base.getindex(C::WSCollection, inds...) = getindex(C.labels, inds...)
+
+@doc raw"""
+    length(C::WSCollection)
+
+Return the length of `C.labels`.
+"""
+Base.length(C::WSCollection) = length(C.labels)
+
+@doc raw"""
+    (==)(C1::WSCollection, C2::WSCollection)
+
+Return true if the vertices of `C1` and `C2` contain the same labels.
 The order of labels in each collection does not matter.
 """
-function Base.:(==)(collection1::WSCollection, collection2::WSCollection)
-    return sort(collection1.labels) == sort(collection2.labels)
+function Base.:(==)(C1::WSCollection, C2::WSCollection)
+    n = C1.n
+    n == C2.n || return false
+    C1.k == C2.k || return false
+    
+    return @views sort(C1.labels[n+1:end]) == sort(C2.labels[n+1:end])
 end
 
+Base.hash(C::WSCollection) = hash(sort(C.labels))
 
-Base.hash(collection::WSCollection) = hash(sort(collection.labels))
+# function Base.hash(C::WSCollection)
+#     n = C.n
+#     res = hash(C[n+1])
 
-
-@doc raw"""
-    in(label::Vector{Int}, collection::WSCollection)
-
-Return true if `label` is occurs as label of `collection`.
-"""
-Base.in(label::Vector{T}, collection::WSCollection{T}) where T <: Integer = label in collection.labels
-
-@doc raw"""
-    getindex(collection::WSCollection, inds...)
-
-Return the subset of the labels in `collection` specified `inds` in `collection.labels`.
-"""
-Base.getindex(collection::WSCollection, inds...) = getindex(collection.labels, inds...)
+#     for i in n+2:length(C)
+#         res += hash(C[i])
+#     end
+    
+#     return res
+# end
 
 @doc raw"""
-    setindex!(collection::WSCollection{T}, x::Vector{T}, ind)
+    cliques_empty(C::WSCollection)
 
-Set the element at index `i` in `collection.labels` to `x`.
+Return true if the white or black cliques in `C` are empty. 
 """
-Base.setindex!(collection::WSCollection{T}, x::Vector{T}, ind) where T <: Integer = setindex!(collection.labels, x, ind)
-
-@doc raw"""
-    setindex!(collection::WSCollection{T}, X::Vector{Vector{T}}, inds...)
-
-Store the elements from X withing the subset of `collection` specified by `inds`.
-"""
-Base.setindex!(collection::WSCollection{T}, X::Vector{Vector{T}}, inds...) where T <: Integer = setindex!(collection.labels, X, inds...)
-
-@doc raw"""
-    length(collection::WSCollection)
-
-Return the length of `collection.labels`.
-"""
-Base.length(collection::WSCollection) = length(collection.labels)
-
-@doc raw"""
-    cliques_empty(collection::WSCollection)
-
-Return true if the white or black cliques in `collection` are empty. 
-"""
-function cliques_empty(collection::WSCollection)
-    return isempty(collection.whiteCliques) || isempty(collection.blackCliques)
+function cliques_empty(C::WSCollection)
+    return isempty(C.whiteCliques) || isempty(C.blackCliques)
 end
 
 @doc raw"""
-    intersect(collection1::WSCollection, collection2::WSCollection)
+    intersect(C1::WSCollection, C2::WSCollection)
 
-Return the common labels of `collection1` and `collection2`.
+Return the common labels of `C1` and `C2`.
 """
-function Base.intersect(collection1::WSCollection, collection2::WSCollection)
-    return intersect(collection1.labels, collection2.labels)
+function Base.intersect(C1::WSCollection, C2::WSCollection)
+    return intersect(C1.labels, C2.labels)
 end
 
 @doc raw"""
-    setdiff(collection1::WSCollection, collection2::WSCollection)
+    setdiff(C1::WSCollection, C2::WSCollection)
 
-Return the labels of `collection1` minus the labels of `collection2`.
+Return the labels of `C1` minus the labels of `C2`.
 """
-function Base.setdiff(collection1::WSCollection, collection2::WSCollection)
-    return setdiff(collection1.labels, collection2.labels)
+function Base.setdiff(C1::WSCollection, C2::WSCollection)
+    return setdiff(C1.labels, C2.labels)
 end
 
 @doc raw"""
-    setdiff(collection1::WSCollection, collection2::WSCollection)
+    setdiff(C1::WSCollection, C2::WSCollection)
 
-Return the union of labels in `collection1` and `collection2`.
+Return the union of labels in `C1` and `C2`.
 """
-function Base.union(collection1::WSCollection, collection2::WSCollection)
-    return union(collection1.labels, collection2.labels)
+function Base.union(C1::WSCollection, C2::WSCollection)
+    return union(C1.labels, C2.labels)
 end
 
 
-function Base.show(io::IO, collection::WSCollection{T}) where T <: Integer
-    s = "WSCollection{$T} of type ($(collection.k), $(collection.n)) with $(length(collection)) labels"
+function Base.show(io::IO, C::WSCollection{T}) where T <: Integer
+    s = "WSCollection{$T} of type ($(C.k), $(C.n)) with $(length(C)) labels"
     print(io, s)
 end
 
-function Base.print(collection::WSCollection{T}; full::Bool = false) where T <: Integer
-    s = "WSCollection{$T} of type ($(collection.k), $(collection.n)) with $(length(collection)) labels"
+function Base.print(C::WSCollection{T}; full::Bool = false) where T <: Integer
+    s = "WSCollection{$T} of type ($(C.k), $(C.n)) with $(length(C)) labels"
 
     if full
         s *= ": \n"
-        for l in collection.labels
+        for l in C.labels
             s *= "$l\n"
         end
     end
@@ -630,403 +917,536 @@ function Base.print(collection::WSCollection{T}; full::Bool = false) where T <: 
 end
 
 
-function Base.println(collection::WSCollection; full::Bool = false)
-    print(collection; full)
+function Base.println(C::WSCollection; full::Bool = false)
+    print(C; full)
     print("\n")
 end
 
 @doc raw"""
-    checkboard_collection(k::Int, n::Int)
+    checkboard_collection(k::Int, n::Int, T::Type = Int)
 
 Return the weakly separated collection corresponding to the checkboard graph.
 """ 
-function checkboard_collection(k, n, type = Int) # TODO use known quiver to speed up computation
-    return WSCollection(k, n, checkboard_labels(k, n, type))
+function checkboard_collection(k::Int, n::Int, T::Type = Int) # TODO use known quiver to speed up computation
+    return WSCollection(k, n, checkboard_labels(k, n, T))
 end
 
 @doc raw"""
-    rectangle_collection(k::Int, n::Int)
+    rectangle_collection(k::Int, n::Int, T::Type = Int)
 
 Return the weakly separated collection corresponding to the rectangle graph.
 """ 
-function rectangle_collection(k, n, type = Int) # TODO use known quiver to speed up computation
-    return WSCollection(k, n, rectangle_labels(k, n, type))
+function rectangle_collection(k::Int, n::Int, T::Type = Int) # TODO use known quiver to speed up computation
+    return WSCollection(k, n, rectangle_labels(k, n, T))
 end
 
 @doc raw"""
-    dual_checkboard_collection(k::Int, n::Int)
+    dual_checkboard_collection(k::Int, n::Int, T::Type = Int)
 
 Return the weakly separated collection corresponding to the dual-checkboard graph.
 """ 
-function dual_checkboard_collection(k, n, type = Int) # TODO use known quiver to speed up computation
-    return WSCollection(k, n, dual_checkboard_labels(k, n, type))
+function dual_checkboard_collection(k::Int, n::Int, T::Type = Int) # TODO use known quiver to speed up computation
+    return WSCollection(k, n, dual_checkboard_labels(k, n, T))
 end
 
 @doc raw"""
-    dual_rectangle_collection(k::Int, n::Int)
+    dual_rectangle_collection(k::Int, n::Int, T::Type = Int)
 
 Return the weakly separated collection corresponding to the dual-rectangle graph.
 """ 
-function dual_rectangle_collection(k, n, type = Int) # TODO use known quiver to speed up computation
-    return WSCollection(k, n, dual_rectangle_labels(k, n, type))
+function dual_rectangle_collection(k::Int, n::Int, T::Type = Int) # TODO use known quiver to speed up computation
+    return WSCollection(k, n, dual_rectangle_labels(k, n, T))
 end
 
 @doc raw"""
-    is_frozen(collection::WSCollection, i::Int)
+    is_frozen(C::WSCollection, i::Int)
 
-Return true if the vertex `i` of `collection` is frozen.
+Return true if the vertex `i` of `C` is frozen.
 """
-function is_frozen(collection::WSCollection, i) 
-    return i <= collection.n
+function is_frozen(C::WSCollection, i::Integer) 
+    return i <= C.n
 end
 
 @doc raw"""
-    is_mutable(collection::WSCollection, i::Int) 
+    is_mutable(C::WSCollection, i::Int) 
 
-Return true if the vertex `i` of `collection` is mutable.
+Return true if the vertex `i` of `C` is mutable.
 """
-function is_mutable(collection::WSCollection, i)
-    return !is_frozen(collection, i) && degree(collection.quiver, [i])[1] == 4 
+function is_mutable(C::WSCollection, i::Integer)
+    return !is_frozen(C, i) && myDegree(C.quiver, i) == 4 
 end
 
 @doc raw"""
-    get_mutables(collection::WSCollection)
+    get_mutables(C::WSCollection)
 
-Return all mutable vertices of `collection`.
+Return all mutable vertices of `C`.
 """
-function get_mutables(collection::WSCollection)
-    return filter( x -> is_mutable(collection, x), collection.n+1:length(collection))
+function get_mutables(C::WSCollection{T}) where T <: Integer
+    n = C.n
+    N = length(C)
+    res = Vector{T}(undef, N-n)
+
+    j = 1
+    for i in n+1:N
+        myDegree(C.quiver, i) == 4 && (res[j] = i; j+=1)
+    end
+
+    return resize!(res, j-1)
 end
 
-function updateCliques!(array::Vector{T}, collection::WSCollection{T}, 
-                        i, I::Vector{T}, a::T, b::T, c::T, d::T) where T <: Integer
+#### helper functions #####
 
-    if length(array) == 1
-        adj = sort!(union(I, array))
-        opp = sort(union(adj, [b, d]))
-        X = collection.whiteCliques
-        Y = collection.blackCliques 
-    else 
-        adj = sort!(union(I, array))
-        opp = setdiff(adj, [a, c]) 
-        X = collection.blackCliques
-        Y = collection.whiteCliques
+function sort_abcd(a, b, c, d)
+    # we alreadyy know a < b amd c < d
+    a > c && ((a, c) = (c, a))
+    b > d && ((b, d) = (d, b))
+    b > c && ((b, c) = (c, b))
+
+    return a, b, c, d
+end
+
+function get_inneighbors(Q, i)
+    x, y = 0, 0
+
+    for i in inneighbors(Q, i) 
+        x == 0 ? x = i : y = i
+    end
+
+    return x, y
+end
+
+function get_outneighbors(Q, i)
+    x, y = 0, 0
+
+    for i in outneighbors(Q, i) 
+        x == 0 ? x = i : y = i
+    end
+
+    return x, y
+end
+
+function remove_I(I, Iab)
+    len = length(I)
+    x, y = 0, 0
+
+    for i in 1:len
+        @inbounds I[i] == Iab[i] || (x = i; break)
+    end
+
+    if x == 0 
+        return Iab[len+1], Iab[len+2]
+    end
+
+    for i in x:len
+        @inbounds I[i] == Iab[i+1] || (y = i; break)
+    end
+
+    return y == 0 ? (Iab[x], Iab[len+2]) :  (Iab[x], Iab[y+1])
+end
+
+function add_I!(res, I, a, b)
+    len = length(I)
+    x, y = 0, 0
+
+    for i in 1:len
+        I[i] < a || (x = i; break)
+        @inbounds res[i] = I[i]
+    end
+
+    if x == 0 
+        res[len+1] = a
+        res[len+2] = b
+        return res
+    end
+
+    # I[x] > a
+    res[x] = a
+
+    for i in x:len
+        I[i] < b || (y = i; break)
+        @inbounds res[i+1] = I[i]
+    end
+
+    if y == 0
+        res[len+2] = b
+        return res
+    end 
+
+    # I[y] > b
+    res[y+1] = b
+
+    for i in y:len
+        @inbounds res[i+2] = I[i]
     end
     
-    if haskey(Y, opp) # adjacent clique is a triangle and must be merged with the opposite clique
-        A = X[adj]
-        l = findfirst(x -> x == i, A)
-        succ = A[pmod(l+1 ,3)]
+    return res
+end
 
-        O = Y[opp]
-        l = findfirst(x -> x == succ, O)
+function merge_cliques!(X::Dict{Vector{T},Vector{T}}, Y::Dict{Vector{T},Vector{T}}, i, ind_adj, ind_opp) where T <:Integer
+    A = X.vals[ind_adj]
+    l = findindex(A, i)
+    succ = A[mod1(l+1 ,3)]
 
-        Y[opp] = insert!(O, l, T(i))
-        delete!(X, adj)
-    else # adjacent clique must be split into a triangle and another (possibly empty) clique
-        A = X[adj]
+    O = Y.vals[ind_opp]
+    l = findindex(O, succ)
 
-        if length(A) == 3 # adjacent clique is trangle at the boundary. Just flip colors
-            Y[opp] = A
-            delete!(X, adj)
-        else # split off a triangle from the adjacent clique
+    insert!(O, l, T(i))
+    Base._delete!(X, ind_adj) 
+end
 
-         l = findfirst(x -> x == i, A) 
-         m = length(A)
-         Y[opp] = [ A[pmod(l-1, m)], T(i), A[pmod(l+1, m)] ]
-         X[adj] = deleteat!(A, l)
+function split_clique!(X::Dict{Vector{T},Vector{T}}, Y::Dict{Vector{T},Vector{T}}, i, ind_adj, opp::Vector{T}) where T <:Integer
+    A = X.vals[ind_adj]
+
+    if length(A) == 3 # adjacent clique is trangle at the boundary. Just flip colors
+        Y[copy(opp)] = A
+        Base._delete!(X, ind_adj)
+    else # split off a triangle from the adjacent clique
+
+        l = findindex(A, i)
+        m = length(A)
+        Y[copy(opp)] = [ A[mod1(l-1, m)], T(i), A[mod1(l+1, m)] ]
+        deleteat!(A, l)
+    end
+end
+
+function updateCliques!(K::Vector{T}, L::Vector{T}, x, y, i, C::WSCollection{T}) where T <: Integer
+
+    intersect_neighbors!(K, C[x], C[y])
+    combine_neighbors!(L, C[x], C[y])
+    ind_K = Base.ht_keyindex(C.whiteCliques, K)
+    ind_L = Base.ht_keyindex(C.blackCliques, L)
+
+    if is_contained(K, C[i]) # K corresponds to adjacent clique, L to "opposite"
+        
+        if ind_L >= 0
+            # adjacent clique is a triangle and must be merged with the opposite clique
+            merge_cliques!(C.whiteCliques, C.blackCliques, i, ind_K, ind_L)
+        else
+            # adjacent clique must be split into a triangle and another (possibly empty) clique
+            split_clique!(C.whiteCliques, C.blackCliques, i, ind_K, L)
+        end
+
+    else # now L corresponds to adjacent clique, K to "opposite"
+        
+        if ind_K >= 0
+            merge_cliques!(C.blackCliques, C.whiteCliques, i, ind_L, ind_K)
+        else
+            split_clique!(C.blackCliques, C.whiteCliques, i, ind_L, K)
         end
     end
-
-    collection.whiteCliques, collection.blackCliques = length(array) == 1 ? (X, Y) : (Y, X)
 end
 
 @doc raw"""
-    mutate!(collection::WSCollection, i::Int, mutateCliques::Bool = true)
+    mutate!(C::WSCollection, i::Int, mutateCliques::Bool = true)
 
-Mutate the `collection` in direction `i` if `i` is a mutable vertex of `collection`.
+Mutate the `C` in direction `i` if `i` is a mutable vertex of `C`.
 
 If `mutateCliques` is set to false, the 2-cells are emptied.
 """
-function mutate!(collection::WSCollection{T}, i::Int, mutateCliques::Bool = true) where T <: Integer
+function mutate!(C::WSCollection{T}, i::Int, mutateCliques::Bool = true) where T <: Integer
 
-    if !is_mutable(collection, i)
-        return error("vertex $i with label $(collection.labels[i]) of the given WSCollection is not mutable!")
+    is_mutable(C, i) || error("vertex $i with label $(C[i]) is not mutable!")
+        
+    Q = C.quiver
+    N_in = get_inneighbors(Q, i)
+    N_out = get_outneighbors(Q, i)
+
+    ##### update cliques #####
+    
+    if mutateCliques && !cliques_empty(C)
+
+        K = Vector{T}(undef, C.k-1)
+        L = Vector{T}(undef, C.k+1)
+        
+        for x in N_in 
+            for y in N_out
+                updateCliques!(K, L, x, y, i, C)
+            end
+        end
+        
+    elseif !cliques_empty(C)
+        empty!(C.whiteCliques)
+        empty!(C.blackCliques)
     end
 
-    G = collection.quiver
-    
-    # exchange label of i
-    N_in::SVector{2, Int} = collect(inneighbors(G, i))
-    N_out::SVector{2, Int} = collect(outneighbors(G, i))
+    ##### mutate quiver #####
 
-    N_out_labels = collection[N_out]
-    
-    I = intersect(N_out_labels[1], N_out_labels[2])
-    (a, b, c, d) = sort!(setdiff(union(N_out_labels[1], N_out_labels[2]), I))
-    
-    if b in collection.labels[i]   # ensure label of i is Iac
-        (a, b, c, d) = (b, c, d, a) 
-    end
-    
-    collection[i] = sort!(union(I, [b,d])) # exchange Iac for Ibd
-
-    # mutate quiver
     for j in N_in # add/remove edges according to quiver mutation
         for l in N_out
-            if has_edge(G, l, j)
-                rem_edge!(G, l, j)
-            elseif !is_frozen(collection, j) || !is_frozen(collection, l)
-                add_edge!(G, j, l)
+            if has_edge(Q, l, j)
+                rem_edge!(Q, l, j)
+            elseif !is_frozen(C, j) || !is_frozen(C, l)
+                add_edge!(Q, j, l)
             end
         end
     end
 
     # reverse edges adjacent to i
     for j in N_in
-        rem_edge!(G, j, i)
-        add_edge!(G, i, j)
+        rem_edge!(Q, j, i)
+        add_edge!(Q, i, j)
     end
 
     for l in N_out
-        rem_edge!(G, i, l)
-        add_edge!(G, l, i)
+        rem_edge!(Q, i, l)
+        add_edge!(Q, l, i)
     end
 
-    collection.quiver = G
+    ##### exchange label of i #####
 
-    if mutateCliques && !cliques_empty(collection)
-        updateCliques!([a], collection, i, I, a, b, c, d)
-        updateCliques!([c], collection, i, I, a, b, c, d)
-        updateCliques!([a,b,c], collection, i, I, a, b, c, d)
-        updateCliques!([a,c,d], collection, i, I, a, b, c, d)
-        
-    elseif !cliques_empty(collection)
-        collection.whiteCliques = Dict{Vector{T}, Vector{T}}()
-        collection.blackCliques = Dict{Vector{T}, Vector{T}}()
-    end
+    I = Vector{T}(undef, C.k-2)
+    intersect_opposing!(I, C[N_out[1]], C[N_out[2]])
+    
+    a, b = remove_I(I, C[N_out[1]])
+    c, d = remove_I(I, C[N_out[2]])
+    (a, b, c, d) = sort_abcd(a, b, c, d)
 
-    return collection
+    insorted(b, C[i]) ? add_I!(C[i], I, a, c) : add_I!(C[i], I, b, d)
+
+    return C
 end
 
 @doc raw"""
-    mutate(collection::WSCollection, i::Int, mutateCliques::Bool = true)
+    mutate(C::WSCollection, i::Int, mutateCliques::Bool = true)
 
 Version of `mutate!` that does not modify its arguments.
 """
-function mutate(collection::WSCollection, i::Int, mutateCliques::Bool = true)
-    return mutate!( deepcopy(collection), i, mutateCliques)
+function mutate(C::WSCollection, i::Int, mutateCliques::Bool = true)
+    return mutate!( deepcopy(C), i, mutateCliques)
 end
 
 @doc raw"""
-    mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
+    mutate!(C::WSCollection, label::Vector{T}, mutateCliques::Bool = true)
 
-Mutate the `collection` by addressing a vertex with its label.
+Mutate the `C` by addressing a vertex with its label.
 """
-function mutate!(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true) 
-    i = findfirst(x -> x == label, collection.labels)
+function mutate!(C::WSCollection, label::Vector{T}, mutateCliques::Bool = true) where T <: Integer
+    i = findindex(C.labels, label)
+    i == 0 && error("$label is not part of the collection")
 
-    if isnothing(i)
-        error("$label is not part of the collection")
+    return mutate!(C, i, mutateCliques)
+end
+
+@doc raw"""
+    mutate(C::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
+
+Mutate the `C` by addressing a vertex with its label, without modifying arguments.
+"""
+function mutate(C::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
+    return mutate!( deepcopy(C), label, mutateCliques)
+end
+
+function apply_to_collection!(f::Function, C::WSCollection{T}) where T <: Integer # f: T -> T
+    k = C.k
+    N = length(C)
+
+    # apply to labels
+    for i in 1:N
+        for j in 1:k
+            @inbounds C.labels[i][j] = f(C.labels[i][j])
+        end
+        sort!(C.labels[i])
     end
 
-    return mutate!(collection, i, mutateCliques)
-end
-
-@doc raw"""
-    mutate(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
-
-Mutate the `collection` by addressing a vertex with its label, without modifying arguments.
-"""
-function mutate(collection::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
-    return mutate!( deepcopy(collection), label, mutateCliques)
-end
-
-
-function apply_to_collection!(f::Function, collection::WSCollection{T}) where T <: Integer # f: T -> T
-    
-    # apply to labels
-    F = I -> sort!(f.(I))
-    collection.labels = F.(collection.labels)
+    W2 = Dict{Vector{T}, Vector{T}}()
+    B2 = Dict{Vector{T}, Vector{T}}()
+    sizehint!(W2, length(C.whiteCliques))
+    sizehint!(B2, length(C.blackCliques))
 
     # shift clique keys
-    W2::Dict{Vector{T}, Vector{T}} = Dict()
-    B2::Dict{Vector{T}, Vector{T}} = Dict()
-
-    for (K, C) in collection.whiteCliques
-        K2 = sort(f.(K))
-        W2[K2] = C
+    for (K, C) in C.whiteCliques
+        for i in 1:k-1
+            @inbounds K[i] = f(K[i])
+        end
+        sort!(K)
+        W2[K] = C
     end
 
-    for (L, C) in collection.blackCliques
-        L2 = sort(f.(L))
-        B2[L2] = C
+    for (L, C) in C.blackCliques
+        for i in 1:k+1
+            @inbounds L[i] = f(L[i])
+        end
+        sort!(L)
+        B2[L] = C
     end
 
-    collection.whiteCliques = W2
-    collection.blackCliques = B2
+    C.whiteCliques = W2
+    C.blackCliques = B2
 
-    return collection
+    return C
 end
 
-
 @doc raw"""
-    rotate!(collection::WSCollection, amount::Int)
+    rotate!(C::WSCollection, amount::Int)
 
-Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation.
+Rotate `C` by `amount`, where a positive amount indicates a clockwise rotation.
 """
-function rotate!(collection::WSCollection{T}, amount) where T <: Integer
-
-    shift = let (n, a) = (collection.n, T(amount))
-        x -> pmod(x + a, n)
-    end
-    return apply_to_collection!(shift, collection)
+function rotate!(C::WSCollection, amount::Int)
+    shift = x -> mod1(x + amount, C.n)
+    return apply_to_collection!(shift, C)
 end
 
 @doc raw"""
-    rotate(collection::WSCollection, amount::Int)
+    rotate(C::WSCollection, amount::Int)
 
-Rotate `collection` by `amount`, where a positive amount indicates a clockwise rotation.
+Rotate `C` by `amount`, where a positive amount indicates a clockwise rotation.
 Does not change its input.
 """
-function rotate(collection::WSCollection, amount)
-    return rotate!(deepcopy(collection), amount)
+function rotate(C::WSCollection, amount::Int)
+    return rotate!(deepcopy(C), amount)
 end
 
 @doc raw"""
-    mirror!(collection::WSCollection, shift::Int = 1)
+    mirror!(C::WSCollection, shift::Int = 1)
 
-Reflect `collection` by letting the permutation `p(x) = 1 + shift - x` interpreted modulo 
-`n = collection.n` act on the labels of `collection`.
+Reflect `C` by letting the permutation `p(x) = shift - x` interpreted modulo 
+`n = C.n` act on the labels of `C`.
 """
-function mirror!(collection::WSCollection{T}, shift = 2) where T <: Integer
-
-    mirror = let (n, s) = (collection.n, T(shift))
-        x -> pmod(s - x, n)
-    end
-    return apply_to_collection!(mirror, collection)
+function mirror!(C::WSCollection, shift::Int = 2)
+    mirror = x -> mod1(shift - x, C.n)
+    return apply_to_collection!(mirror, C)
 end
 
 @doc raw"""
-    mirror(collection::WSCollection, shift::Int = 1) 
+    mirror(C::WSCollection, shift::Int = 1) 
 
-Reflect `collection` by letting the permutation `p(x) = 1 + shift - x` interpreted modulo 
-`n = collection.n` act on the labels of `collection`. Does not change its input.
+Reflect `C` by letting the permutation `p(x) = shift - x` interpreted modulo 
+`n = C.n` act on the labels of `C`. Does not change its input.
 """
-function mirror(collection::WSCollection, shift = 1)
-    return mirror!(deepcopy(collection), shift)
+function mirror(C::WSCollection, shift::Int = 2)
+    return mirror!(deepcopy(C), shift)
 end
 
-@doc raw"""
-    complements!(collection::WSCollection) 
+function complement(a::Vector{T}, n::Int) where T <: Integer
+    
+    len = n - length(a)
+    res = Vector{T}(undef, len)
 
-Return the collection whose labels are complementary to those of `collection`.
-"""
-function complements!(collection::WSCollection{T}) where T <: Integer
-    n = collection.n
-    k = collection.k
-
-    complement = let Omega = collect(T, 1:n)
-        A -> setdiff(Omega, A)
+    x = 1
+    for i in 1:n
+        @inbounds i in a || (res[x] = i; x += 1)
     end
 
-    collection.labels = complement.(collection.labels)
+    return res
+end
+
+@doc raw"""
+    complements!(C::WSCollection) 
+
+Return the collection whose labels are complementary to those of `C`.
+"""
+function complements!(C::WSCollection{T}) where T <: Integer
+    n = C.n
+    N = length(C)
+
+    for i in 1:N
+        @inbounds C.labels[i] = complement(C[i], n)
+    end
 
     # take complement of clique keys
-    W2::Dict{Vector{T}, Vector{T}} = Dict()
-    B2::Dict{Vector{T}, Vector{T}} = Dict()
+    W2 = Dict{Vector{T}, Vector{T}}()
+    B2 = Dict{Vector{T}, Vector{T}}()
+    sizehint!(W2, length(C.blackCliques))
+    sizehint!(B2, length(C.whiteCliques))
 
-    for (K, C) in collection.whiteCliques
-        L = complement(K)
+    for (K, C) in C.whiteCliques
+        L = complement(K, n)
         B2[L] = C
     end
 
-    for (L, C) in collection.blackCliques
-        K = complement(L)
+    for (L, C) in C.blackCliques
+        K = complement(L, n)
         W2[K] = C
     end
 
-    collection.whiteCliques = W2
-    collection.blackCliques = B2
+    C.whiteCliques = W2
+    C.blackCliques = B2
+    C.k = n-C.k
 
-    collection.k = n-k
-
-    return collection
+    return C
 end
 
 @doc raw"""
-    complements(collection::WSCollection) 
+    complements(C::WSCollection) 
 
-Return the collection whose labels are complementary to those of `collection`.
-Does not change its input.
+Return the collection whose labels are complementary to those of `C`.
+Does not modify its input.
 """
-function complements(collection::WSCollection)
-    return complements!(deepcopy(collection))
+function complements(C::WSCollection)
+    return complements!(deepcopy(C))
 end
 
 @doc raw"""
-    swap_colors!(collection::WSCollection) 
+    swap_colors!(C::WSCollection) 
 
 Return the weakly separated collection whose corresponding plabic graph is obtained
-from the one of `collection` by swapping the colors black and white.
+from the one of `C` by swapping the colors black and white.
 
-This is the same as taking complements and rotating by `collection.k`.
+This is the same as taking complements and rotating by `C.k`.
 """
-function swap_colors!(collection::WSCollection{T}) where T <: Integer
+function swap_colors!(C::WSCollection{T}) where T <: Integer
     # swapping colors = complement + rotate by k
 
-    n = collection.n
-    k = collection.k
-
-    shift = let (k, n) = (k, n)
-        x -> pmod(x + k, n)
+    n = C.n
+    k = C.k
+    N = length(C)
+    
+    for i in 1:N
+        for j in 1:k
+            @inbounds C.labels[i][j] = mod1(C[i][j] + k, n)
+        end
+        @inbounds C.labels[i] = complement(C[i], n)
     end
-
-    swap_color = let Omega = collect(T, 1:n)
-        A -> setdiff( Omega, shift.(A))
-    end
-
-    collection.labels = swap_color.(collection.labels)
 
     # swap colors of clique keys
-    W2::Dict{Vector{T}, Vector{T}} = Dict()
-    B2::Dict{Vector{T}, Vector{T}} = Dict()
+    W2 = Dict{Vector{T}, Vector{T}}()
+    B2 = Dict{Vector{T}, Vector{T}}()
+    sizehint!(W2, length(C.blackCliques))
+    sizehint!(B2, length(C.whiteCliques))
 
-    for (K, C) in collection.whiteCliques
-        L = swap_color(K)
+    for (K, C) in C.whiteCliques
+
+        for j in 1:k-1
+            @inbounds K[j] = mod1(K[j] + k, n)
+        end
+        L = complement(K, n)
         B2[L] = C
     end
 
-    for (L, C) in collection.blackCliques
-        K = swap_color(L)
+    for (L, C) in C.blackCliques
+
+        for j in 1:k+1
+            @inbounds L[j] = mod1(L[j] + k, n)
+        end
+        K = complement(L, n)
         W2[K] = C
     end
 
-    collection.whiteCliques = W2
-    collection.blackCliques = B2
-    collection.k = n-k
+    C.whiteCliques = W2
+    C.blackCliques = B2
+    C.k = n-k
 
-    return collection
+    return C
 end
 
 @doc raw"""
-    swap_colors(collection::WSCollection) 
+    swap_colors(C::WSCollection) 
 
 Return the weakly separated collection whose corresponding plabic graph is obtained
-from the one of `collection` by swapping the colors black and white.
+from the one of `C` by swapping the colors black and white.
 Does not change its input.
 """
-function swap_colors(collection::WSCollection)
-    return swap_colors!(deepcopy(collection))
+function swap_colors(C::WSCollection)
+    return swap_colors!(deepcopy(C))
 end
 
 # extend to maximal weakly separated collection using brute force
 @doc raw"""
-    extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})  
+    extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{T}})  
 
 Extend `labels` to contain the labels of a maximal weakly separated collection.
 """
-function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{T}}) where T <: Integer
+function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{T}}) where T <: Integer # TODO optimize
     N = k*(n-k)+1
 
     # enforce frozen labels in the first n positions
@@ -1041,8 +1461,8 @@ function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{T}}) whe
 
     for v in k_sets
         v = Vector{T}(v)
-        if !(v in labels) && is_weakly_separated(n, union(labels, [v]))
-            push!(labels, v)
+        if !(v in labels)
+            is_weakly_separated(push!(labels, v)) || pop!(labels)
         end
 
         if length(labels) == N
@@ -1054,14 +1474,14 @@ end
 
 # extend to maximal weakly separated collection using know labels, then brute fore
 @doc raw"""
-    extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, 
-                                             labels2::Vector{Vector{Int}})
+    extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{T}}, 
+                                             labels2::Vector{Vector{T}})
 
 Extend `labels1` to contain the labels of a maximal weakly separated collection.
 Use elements of `labels2` if possible.
 """
 function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{T}}, 
-                                                  labels2::Vector{Vector{T}}) where T <: Integer
+                                                  labels2::Vector{Vector{T}}) where T <: Integer # TODO optimize
     N = k*(n-k)+1
 
     # enforce frozen labels in the first n positions
@@ -1069,39 +1489,34 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{T}},
     labels1 = union(frozen, labels1)
 
     for v in labels2
-        if !(v in labels1) && is_weakly_separated(n, union(labels1, [v]))
-
-            push!(labels1, deepcopy(v))
+        if !(v in labels1)
+            is_weakly_separated(push!(labels1, copy(v))) || pop!(labels1)
         end
 
-        if length(labels1) == N
-            return labels1
-        end
+        length(labels1) == N && return labels1
     end
 
     k_sets = subsets(1:n, k)
 
     for v in k_sets
         v = Vector{T}(v)
-        if !(v in labels1) && is_weakly_separated(n, union(labels1, [v]))
-            push!(labels1, v)
+        if !(v in labels1)
+            is_weakly_separated(push!(labels1, v)) || pop!(labels1)
         end
 
-        if length(labels1) == N
-            return labels1
-        end
+        length(labels1) == N && return labels1
     end
 
 end
 
 @doc raw"""
-    extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)
+    extend_weakly_separated!(labels::Vector{Vector{Int}}, C::WSCollection)
 
 Extend `labels` to contain the labels of a maximal weakly separated collection.
-Use labels of `collection` if possible.
+Use labels of `C` if possible.
 """
-function extend_weakly_separated!(labels::Vector{Vector{T}}, collection::WSCollection{T}) where T <: Integer
-    return extend_weakly_separated!(collection.k, collection.n, labels, collection.labels)
+function extend_weakly_separated!(labels::Vector{Vector{T}}, C::WSCollection{T}) where T <: Integer
+    return extend_weakly_separated!(C.k, C.n, labels, C.labels)
 end
 
 @doc raw"""
@@ -1110,7 +1525,14 @@ end
 Return a maximal weakly separated collection containing all elements of `labels`.
 """
 function extend_to_collection(k::Int, n::Int, labels::Vector{Vector{T}}) where T <: Integer
-    return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels)))
+    N = length(labels)
+
+    L = Vector{Vector{T}}(undef, N)
+    for i in 1:N
+        @inbounds L[i] = copy(labels[i])
+    end
+
+    return WSCollection(k, n, extend_weakly_separated!(k, n, L))
 end
 
 @doc raw"""
@@ -1121,17 +1543,31 @@ Return a maximal weakly separated collection containing all elements of `labels1
 Use elements of `labels2` if possible.
 """
 function extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{T}}, labels2::Vector{Vector{T}}) where T <: Integer
-    return WSCollection(k, n, extend_weakly_separated!(k, n, deepcopy(labels1), labels2))
+    N = length(labels1)
+
+    L = Vector{Vector{T}}(undef, N)
+    for i in 1:N
+        @inbounds L[i] = copy(labels1[i])
+    end
+
+    return WSCollection(k, n, extend_weakly_separated!(k, n, L, labels2))
 end
 
 @doc raw"""
-    extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)
+    extend_to_collection(labels::Vector{Vector{Int}}, C::WSCollection)
 
 Return a maximal weakly separated collection containing all elements of `labels`.
 Use labels of `collection` if possible.
 """
-function extend_to_collection(labels::Vector{Vector{T}}, collection::WSCollection{T}) where T <: Integer
-    return WSCollection(collection.k, collection.n, extend_weakly_separated!(deepcopy(labels), collection))
+function extend_to_collection(labels::Vector{Vector{T}}, C::WSCollection{T}) where T <: Integer
+    N = length(labels)
+
+    L = Vector{Vector{T}}(undef, N)
+    for i in 1:N
+        @inbounds L[i] = copy(labels[i])
+    end
+
+    return WSCollection(C.k, C.n, extend_weakly_separated!(L, C))
 end
 
 

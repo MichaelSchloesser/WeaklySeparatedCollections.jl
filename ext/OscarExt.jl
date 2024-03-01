@@ -4,32 +4,43 @@ using WeaklySeparatedCollections, Oscar
 import Graphs: SimpleDiGraph, inneighbors, outneighbors, has_edge, add_edge!, rem_edge!
 import WeaklySeparatedCollections as WSC
 
-pmod = WSC.pmod
-frozen_label = WSC.frozen_label
+findindex = WSC.findindex
 super_potential_label = WSC.super_potential_label
 
 ################## basic seed functionality ##################
 
-# TODO allow for custom printing
-function WSC.Seed(cluster_size::T, n_frozen::T, quiver::SimpleDiGraph{T}) where T <: Integer
+function WSC.Seed(cluster_size::Int, n_frozen::Int, quiver::SimpleDiGraph{T}) where T <: Integer
     R, _ = polynomial_ring(ZZ, cluster_size)
     S = fraction_field(R)
 
-    return Seed{elem_type(S), T}(n_frozen, gens(S), deepcopy(quiver))
+    return Seed{elem_type(S), T}(n_frozen, gens(S), SimpleDiGraph(quiver))
+end
+
+function WSC.Seed(variable_names::Vector{String}, n_frozen::Int, quiver::SimpleDiGraph{T}) where T <: Integer
+    R, _ = polynomial_ring(ZZ, variable_names)
+    S = fraction_field(R)
+
+    return Seed{elem_type(S), T}(n_frozen, gens(S), SimpleDiGraph(quiver))
 end
 
 # TODO add version that prints variables with left/right labels
-function WSC.Seed(collection::WSCollection{T}) where T <: Integer
-    N = T(length(collection))
+function WSC.Seed(C::WSCollection) 
+    N = length(C)
 
-    return Seed(N, deepcopy(collection.n), deepcopy(collection.quiver))
+    return Seed(N, C.n, SimpleDiGraph(C.quiver))
 end
 
-Base.getindex(seed::Seed, i::Int) = getindex(seed.variables, i)
+Base.getindex(seed::Seed, itr...) = getindex(seed.variables, itr...)
 
-Base.getindex(seed::Seed, v::Vector{Int}) = getindex(seed.variables, v)
+Base.setindex!(seed::Seed, x, i::Int) = setindex!(seed.variables, x, i)
 
-Base.setindex!(seed::Seed, x::AbstractAlgebra.Generic.Frac{T} where T <: RingElem, i::Int) = setindex!(seed.variables, x, i)
+function Base.deepcopy(seed::Seed)
+    n = seed.n_frozen
+    vars = deepcopy(seed.variables)
+    Q = SimpleDiGraph(seed.quiver)
+
+    return Seed(n, vars, Q)
+end
 
 Base.length(seed::Seed) = length(seed.variables)
 
@@ -64,10 +75,17 @@ function WSC.is_frozen(seed::Seed, i::Int)
     return i <= seed.n_frozen
 end
 
-function myProd(array)
-    return isempty(array) ? 1 : prod(array)
+function myProd(x, array)
+    res = one(x[1])
+
+    for a in array
+        res*= x[a]
+    end
+
+    return res
 end
 
+# TODO this only really supports mutations coming from a WSC. need non multigraph for general case
 @doc raw"""
     mutate!(seed::Seed, i::Int)
 
@@ -81,10 +99,11 @@ function WSC.mutate!(seed::Seed, i::Int)
 
     Q = seed.quiver
     x = seed.variables
-    N_in = collect(inneighbors(Q, i))
-    N_out = collect(outneighbors(Q, i))
 
-    new_x_i = (myProd(x[N_in]) + myProd(x[N_out])) / x[i]
+    N_in = copy(inneighbors(Q, i))
+    N_out = copy(outneighbors(Q, i))
+
+    new_x_i = (myProd(x, N_in) + myProd(x, N_out)) / x[i]
     seed.variables[i] = new_x_i
 
     # mutate quiver
@@ -108,8 +127,6 @@ function WSC.mutate!(seed::Seed, i::Int)
         rem_edge!(Q, i, l)
         add_edge!(Q, l, i)
     end
-
-    seed.quiver = Q
     
     return seed
 end
@@ -126,9 +143,8 @@ end
 ################## special seeds ##################
 
 function WSC.grid_seed(n::Int, height::Int, width::Int, quiver::SimpleDiGraph{Int})
-    variable_names::Vector{String} = []
+    variable_names = Vector{String}()
 
-    # TODO make frozen actually depend on the labels
     for f in 1:n
         push!(variable_names, "a$f")
     end
@@ -147,7 +163,7 @@ end
 
 
 function WSC.grid_seed(collection::WSCollection, height::Int = collection.n - collection.k, width::Int = collection.k)
-    grid_seed(collection.n, height, width,  deepcopy(collection.quiver))
+    grid_seed(collection.n, height, width,  SimpleDiGraph(collection.quiver))
 end
 
 
@@ -160,7 +176,7 @@ function WSC.extended_checkboard_seed(k, n)
     for i in 0:n-k
         for j in 0:k
             label = checkboard_label(k, n, i, j)
-            pos = findfirst(x -> x == label, check.labels)
+            pos = findindex(check.labels, label)
 
             X[i+1, j+1] = check_seed[pos]
         end
@@ -179,7 +195,7 @@ function WSC.extended_rectangle_seed(k, n)
     for i in 0:n-k
         for j in 0:k
             label = rectangle_label(k, n, i, j)
-            pos = findfirst(x -> x == label, rec.labels)
+            pos = findindex(rec.labels, label)
 
             X[i+1, j+1] = rec_seed[pos]
         end
@@ -195,17 +211,18 @@ end
 function WSC.get_superpotential_terms(collection::WSCollection, seed::Seed = Seed(collection))
     k = collection.k
     n = collection.n
+    T = typeof(seed[1])
 
-    terms::Vector{AbstractAlgebra.Generic.Frac{ZZMPolyRingElem}} = []
+    terms = Vector{T}()
 
     for i in 1:n
         super = super_potential_label(k, n, i)
-        denom_index = findfirst( x -> x == WSC.frozen_label(k, n, i), collection.labels)
+        denom_index = findindex(collection.labels, WSC.frozen_label(k, n, i))
 
         s = deepcopy(seed)
 
         if super in collection
-            pos = findfirst( x -> x == super, collection.labels)
+            pos = findindex(collection.labels, super)
             push!(terms, s[pos]/s[denom_index])
         else
             seq = find_label(collection, super)
@@ -227,8 +244,8 @@ function WSC.checkboard_potential_terms(k::Int, n::Int)
     x = (i, j) -> X[i+1, j+1]
 
     terms = [x(1, 1) for i in 1:n]
-    terms[Int(floor( k/2 ))] = x(1, k-1)/x(0, k)
-    terms[Int(floor( (n+k)/2 ))] = x(n-k-1, 1)/x(n-k, 0)
+    terms[fld(k, 2)] = x(1, k-1)/x(0, k)
+    terms[fld(n+k, 2)] = x(n-k-1, 1)/x(n-k, 0)
     
     for d in 1-k:n-k-2
 
@@ -243,9 +260,9 @@ function WSC.checkboard_potential_terms(k::Int, n::Int)
         end
 
         if d % 2 == 0
-            terms[pmod( Int(k + d/2), n)] = term
+            terms[mod1( k + div(d, 2), n)] = term
         else
-            terms[pmod( Int(n - (d+1)/2), n)] = term
+            terms[mod1( n - div(d+1, 2), n)] = term
         end
     end
 
@@ -259,10 +276,10 @@ end
 function WSC.newton_okounkov_inequalities(collection::WSCollection, r::Int = 1; q_term_index::Int = collection.k)
     k, n = collection.k, collection.n
     T = get_superpotential_terms(collection)
-    empty_index = findfirst( x -> x == WSC.frozen_label(k, n, n-k+1), collection.labels)
+    empty_index = findindex(collection.labels, frozen_label(k, n, n-k+1))
 
-    A::Vector{Vector{Int}} = []
-    b::Vector{Int} = []
+    A = Vector{Vector{Int}}()
+    b = Vector{Int}()
 
     for i in 1:n
         numer, denom = numerator(T[i]), denominator(T[i])
@@ -286,8 +303,8 @@ end
 function WSC.checkboard_inequalities(k::Int, n::Int, r::Int = 1; q_term_index::Int = k)
     T = checkboard_potential_terms(k, n)
     empty_index = n-k+1
-    A::Vector{Vector{Int}} = []
-    b::Vector{Int} = []
+    A = Vector{Vector{Int}}()
+    b = Vector{Int}()
 
     for i in 1:n
         numer, denom = numerator(T[i]), denominator(T[i])
@@ -319,7 +336,7 @@ end
 ################## Action of cyclic and dihedral group ##################
 
 function WSC.dihedral_perm_group(n::Int) # D_n as specific permutation group
-    return permutation_group(n, [cperm(collect(1:n)), perm([pmod(n+2-i, n) for i in 1:n])] )
+    return permutation_group(n, [cperm(collect(1:n)), perm([mod1(n+2-i, n) for i in 1:n])] )
 end
 
 function WSC.cyclic_perm_group(n::Int) # C_n as specific permutation group

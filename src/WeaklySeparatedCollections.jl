@@ -17,7 +17,7 @@ export  WSCollection,
         is_weakly_separated, hash, cliques_empty
 
 export  BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, 
-        HEURISTIC, NUMBER_WRONG_LABELS, MIN_LABEL_DIST, MIN_LABEL_DIST_EXPERIMENTAL, Astar, find_label
+        Astar, find_label
 
 export  drawTiling, drawPLG
         
@@ -27,12 +27,10 @@ export  Seed, grid_seed, extended_rectangle_seed, extended_checkboard_seed,
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
         newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
 
-import Graphs: SimpleGraph, SimpleDiGraph, nv, edges, src, dst, has_edge, add_edge!, add_vertex!, rem_edge!, inneighbors, outneighbors, degree
+import Graphs: SimpleGraph, SimpleDiGraph, nv, ne, edges, src, dst, has_edge, add_edge!, add_vertex!, rem_edge!, inneighbors, outneighbors, degree
 
 import IterTools: subsets
 using DataStructures
-using StaticArrays
-import StaticArrays: sacollect
 
 include("Combinatorics.jl")
 include("Searching_algorithms.jl")
@@ -109,7 +107,7 @@ integers.
     Seed(collection::WSCollection)
 """
 mutable struct Seed{T, S <: Integer}
-    n_frozen::S
+    n_frozen::Int
     variables::Vector{T}
     quiver::SimpleDiGraph{S}
 end
