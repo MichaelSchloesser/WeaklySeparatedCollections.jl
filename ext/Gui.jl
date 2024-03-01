@@ -8,6 +8,7 @@ import Graphs: outneighbors
 using Scratch
 using JLD2
 using FileIO
+using StaticArrays
 
 bin_path = ""
 
@@ -17,10 +18,25 @@ function temporary_set_transient_for!(self::Window, other::Window)
 end
 
 LPoint = Luxor.Point
-norm = P -> sqrt(P.x^2 + P.y^2)
 
-function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
-    scale_factor = 2.4
+function P(v::SVector{2, T}) where T <: AbstractFloat
+    return LPoint(v[1], v[2])
+end
+
+function norm(P::LPoint)
+    res = P.x*P.x + P.y*P.y
+    return sqrt(res)
+end
+
+function norm(v::SVector{2, T}) where T <: AbstractFloat
+    res = v[1]*v[1] + v[2]*v[2]
+    return sqrt(res)
+end
+
+intersect_neighbors! = WSC.intersect_neighbors!
+combine_neighbors! = WSC.combine_neighbors!
+
+function WSC.visualizer!(collection::WSCollection{T} = rectangle_collection(4, 9)) where T <: Integer
 
     main() do app::Application
         
@@ -35,7 +51,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         draw_vertex_labels = true
         draw_face_labels = true
         highlight_mutables = false
-        top_label = nothing
+        top_label = -1.0
         label_direction = "left"
 
         # theme and colors
@@ -78,8 +94,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             top_label = D["top_label"]
             highlight_mutables = D["highlight_mutables"]
             label_direction = D["label_direction"]
-            
-            
+        
             if theme == "dark"
                 set_current_theme!(app, THEME_DEFAULT_DARK)
             else
@@ -89,22 +104,33 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         load_settings()
 
         # embedding data
-        reference_polygon = []
-        reference_radius = 1
-        scale = resolution/(scale_factor * reference_radius)
-        tau = i -> scale*sum( reference_polygon[G[i]] )
 
-        function update_embedding_data()
-            reference_polygon = [LPoint( sin(i*2*pi/G.n), -cos(i*2*pi/G.n) ) for i = 0:G.n-1 ]
-            reference_radius = norm(sum(reference_polygon[1:G.k]))
-            scale = resolution/(scale_factor * reference_radius)
-
-            if !isnothing(top_label)
-                angle = acos( -sum(reference_polygon[1:G.k]).y/norm(sum(reference_polygon[1:G.k])) ) - (G.k-top_label+0.5)*2*pi/G.n
-                reference_polygon = [LPoint( sin(i*2*pi/G.n - angle), -cos(i*2*pi/G.n - angle) ) for i = 0:G.n-1 ]
+        function update_embedding_data(C::WSCollection, resolution::Int, topLabel::AbstractFloat)
+            k, n = C.k, C.n
+            
+            R_poly = Vector{SVector{2, Float64}}(undef, n)
+            for i in 0:n-1
+                @fastmath @inbounds R_poly[i+1] = SVector{2, Float64}(sin(i*2*pi/n), -cos(i*2*pi/n))
             end
+
+            # autoselect scale such that plabic tiling fits into window
+            v = sum( @view R_poly[1:k])
+            r = norm(v)
+            # scale_factor = 2.4
+            s = resolution/(2.4*r)
+
+            if topLabel > 0
+                @fastmath @views new_angle = acos( -v[2]/r ) - (k - topLabel + 0.5)*2.0*pi/n 
+
+                for i in 0:n-1
+                    @fastmath @inbounds R_poly[i+1] = SVector{2, Float64}( sin(i*2*pi/n - new_angle), -cos(i*2*pi/n - new_angle))
+                end
+            end
+
+            tau = i -> P(s*sum( @view R_poly[C[i]] ))
+            return tau
         end
-        update_embedding_data()
+        tau = update_embedding_data(G, resolution, top_label)
 
         ####################################################################################
         ###                                      GUI                                     ###
@@ -612,7 +638,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         redos = ""
 
         function update_history_strings(task, data) # horribly inefficient, but this should not be the bottleneck either way
-            
+
             function task_to_string(task::String, data)
                 if task == "mutation"
                     return "(mutate: i=$(data[1]), L=$(data[2]))"
@@ -639,7 +665,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             set_text!(history_label, history)
 
             # renew undo string
-            if length(undo_list) == 0
+            if isempty(undo_list)
                 undos = ""
             else
                 undos = "Undos: "
@@ -650,7 +676,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             set_text!(undo_label, undos)
 
             # renew redo string
-            if length(redo_list) == 0
+            if isempty(redo_list)
                 redos = ""
             else
                 redos = "Redos: "
@@ -670,8 +696,8 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                 history = ""
                 set_text!(history_label, "")
             else
-                undo_list = Vector()
-                redo_list = Vector()
+                empty!(undo_list)
+                empty!(redo_list)
                 undos = ""
                 redos = ""
                 set_text!(undo_label, "")
@@ -772,7 +798,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                                     x::AbstractFloat, y::AbstractFloat, data::Widget)
 
             w, h = get_allocated_size(data).x, get_allocated_size(data).y
-            x, y = (x-w/2)*resolution/w, (y-h/2)*resolution/h
+            x, y = (x/w-0.5)*resolution, (y/h-0.5)*resolution
 
             if get_current_button(self) == BUTTON_ID_BUTTON_03 # select label
                 
@@ -791,10 +817,10 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             elseif get_current_button(self) == BUTTON_ID_BUTTON_01 # mutate label
                 
                 set_mouse_input_blocked!(true)
-                is_close_mutable = p -> norm(tau(p) - LPoint(x, y)) < 25.0 && is_mutable(G, p)
-                close_mutable = filter(is_close_mutable , [p for p = G.n+1:length(G.labels)])
+                is_close = p -> norm(tau(p) - LPoint(x, y)) < 30.0
+                close_mutable = filter!(is_close , get_mutables(G))
         
-                if length(close_mutable) > 0 # mutate
+                if !isempty(close_mutable) # mutate
                     # select direction of mutation
                     i = argmin(p -> norm(tau(p) - LPoint(x, y)), close_mutable)
                     
@@ -803,11 +829,11 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                     update_displays()
 
                     # update undo/redo
-                    push!(undo_list, ("mutation", [i, G.labels[i]] ))
-                    if length(redo_list) > 0 && i != pop!(redo_list)
-                        redo_list = Vector() 
+                    push!(undo_list, ("mutation", (i, G[i]) ))
+                    if !isempty(redo_list) && i != pop!(redo_list)
+                        empty!(redo_list)
                     end
-                    update_history_strings("mutation", [i, G.labels[i]] )
+                    get_is_visible(history_notebook) && update_history_strings("mutation", (i, G[i]) )
                 end
 
                 set_mouse_input_blocked!(false)
@@ -823,24 +849,23 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             x::AbstractFloat, y::AbstractFloat, data::Widget)
 
             function is_surounding_mutable(p::Int)
-                if is_mutable(G, p)
-                    N_out = collect(outneighbors(G.quiver, p))
+                N_out = outneighbors(G.quiver, p)
 
-                    arith_mean = x -> sum(tau.(x))/length(x)
+                arith_mean = x -> sum(tau.(x))/length(x)
 
-                    p1 = arith_mean( G.whiteCliques[ intersect( G.labels[p], G.labels[N_out[1]])  ] )
-                    p2 = arith_mean( G.blackCliques[ sort(union(G.labels[p], G.labels[N_out[1]])) ] )
-                    p3 = arith_mean( G.whiteCliques[ intersect( G.labels[p], G.labels[N_out[2]])  ] )
-                    p4 = arith_mean( G.blackCliques[ sort(union(G.labels[p], G.labels[N_out[2]])) ] )
+                K = Vector{T}(undef, G.k-1)
+                L = Vector{T}(undef, G.k+1)
 
-                    return isinside(LPoint(x, y), [p1, p2, p3, p4], allowonedge = false)
-                else
-                    return false
-                end
+                p1 = arith_mean( G.whiteCliques[ intersect_neighbors!(K, G[p], G[N_out[1]]) ])
+                p2 = arith_mean( G.blackCliques[ combine_neighbors!(L, G[p], G[N_out[1]])   ])
+                p3 = arith_mean( G.whiteCliques[ intersect_neighbors!(K, G[p], G[N_out[2]]) ])
+                p4 = arith_mean( G.blackCliques[ combine_neighbors!(L, G[p], G[N_out[2]])   ])
+
+                return isinside(LPoint(x, y), [p1, p2, p3, p4], allowonedge = false)    
             end
 
             w, h = get_allocated_size(data).x, get_allocated_size(data).y
-            x, y = (x-w/2)*resolution/w, (y-h/2)*resolution/h
+            x, y = (x/w-0.5)*resolution, (y/h-0.5)*resolution
 
             if get_current_button(self) == BUTTON_ID_BUTTON_03 # select label
 
@@ -856,7 +881,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
 
             elseif get_current_button(self) == BUTTON_ID_BUTTON_01 # mutate label
                 set_mouse_input_blocked!(true)
-                for i = G.n+1:length(G.labels)
+                for i in get_mutables(G)
                     if is_surounding_mutable(i)
 
                         # mutate and update displays
@@ -864,11 +889,11 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                         update_displays()
                         
                         # update undo/redo
-                        push!(undo_list, ("mutation", [i, G.labels[i]] ))
-                        if length(redo_list) > 0 && i != pop!(redo_list)
-                            redo_list = Vector() 
+                        push!(undo_list, ("mutation", (i, G[i]) ))
+                        if !isempty(redo_list) && i != pop!(redo_list)
+                            empty!(redo_list)
                         end
-                        update_history_strings("mutation", [i, G.labels[i]] )
+                        get_is_visible(history_notebook) && update_history_strings("mutation", (i, G[i]) )
 
                         break
                     end
@@ -900,18 +925,18 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                 Q, W, B = compute_adjacencies(D["k"], D["n"], D["labels"])
                 G2 = WSCollection(D["k"], D["n"], D["labels"], Q, W, B)
 
-                push!(undo_list, ("load", [G, chosen_path]))
-                if length(redo_list) > 0
+                push!(undo_list, ("load", (G, chosen_path)))
+                if !isempty(redo_list)
                     task, data = pop!(redo_list)
                     if task != "load" || !isequal(data[1], G) || !isequal(data[2], G2)
-                        redo_list = Vector()
+                        empty!(redo_list)
                     end
                 end
 
-                update_history_strings("load", [G, chosen_path])
+                get_is_visible(history_notebook) && update_history_strings("load", (G, chosen_path))
 
                 G = G2
-                update_embedding_data()
+                tau = update_embedding_data(G, resolution, top_label)
                 update_displays()
                 
                 return nothing
@@ -1066,7 +1091,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         undo = Action("undo.action", app) do x 
             set_mouse_input_blocked!(true)
 
-            if length(undo_list) > 0
+            if !isempty(undo_list)
                 (task, data) = pop!(undo_list)
                 push!(redo_list, (task, data))
 
@@ -1075,11 +1100,11 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                     update_displays()
                 elseif task == "complements"
                     complements!(G)
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 elseif task == "swap_colors"
                     swap_colors!(G)
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 elseif task == "rotate"
                     WSC.rotate!(G, -data[1])
@@ -1089,11 +1114,11 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                     update_displays()
                 else # task is predefined or load. All handeled the same
                     G = data[1]
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 end
 
-                update_history_strings(task, data)
+                get_is_visible(history_notebook) && update_history_strings(task, data)
             end
 
             set_mouse_input_blocked!(false)
@@ -1107,7 +1132,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         redo = Action("redo.action", app) do x
             set_mouse_input_blocked!(true)
 
-            if length(redo_list) > 0
+            if !isempty(redo_list)
                 (task, data) = pop!(redo_list)
                 push!(undo_list, (task, data))
 
@@ -1117,27 +1142,27 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                     update_displays()
                 elseif task == "checkboard"
                     G = checkboard_collection(data[2], data[3])
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 elseif task == "rectangle"
                     G = rectangle_collection(data[2], data[3])
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 elseif task == "dual_checkboard"
                     G = dual_checkboard_collection(data[2], data[3])
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 elseif task == "dual_rectangle"
                     G = dual_rectangle_collection(data[2], data[3])
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 elseif task == "complements"
                     complements!(G)
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 elseif task == "swap_colors"
                     swap_colors!(G)
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 elseif task == "rotate"
                     WSC.rotate!(G, data[1])
@@ -1151,11 +1176,11 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
                     Q, W, B = compute_adjacencies(D["k"], D["n"], D["labels"])
                     G = WSCollection(D["k"], D["n"], D["labels"], Q, W, B)
 
-                    update_embedding_data()
+                    tau = update_embedding_data(G, resolution, top_label)
                     update_displays()
                 end
 
-                update_history_strings(task, data)
+                get_is_visible(history_notebook) && update_history_strings(task, data)
             end
         
             set_mouse_input_blocked!(false)
@@ -1191,58 +1216,58 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
 
             if selected == predefined_dropdown_item_1
 
-                push!(undo_list, ("checkboard", [G, k, n]))
-                if length(redo_list) > 0
+                push!(undo_list, ("checkboard", (G, k, n)))
+                if !isempty(redo_list)
                     task, data = pop!(redo_list)
                     if task != "checkboard" || !isequal(data[1], G) || (data[2], data[3]) != (k, n)
-                        redo_list = Vector()
+                        empty!(redo_list)
                     end
                 end
 
-                update_history_strings("checkboard", [G, k, n])
+                get_is_visible(history_notebook) && update_history_strings("checkboard", (G, k, n))
                 G = checkboard_collection(k, n)
 
             elseif selected == predefined_dropdown_item_2
 
-                push!(undo_list, ("rectangle", [G, k, n]))
-                if length(redo_list) > 0
+                push!(undo_list, ("rectangle", (G, k, n)))
+                if !isempty(redo_list)
                     task, data = pop!(redo_list)
                     if task != "rectangle" || !isequal(data[1], G) || (data[2], data[3]) != (k, n)
-                        redo_list = Vector()
+                        empty!(redo_list)
                     end
                 end
                 
-                update_history_strings("rectangle", [G, k, n])
+                get_is_visible(history_notebook) && update_history_strings("rectangle", (G, k, n))
                 G = rectangle_collection(k, n)
             
             elseif selected == predefined_dropdown_item_3
 
-                push!(undo_list, ("dual_checkboard", [G, k, n]))
-                if length(redo_list) > 0
+                push!(undo_list, ("dual_checkboard", (G, k, n)))
+                if !isempty(redo_list)
                     task, data = pop!(redo_list)
                     if task != "dual_checkboard" || !isequal(data[1], G) || (data[2], data[3]) != (k, n)
-                        redo_list = Vector()
+                        empty!(redo_list)
                     end
                 end
                 
-                update_history_strings("dual_checkboard", [G, k, n])
+                get_is_visible(history_notebook) && update_history_strings("dual_checkboard", (G, k, n))
                 G = dual_checkboard_collection(k, n)
 
             else # selected == predefined_dropdown_item_4
 
-                push!(undo_list, ("dual_rectangle", [G, k, n]))
-                if length(redo_list) > 0
+                push!(undo_list, ("dual_rectangle", (G, k, n)))
+                if !isempty(redo_list)
                     task, data = pop!(redo_list)
                     if task != "dual_rectangle" || !isequal(data[1], G) || (data[2], data[3]) != (k, n)
-                        redo_list = Vector()
+                        empty!(redo_list)
                     end
                 end
                 
-                update_history_strings("dual_rectangle", [G, k, n])
+                get_is_visible(history_notebook) && update_history_strings("dual_rectangle", (G, k, n))
                 G = dual_rectangle_collection(k, n)
             end
 
-            update_embedding_data()
+            tau = update_embedding_data(G, resolution, top_label)
             update_displays()
 
             close!(predefined_window)
@@ -1266,17 +1291,17 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
 
             set_mouse_input_blocked!(true)
             
-            push!(undo_list, ("rotate", [1]))
-            if length(redo_list) > 0
+            push!(undo_list, ("rotate", (1,)))
+            if !isempty(redo_list)
                 task, data = pop!(redo_list)
                 if task != "rotate" || data[1] != 1
-                    redo_list = Vector()
+                    empty!(redo_list)
                 end
             end
 
             WSC.rotate!(G, 1)
             update_displays()
-            update_history_strings("rotate", [1])
+            get_is_visible(history_notebook) && update_history_strings("rotate", (1,))
         
             set_mouse_input_blocked!(false)
             return nothing
@@ -1289,17 +1314,17 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
 
             set_mouse_input_blocked!(true)
             
-            push!(undo_list, ("rotate", [-1]))
-            if length(redo_list) > 0
+            push!(undo_list, ("rotate", (-1,)))
+            if !isempty(redo_list)
                 task, data = pop!(redo_list)
                 if task != "rotate" || data[1] != -1
-                    redo_list = Vector()
+                    empty!(redo_list)
                 end
             end
 
             WSC.rotate!(G, -1)
             update_displays()
-            update_history_strings("rotate", [-1])
+            get_is_visible(history_notebook) && update_history_strings("rotate", (-1,))
         
             set_mouse_input_blocked!(false)
             return nothing
@@ -1312,17 +1337,17 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
 
             set_mouse_input_blocked!(true)
             
-            push!(undo_list, ("mirror", [1]))
-            if length(redo_list) > 0
+            push!(undo_list, ("mirror", (1,)))
+            if !isempty(redo_list)
                 task, data = pop!(redo_list)
                 if task != "mirror" || data[1] != 1
-                    redo_list = Vector()
+                    empty!(redo_list)
                 end
             end
 
             mirror!(G)
             update_displays()
-            update_history_strings("mirror", [1])
+            get_is_visible(history_notebook) && update_history_strings("mirror", (1,))
         
             set_mouse_input_blocked!(false)
             return nothing
@@ -1334,19 +1359,19 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         complements = Action("complements.action", app) do x    
             set_mouse_input_blocked!(true)
             
-            push!(undo_list, ("complements", []))
-            if length(redo_list) > 0
+            push!(undo_list, ("complements", () ))
+            if !isempty(redo_list)
                 task, data = pop!(redo_list)
                 if task != "complements"
-                    redo_list = Vector()
+                    empty!(redo_list)
                 end
             end
 
             complements!(G)
 
-            update_embedding_data()
+            tau = update_embedding_data(G, resolution, top_label)
             update_displays()
-            update_history_strings("complements", [])
+            get_is_visible(history_notebook) && update_history_strings("complements", ())
 
             set_mouse_input_blocked!(false)
             return nothing
@@ -1357,19 +1382,19 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
         swap_colors = Action("swap_colors.action", app) do x    
             set_mouse_input_blocked!(true)
 
-            push!(undo_list, ("swap_colors", []))
-            if length(redo_list) > 0
+            push!(undo_list, ("swap_colors", ()))
+            if !isempty(redo_list)
                 task, data = pop!(redo_list)
                 if task != "swap_colors"
-                    redo_list = Vector()
+                    empty!(redo_list)
                 end
             end
 
             swap_colors!(G)
 
-            update_embedding_data()
+            tau = update_embedding_data(G, resolution, top_label)
             update_displays()
-            update_history_strings("swap_colors", [])
+            get_is_visible(history_notebook) && update_history_strings("swap_colors", ())
 
             set_mouse_input_blocked!(false)
             return nothing
@@ -1393,7 +1418,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             D = Dict()
             try
                 D = FileIO.load(bin_path * "view_settings.jld2")
-            catch e
+            catch
                 D = Dict(
                 "menubar_visible" => get_is_visible(menubar),
                 "display_left_visible" => get_is_visible(image_display_left),
@@ -1545,7 +1570,7 @@ function WSC.visualizer!(collection::WSCollection = rectangle_collection(4, 9))
             )
             FileIO.save(bin_path * "config.jld2", D)
 
-            update_embedding_data()
+            tau = update_embedding_data(G, resolution, top_label)
             update_displays()
 
             close!(settings_window)
