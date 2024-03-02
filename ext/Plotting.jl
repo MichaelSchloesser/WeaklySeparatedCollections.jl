@@ -165,7 +165,7 @@ function drawPLG_poly(C::WSCollection{T}, title::String, width::Int = 500, heigh
             r2 = norm(p1 + p2)
             line((p1 + p2)/2, r*s*(p1 + p2)/r2, :stroke)
             
-            text( "$(mod1(i+1, n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
+            text( "$(mod1(i+1, n))", (1.1+fontScale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
         circle(LPoint(0, 0), s*r, :stroke)
@@ -309,7 +309,7 @@ function drawPLG_straight(C::WSCollection{T}, title::String, width::Int = 500, h
                 line(r*s*(p1 + p2)/r2, p3, :stroke)
             end
             
-            text( "$(mod1(i+1, n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
+            text( "$(mod1(i+1, n))", (1.1+fontScale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
         end
 
         circle(LPoint(0, 0), s*r, :stroke)
@@ -481,7 +481,7 @@ function drawPLG_smooth(C::WSCollection{T}, title::String, width::Int = 500, hei
                 strokepath()
             end
             
-            text( "$(mod1(i+1, n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
+            text( "$(mod1(i+1, n))", (1.1+fontScale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
         circle(LPoint(0,0), s*r, :stroke)
@@ -718,7 +718,7 @@ function drawPLG_poly(C::WSCollection, width::Int = 500, height::Int = 500; topL
             r2 = norm(p1 + p2)
             line((p1 + p2)/2, r*s*(p1 + p2)/r2, :stroke)
             
-            text( "$(mod1(i+1, n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
+            text( "$(mod1(i+1, n))", (1.1+fontScale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
         circle(LPoint(0, 0), s*r, :stroke)
@@ -862,7 +862,7 @@ function drawPLG_straight(C::WSCollection{T}, width::Int = 500, height::Int = 50
                 line(r*s*(p1 + p2)/r2, p3, :stroke)
             end
             
-            text( "$(mod1(i+1, n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
+            text( "$(mod1(i+1, n))", (1.1+fontScale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
         end
 
         circle(LPoint(0, 0), s*r, :stroke)
@@ -1034,7 +1034,7 @@ function drawPLG_smooth(C::WSCollection{T}, width::Int = 500, height::Int = 500;
                 strokepath()
             end
             
-            text( "$(mod1(i+1, n))", 1.1*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
+            text( "$(mod1(i+1, n))", (1.1+fontScale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
         circle(LPoint(0,0), s*r, :stroke)
