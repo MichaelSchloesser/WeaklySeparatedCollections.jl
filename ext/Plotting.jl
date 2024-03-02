@@ -587,16 +587,16 @@ function WSC.drawPLG(C::WSCollection, title::String, width::Int = 500, height::I
 
     if drawmode == "straight"
 
-        drawPLG_straight(C, title, width, height; topLabel, backgroundColor, drawLabels,
+        drawPLG_straight(C, title, width, height; topLabel, fontScale, backgroundColor, drawLabels,
         highlightMutables, labelDirection)
 
     elseif drawmode == "smooth"
 
-        drawPLG_smooth(C, title, width, height; topLabel, backgroundColor, drawLabels, labelDirection = "left")
+        drawPLG_smooth(C, title, width, height; topLabel, fontScale, backgroundColor, drawLabels, labelDirection)
 
     elseif drawmode == "polygonal"
 
-        drawPLG_poly(C, title, width, height; topLabel, backgroundColor, drawLabels, labelDirection = "left")
+        drawPLG_poly(C, title, width, height; topLabel, fontScale, backgroundColor, drawLabels, labelDirection)
 
     else 
         error("invalid drawmode: $drawmode")
@@ -1139,16 +1139,16 @@ function WSC.drawPLG(C::WSCollection, width::Int = 500, height::Int = 500; topLa
 
     if drawmode == "straight"
 
-        drawPLG_straight(C, width, height; topLabel, fontScale = fontScale, backgroundColor, drawLabels, 
+        drawPLG_straight(C, width, height; topLabel, fontScale, backgroundColor, drawLabels, 
         highlightMutables, labelDirection)
 
     elseif drawmode == "smooth"
 
-        drawPLG_smooth(C, width, height; topLabel, fontScale = fontScale, backgroundColor, drawLabels, labelDirection = "left")
+        drawPLG_smooth(C, width, height; topLabel, fontScale, backgroundColor, drawLabels, labelDirection)
 
     elseif drawmode == "polygonal"
 
-        drawPLG_poly(C, width, height; topLabel, fontScale = fontScale, backgroundColor, drawLabels, 
+        drawPLG_poly(C, width, height; topLabel, fontScale, backgroundColor, drawLabels, 
         labelDirection = "left")
 
     else 
