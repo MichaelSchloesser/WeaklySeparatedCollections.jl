@@ -175,10 +175,8 @@ rec[3]
 ```
 
 ```@example access
-rec[7] = [1, 3, 6]
+rec[[1, 7]]
 ```
-
-Caution is advised when modifying labels as above, as it is not checked if the resulting labels are still weakly separated nor is the associated data changed accordingly.
 
 For convenience we also extend the following functions:
 
@@ -400,7 +398,7 @@ Astar(check, rec)
 ```@example Astar
 check = checkboard_collection(4, 9)
 rec = rectangle_collection(4, 9)
-Astar(check, rec, heuristic = MIN_LABEL_DIST_EXPERIMENTAL)
+Astar(check, rec, heuristic = "min_label_dist_experimental")
 ```
 
 Sometimes we only want to find a sequence of mutations from some WSC to any WSC containing some desired label. 
@@ -413,7 +411,7 @@ find_label
 using WeaklySeparatedCollections # hide
 check = checkboard_collection(4, 9)
 label = [2, 3, 4, 9]
-s = find_label(check, label, heuristic = MIN_LABEL_DIST_EXPERIMENTAL)
+s = find_label(check, label, heuristic = "min_label_dist_experimental")
 ```
 
 Lets test the found sequence
