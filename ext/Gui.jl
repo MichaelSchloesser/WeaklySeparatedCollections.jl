@@ -71,6 +71,7 @@ function WSC.visualizer!(collection::WSCollection{T} = rectangle_collection(4, 9
                 D = FileIO.load(bin_path * "config.jld2")
             catch 
                 # if no config file exists, create one
+                
                 D = Dict(
                 "size" => size,
                 "resolution" => resolution,
@@ -84,16 +85,19 @@ function WSC.visualizer!(collection::WSCollection{T} = rectangle_collection(4, 9
                 )
                 FileIO.save(bin_path * "config.jld2", D)
             end
-            
-            size = D["size"]
-            resolution = D["resolution"]
-            plg_drawmode = D["plg_drawmode"]
-            draw_vertex_labels = D["draw_vertex_labels"]
-            draw_face_labels = D["draw_face_labels"]
-            theme = D["theme"]
-            top_label = D["top_label"]
-            highlight_mutables = D["highlight_mutables"]
-            label_direction = D["label_direction"]
+
+            try 
+                size = D["size"]
+                resolution = D["resolution"]
+                plg_drawmode = D["plg_drawmode"]
+                draw_vertex_labels = D["draw_vertex_labels"]
+                draw_face_labels = D["draw_face_labels"]
+                theme = D["theme"]
+                top_label = D["top_label"]
+                highlight_mutables = D["highlight_mutables"]
+                label_direction = D["label_direction"]
+            catch 
+            end
         
             if theme == "dark"
                 set_current_theme!(app, THEME_DEFAULT_DARK)
