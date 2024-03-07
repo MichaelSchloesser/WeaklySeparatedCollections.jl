@@ -60,7 +60,7 @@ end
 
 function WSC.drawTiling(C::WSCollection, title::String, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, 
-    highlightMutables::Bool = true, labelDirection = "left") 
+    highlightMutables::Bool = false, labelDirection = "left") 
 
     if cliques_empty(C)
         error("cliques needed for drawing are empty!")
@@ -612,7 +612,7 @@ end
 
 function WSC.drawTiling(C::WSCollection, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, 
-    highlightMutables::Bool = true, labelDirection = "left") 
+    highlightMutables::Bool = false, labelDirection = "left") 
 
     if cliques_empty(C)
         error("cliques needed for drawing are empty!")

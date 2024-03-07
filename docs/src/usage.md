@@ -68,11 +68,13 @@ Thus to construct a WSC we only need to know its labels.
 
 #### Examples:
 
+If we are not sure about the weak spearation of a given set of labels, we can easily test it.
+
 ```@example constructors
 using WeaklySeparatedCollections # hide
 labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], 
           [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6] ]
-is_weakly_separated(6, labels) # checks for pairwise weak separation
+is_weakly_separated(labels) # checks for pairwise weak separation
 ```
 
 ```@example constructors
@@ -86,11 +88,11 @@ Q = C.quiver
 WSCollection(3, 6, labels, Q)
 ```
 
-The last constructor is useful, if we already have a WSC but want to omit the 2-cells or if the 2-cells of our WSC are missing and we want to compute them.
+The last constructor is useful, if we already have a WSC but want to omit the 2-cells or if the 2-cells of our WSC are empty and we want to compute them.
 
 ```@example constructors
 D = WSCollection(C, computeCliques = false)
-cliques_missing(D) # checks if the cliques (i.e. the 2-cells) are missing
+cliques_empty(D) # checks if the cliques (i.e. the 2-cells) are empty
 ```
 
 ```@example constructors
