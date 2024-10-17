@@ -217,7 +217,7 @@ function WSC.get_superpotential_terms(collection::WSCollection, seed::Seed = See
 
     for i in 1:n
         super = super_potential_label(k, n, i)
-        denom_index = findindex(collection.labels, WSC.frozen_label(k, n, i))
+        denom_index = findindex(collection.labels, frozen_label(k, n, i))
 
         s = deepcopy(seed)
 
@@ -276,7 +276,7 @@ end
 function WSC.newton_okounkov_inequalities(collection::WSCollection, r::Int = 1; q_term_index::Int = collection.k)
     k, n = collection.k, collection.n
     T = get_superpotential_terms(collection)
-    empty_index = findindex(collection.labels, frozen_label(k, n, n-k+1))
+    empty_index = findindex(collection.labels, frozen_label(k, n, n)) # TODO changed frozen_label(k, n, n-k+1)  to  frozen_label(k, n, n)
 
     A = Vector{Vector{Int}}()
     b = Vector{Int}()
@@ -288,7 +288,7 @@ function WSC.newton_okounkov_inequalities(collection::WSCollection, r::Int = 1; 
 
             # add row to A
             t_exp = deleteat!(exponent_vector(t, 1), empty_index)
-            exponent_vec = denom_exp - t_exp
+            exponent_vec = denom_exp - t_exp                       # note that we negate here to get Ax <= b
             push!(A, exponent_vec)
 
             # add entry to b
@@ -302,7 +302,7 @@ end
 # return the inequalities of the newton okounkov body associated to the checkboard graph
 function WSC.checkboard_inequalities(k::Int, n::Int, r::Int = 1; q_term_index::Int = k)
     T = checkboard_potential_terms(k, n)
-    empty_index = n-k+1
+    empty_index = n # TODO changed empty_index = n-k+1  to  empty_index = n
     A = Vector{Vector{Int}}()
     b = Vector{Int}()
 
