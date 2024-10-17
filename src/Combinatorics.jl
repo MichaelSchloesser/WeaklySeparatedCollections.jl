@@ -1277,27 +1277,27 @@ function apply_to_collection!(f::Function, C::WSCollection{T}) where T <: Intege
 end
 
 @doc raw"""
-    rotate!(C::WSCollection, amount::Int)
+    rotate!(C::WSCollection, amount::Int = 1)
 
 Rotate `C` by `amount`, where a positive amount indicates a clockwise rotation.
 """
-function rotate!(C::WSCollection, amount::Int)
+function rotate!(C::WSCollection, amount::Int = 1)
     shift = x -> mod1(x + amount, C.n)
     return apply_to_collection!(shift, C)
 end
 
 @doc raw"""
-    rotate(C::WSCollection, amount::Int)
+    rotate(C::WSCollection, amount::Int = 1)
 
 Rotate `C` by `amount`, where a positive amount indicates a clockwise rotation.
 Does not change its input.
 """
-function rotate(C::WSCollection, amount::Int)
+function rotate(C::WSCollection, amount::Int = 1)
     return rotate!(deepcopy(C), amount)
 end
 
 @doc raw"""
-    mirror!(C::WSCollection, shift::Int = 1)
+    mirror!(C::WSCollection, shift::Int = 2)
 
 Reflect `C` by letting the permutation `p(x) = shift - x` interpreted modulo 
 `n = C.n` act on the labels of `C`.
@@ -1308,7 +1308,7 @@ function mirror!(C::WSCollection, shift::Int = 2)
 end
 
 @doc raw"""
-    mirror(C::WSCollection, shift::Int = 1) 
+    mirror(C::WSCollection, shift::Int = 2) 
 
 Reflect `C` by letting the permutation `p(x) = shift - x` interpreted modulo 
 `n = C.n` act on the labels of `C`. Does not change its input.

@@ -223,7 +223,6 @@ end
 
 function min_label_dist_change(old_label, new_label, h_value, current::WSCollection, target::WSCollection)
     n = target.n
-
     estimate = (w, x) -> cld(setdiff_length(w, x), 2)
 
     return @views h_value + minimum( x -> estimate(new_label, x), target.labels[n+1:end]) - minimum( x -> estimate(old_label, x), target.labels[n+1:end]) 
@@ -250,7 +249,7 @@ function min_label_dist_experimental(C::WSCollection, target::WSCollection)
 end
 
 function estimate_exp(w, x, current::WSCollection{T}) where T <:Integer
-    @views x in current.labels[n+1:end] && return typemax(T)
+    @views x in current.labels[current.n+1:end] && return typemax(T)
     return cld(setdiff_length(w, x), 2)
 end
 

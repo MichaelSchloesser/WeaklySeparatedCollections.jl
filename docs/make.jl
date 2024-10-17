@@ -12,7 +12,7 @@ makedocs(;
     pages = [
         "Home" => "index.md" 
         "User guide" => "usage.md" # TODO split this up
-        "References" => "reference.md"
+        # "References" => "reference.md"
     ],
     sitename = "WeaklySeparatedCollections",
     format = Documenter.HTML(;

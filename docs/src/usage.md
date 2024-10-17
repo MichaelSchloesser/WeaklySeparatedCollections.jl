@@ -26,8 +26,7 @@ Then $$\mathcal{C'} = (\mathcal{C} \setminus \{Iac\}) \cup \{Ibd\}$$ is also a w
 
 #### Definition (plabic tiling)
 Any WSC can be given the structure of an abstract $2$-dimensional cell complex, which in turn may be embedded into the plane.
-This construction will be called an (abstract) $\textbf{plabic tiling}$, and we referr to 
-TODO for the mathematical details.
+This construction will be called an (abstract) $\textbf{plabic tiling}$, and we referr to [Weak Separation and Plabic Graphs](https://arxiv.org/abs/1109.4434).
 
 Intuitively a plabic tiling is a tiling of a convex $n$-gon into convex polygons, colored either black or white, and with vertices labelled by the elements of the underlying WSC.
 Plabic tilings are in bijective correspondance with WSC's that are maximal with respect to inclusion.
@@ -39,7 +38,7 @@ A $\textbf{plabic graph}$ is a finite simple connected plane graph $G$ whose int
 $b_1, \ldots, b_n$. Here the labelling is chosen in clockwise order.
 
 We only consider $\textbf{reduced}$ plabic graphs which can be also seen to be in one to one correspondance to WSC's that are maximal with respect to inclusion. 
-For more details we referr to TODO.
+For more details we referr to [Total positivity, Grassmannians, and networks](https://arxiv.org/abs/math/0609764).
 
 ## Creating WSC's
 
@@ -68,11 +67,13 @@ Thus to construct a WSC we only need to know its labels.
 
 #### Examples:
 
+If we are not sure about the weak spearation of a given set of labels, we can easily test it.
+
 ```@example constructors
 using WeaklySeparatedCollections # hide
 labels = [[1, 5, 6], [1, 2, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], 
           [4, 5, 6], [2, 5, 6], [2, 3, 6], [3, 5, 6], [3, 4, 6] ]
-is_weakly_separated(6, labels) # checks for pairwise weak separation
+is_weakly_separated(labels) # checks for pairwise weak separation
 ```
 
 ```@example constructors
@@ -86,11 +87,11 @@ Q = C.quiver
 WSCollection(3, 6, labels, Q)
 ```
 
-The last constructor is useful, if we already have a WSC but want to omit the 2-cells or if the 2-cells of our WSC are missing and we want to compute them.
+The last constructor is useful, if we already have a WSC but want to omit the 2-cells or if the 2-cells of our WSC are empty and we want to compute them.
 
 ```@example constructors
 D = WSCollection(C, computeCliques = false)
-cliques_missing(D) # checks if the cliques (i.e. the 2-cells) are missing
+cliques_empty(D) # checks if the cliques (i.e. the 2-cells) are empty
 ```
 
 ```@example constructors
@@ -175,10 +176,8 @@ rec[3]
 ```
 
 ```@example access
-rec[7] = [1, 3, 6]
+rec[[1, 7]]
 ```
-
-Caution is advised when modifying labels as above, as it is not checked if the resulting labels are still weakly separated nor is the associated data changed accordingly.
 
 For convenience we also extend the following functions:
 
@@ -400,7 +399,7 @@ Astar(check, rec)
 ```@example Astar
 check = checkboard_collection(4, 9)
 rec = rectangle_collection(4, 9)
-Astar(check, rec, heuristic = MIN_LABEL_DIST_EXPERIMENTAL)
+Astar(check, rec, heuristic = "min_label_dist_experimental")
 ```
 
 Sometimes we only want to find a sequence of mutations from some WSC to any WSC containing some desired label. 
@@ -413,7 +412,7 @@ find_label
 using WeaklySeparatedCollections # hide
 check = checkboard_collection(4, 9)
 label = [2, 3, 4, 9]
-s = find_label(check, label, heuristic = MIN_LABEL_DIST_EXPERIMENTAL)
+s = find_label(check, label, heuristic = "min_label_dist_experimental")
 ```
 
 Lets test the found sequence
