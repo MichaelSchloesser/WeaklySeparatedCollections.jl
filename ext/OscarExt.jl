@@ -71,7 +71,7 @@ end
 
 Return true if the `i-th` clustervariable of `seed` is frozen.
 """
-function WSC.is_frozen(seed::Seed, i::Int)
+function WSC.is_frozen(seed::Seed, i::T) where T <: Integer
     return i <= seed.n_frozen
 end
 
@@ -91,7 +91,7 @@ end
 
 Mutate the `seed` in direction `i` if `i` is the index of a mutable variable.
 """
-function WSC.mutate!(seed::Seed, i::Int)
+function WSC.mutate!(seed::Seed, i::T) where T <: Integer
 
     if is_frozen(seed, i)
         error("Trying to mutate the frozen variable $(seed.variables[i]).")
