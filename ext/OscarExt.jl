@@ -208,7 +208,7 @@ end
 ################## superpotential ##################
 
 
-function WSC.get_superpotential_terms(collection::WSCollection, seed::Seed = Seed(collection))
+function WSC.get_superpotential_terms(collection::WSCollection{S}, seed::Seed = Seed(collection)) where S <: Integer
     k = collection.k
     n = collection.n
     T = typeof(seed[1])
@@ -216,8 +216,8 @@ function WSC.get_superpotential_terms(collection::WSCollection, seed::Seed = See
     terms = Vector{T}()
 
     for i in 1:n
-        super = super_potential_label(k, n, i)
-        denom_index = findindex(collection.labels, frozen_label(k, n, i))
+        super = super_potential_label(k, n, i, S)
+        denom_index = findindex(collection.labels, frozen_label(k, n, i, S))
 
         s = deepcopy(seed)
 
