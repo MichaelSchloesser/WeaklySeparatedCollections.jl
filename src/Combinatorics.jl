@@ -1143,7 +1143,7 @@ Mutate the `C` in direction `i` if `i` is a mutable vertex of `C`.
 
 If `mutateCliques` is set to false, the 2-cells are emptied.
 """
-function mutate!(C::WSCollection{T}, i::Int, mutateCliques::Bool = true) where T <: Integer
+function mutate!(C::WSCollection{T}, i::S, mutateCliques::Bool = true) where {T <: Integer, S <: Integer}
 
     is_mutable(C, i) || error("vertex $i with label $(C[i]) is not mutable!")
         
