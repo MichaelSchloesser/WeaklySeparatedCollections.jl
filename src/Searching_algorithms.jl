@@ -366,7 +366,8 @@ and `"min_label_dist_experimental"`.
 If `limitSearchSpace` is set to true then labels already contained
 in `target` will never be mutated.
 """
-function find_label(root::WSCollection, label::Vector{Int}; heuristic::String = "number_wrong_labels", limitSearchSpace::Bool = true)
+function find_label(root::WSCollection{T}, label::Vector{T}; heuristic::String = "number_wrong_labels", 
+                        limitSearchSpace::Bool = true) where T <: Integer
 
     seq = Vector{Int}()
     label in root && return seq
