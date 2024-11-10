@@ -610,7 +610,7 @@ end
 ########################################################################
 
 
-function WSC.drawTiling(C::WSCollection, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
+function WSC.drawTiling(C::WSCollection, surfacetype::Symbol, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = true, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
@@ -621,7 +621,7 @@ function WSC.drawTiling(C::WSCollection, width::Int = 500, height::Int = 500; to
     n, k, W, B, r, s, R_poly, tau = embedding_data(C, width, height, topLabel)
     N = length(C)
 
-    @draw begin
+    Drawing(width, height, surfacetype)
         origin()
 
         if backgroundColor != ""
@@ -687,12 +687,12 @@ function WSC.drawTiling(C::WSCollection, width::Int = 500, height::Int = 500; to
             end
         end
 
-    end width height
+    finish()
 
 end
 
 
-function drawPLG_poly(C::WSCollection, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
+function drawPLG_poly(C::WSCollection, surfacetype::Symbol, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") 
 
@@ -702,7 +702,7 @@ function drawPLG_poly(C::WSCollection, width::Int = 500, height::Int = 500; topL
     
     n, k, W, B, r, s, R_poly, tau = embedding_data(C, width, height, topLabel)
 
-    @draw begin
+    Drawing(width, height, surfacetype)
         origin()
         
         if backgroundColor != ""
@@ -815,13 +815,13 @@ function drawPLG_poly(C::WSCollection, width::Int = 500, height::Int = 500; topL
                 text(label, c, halign=:center, valign=:middle)
             end
         end
-    end width height
+    finish()
 end
 
 
-function drawPLG_straight(C::WSCollection{T}, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
-    backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, labelDirection = "left")  where T <: Integer
+function drawPLG_straight(C::WSCollection{T}, surfacetype::Symbol, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
+    highlightMutables::Bool = false, labelDirection = "left") where T <: Integer
 
     if cliques_empty(C)
         error("cliques needed for drawing are empty!")
@@ -829,7 +829,7 @@ function drawPLG_straight(C::WSCollection{T}, width::Int = 500, height::Int = 50
 
     n, k, W, B, r, s, R_poly, tau = embedding_data(C, width, height, topLabel)
     
-    @draw begin
+    Drawing(width, height, surfacetype)
         origin()
         
         if backgroundColor != ""
@@ -980,11 +980,11 @@ function drawPLG_straight(C::WSCollection{T}, width::Int = 500, height::Int = 50
             end
         end
 
-    end width height
+    finish()
 end
 
 
-function drawPLG_smooth(C::WSCollection{T}, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
+function drawPLG_smooth(C::WSCollection{T}, surfacetype::Symbol, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     labelDirection = "left") where T <: Integer
 
@@ -994,7 +994,7 @@ function drawPLG_smooth(C::WSCollection{T}, width::Int = 500, height::Int = 500;
 
     n, k, W, B, r, s, R_poly, tau = embedding_data(C, width, height, topLabel)
     
-    @draw begin
+    Drawing(width, height, surfacetype)
         origin()
         
         if backgroundColor != ""
@@ -1130,25 +1130,25 @@ function drawPLG_smooth(C::WSCollection{T}, width::Int = 500, height::Int = 500;
             end
         end
         
-    end width height
+    finish()
 end
 
-function WSC.drawPLG(C::WSCollection, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
+function WSC.drawPLG(C::WSCollection, surfacetype::Symbol, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left")
 
     if drawmode == "straight"
 
-        drawPLG_straight(C, width, height; topLabel, fontScale, backgroundColor, drawLabels, 
+        drawPLG_straight(C, surfacetype, width, height; topLabel, fontScale, backgroundColor, drawLabels, 
         highlightMutables, labelDirection)
 
     elseif drawmode == "smooth"
 
-        drawPLG_smooth(C, width, height; topLabel, fontScale, backgroundColor, drawLabels, labelDirection)
+        drawPLG_smooth(C, surfacetype, width, height; topLabel, fontScale, backgroundColor, drawLabels, labelDirection)
 
     elseif drawmode == "polygonal"
 
-        drawPLG_poly(C, width, height; topLabel, fontScale, backgroundColor, drawLabels, 
+        drawPLG_poly(C, surfacetype, width, height; topLabel, fontScale, backgroundColor, drawLabels, 
         labelDirection = "left")
 
     else 
