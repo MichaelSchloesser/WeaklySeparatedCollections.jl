@@ -26,8 +26,7 @@ Then $$\mathcal{C'} = (\mathcal{C} \setminus \{Iac\}) \cup \{Ibd\}$$ is also a w
 
 #### Definition (plabic tiling)
 Any WSC can be given the structure of an abstract $2$-dimensional cell complex, which in turn may be embedded into the plane.
-This construction will be called an (abstract) $\textbf{plabic tiling}$, and we referr to 
-TODO for the mathematical details.
+This construction will be called an (abstract) $\textbf{plabic tiling}$, and we referr to [Weak Separation and Plabic Graphs](https://arxiv.org/abs/1109.4434).
 
 Intuitively a plabic tiling is a tiling of a convex $n$-gon into convex polygons, colored either black or white, and with vertices labelled by the elements of the underlying WSC.
 Plabic tilings are in bijective correspondance with WSC's that are maximal with respect to inclusion.
@@ -39,7 +38,7 @@ A $\textbf{plabic graph}$ is a finite simple connected plane graph $G$ whose int
 $b_1, \ldots, b_n$. Here the labelling is chosen in clockwise order.
 
 We only consider $\textbf{reduced}$ plabic graphs which can be also seen to be in one to one correspondance to WSC's that are maximal with respect to inclusion. 
-For more details we referr to TODO.
+For more details we referr to [Total positivity, Grassmannians, and networks](https://arxiv.org/abs/math/0609764).
 
 ## Creating WSC's
 

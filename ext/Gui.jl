@@ -190,7 +190,7 @@ function WSC.visualizer!(collection::WSCollection{T} = rectangle_collection(4, 9
         function update_displays()
             drawTiling(G, bin_path*"display.png", resolution, resolution, topLabel = top_label,
             backgroundColor = "lightblue4", drawLabels = draw_vertex_labels, 
-            labelDirection = label_direction)
+            highlightMutables = highlight_mutables, labelDirection = label_direction)
 
             drawPLG(G, bin_path*"display2.png", resolution, resolution, topLabel = top_label,
             drawmode = plg_drawmode, backgroundColor = "lightblue4", drawLabels = draw_face_labels, 
