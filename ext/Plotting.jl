@@ -1133,7 +1133,7 @@ function drawPLG_smooth(C::WSCollection{T}, surfacetype::Symbol, width::Int = 50
     finish()
 end
 
-function WSC.drawPLG(C::WSCollection, surfacetype::Symbol, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
+function WSC.drawPLG(C::WSCollection, surfacetype::Symbol = :svg, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
     highlightMutables::Bool = false, labelDirection = "left")
 
