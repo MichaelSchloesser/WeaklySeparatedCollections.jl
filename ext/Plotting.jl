@@ -197,6 +197,7 @@ function drawPLG_poly(C::WSCollection{T}, title::String, width::Int = 500, heigh
             end
 
             circle(c, s/8, :fill) # draw black vertex
+            circle(p1, s/8, :stroke)
         end
 
         # draw face labels.
@@ -367,6 +368,7 @@ function drawPLG_straight(C::WSCollection{T}, title::String, width::Int = 500, h
             p1 = sum(b)/len_b # Point in face. 
 
             circle(p1, s/8, :fill) # draw black vertex
+            circle(p1, s/8, :stroke)
         end
 
         # draw face labels
@@ -518,6 +520,7 @@ function drawPLG_smooth(C::WSCollection{T}, title::String, width::Int = 500, hei
             p1 = sum(b)/len_b # Point in face. 
 
             circle(p1, s/8, :fill) # draw black vertex
+            circle(p1, s/8, :stroke)
         end
 
         # draw face labels. 
@@ -750,6 +753,7 @@ function drawPLG_poly(C::WSCollection, surfacetype::Symbol, width::Int = 500, he
             end
 
             circle(c, s/8, :fill) # draw black vertex
+            circle(p1, s/8, :stroke)
         end
 
         # draw face labels.
@@ -920,6 +924,7 @@ function drawPLG_straight(C::WSCollection{T}, surfacetype::Symbol, width::Int = 
             p1 = sum(b)/len_b # Point in face. 
 
             circle(p1, s/8, :fill) # draw black vertex
+            circle(p1, s/8, :stroke)
         end
 
         # draw face labels
@@ -1071,6 +1076,7 @@ function drawPLG_smooth(C::WSCollection{T}, surfacetype::Symbol, width::Int = 50
             p1 = sum(b)/len_b # Point in face. 
 
             circle(p1, s/8, :fill) # draw black vertex
+            circle(p1, s/8, :stroke)
         end
 
         # draw face labels. 
