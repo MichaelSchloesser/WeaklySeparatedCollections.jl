@@ -269,7 +269,7 @@ end
 
 function drawPLG_straight(C::WSCollection{T}, title::String, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, labelDirection = "left") where T <: Integer
+    highlightMutables::Bool = false, highlight::Int, labelDirection = "left") where T <: Integer
 
     if cliques_empty(C)
         error("cliques needed for drawing are empty!")
@@ -337,6 +337,27 @@ function drawPLG_straight(C::WSCollection{T}, title::String, width::Int = 500, h
                     poly([p1, p2, p3, p4], :fill, close = true)
                 end
             end
+        end
+        #highligt select label
+        if !isnothing(highlight)
+            is_mutable(highlight) || break
+
+            i = highlight
+            N_out = outneighbors(C.quiver, i)
+
+            function arith_mean(x)
+                len_x = length(x)
+                return sum(tau.(x))/len_x
+            end
+
+            p1 = arith_mean(W[ intersect_neighbors!(K, C[i], C[N_out[1]]) ])
+            p2 = arith_mean(B[ combine_neighbors!(L, C[i], C[N_out[1]]) ])
+            p3 = arith_mean(W[ intersect_neighbors!(K, C[i], C[N_out[2]]) ])
+            p4 = arith_mean(B[ combine_neighbors!(L, C[i], C[N_out[2]]) ])
+            
+            sethue("orange")
+            setopacity(0.5)
+            poly([p1, p2, p3, p4], :fill, close = true)
         end
         setopacity(1)
 
@@ -825,7 +846,7 @@ end
 
 function drawPLG_straight(C::WSCollection{T}, surfacetype::Symbol, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, labelDirection = "left") where T <: Integer
+    highlightMutables::Bool = false, highlight::Int, labelDirection = "left") where T <: Integer
 
     if cliques_empty(C)
         error("cliques needed for drawing are empty!")
@@ -893,6 +914,28 @@ function drawPLG_straight(C::WSCollection{T}, surfacetype::Symbol, width::Int = 
                     poly([p1, p2, p3, p4], :fill, close = true)
                 end
             end
+        end
+
+        #highligt select label
+        if !isnothing(highlight)
+            is_mutable(highlight) || break
+
+            i = highlight
+            N_out = outneighbors(C.quiver, i)
+
+            function arith_mean(x)
+                len_x = length(x)
+                return sum(tau.(x))/len_x
+            end
+
+            p1 = arith_mean(W[ intersect_neighbors!(K, C[i], C[N_out[1]]) ])
+            p2 = arith_mean(B[ combine_neighbors!(L, C[i], C[N_out[1]]) ])
+            p3 = arith_mean(W[ intersect_neighbors!(K, C[i], C[N_out[2]]) ])
+            p4 = arith_mean(B[ combine_neighbors!(L, C[i], C[N_out[2]]) ])
+            
+            sethue("orange")
+            setopacity(0.5)
+            poly([p1, p2, p3, p4], :fill, close = true)
         end
         setopacity(1)
 
@@ -1141,12 +1184,12 @@ end
 
 function WSC.drawPLG(C::WSCollection, surfacetype::Symbol = :svg, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, labelDirection = "left")
+    highlightMutables::Bool = false, highlight::Int, labelDirection = "left")
 
     if drawmode == "straight"
 
         drawPLG_straight(C, surfacetype, width, height; topLabel, fontScale, backgroundColor, drawLabels, 
-        highlightMutables, labelDirection)
+        highlightMutables, highlight, labelDirection)
 
     elseif drawmode == "smooth"
 
