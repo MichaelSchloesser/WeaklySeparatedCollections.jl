@@ -607,12 +607,12 @@ end
 
 function WSC.drawPLG(C::WSCollection, title::String, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, labelDirection = "left")
+    highlightMutables::Bool = false, highlight::Int labelDirection = "left")
 
     if drawmode == "straight"
 
         drawPLG_straight(C, title, width, height; topLabel, fontScale, backgroundColor, drawLabels,
-        highlightMutables, labelDirection)
+        highlightMutables, highlight, labelDirection)
 
     elseif drawmode == "smooth"
 
