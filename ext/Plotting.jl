@@ -269,7 +269,7 @@ end
 
 function drawPLG_straight(C::WSCollection{T}, title::String, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, highlight::Int, labelDirection = "left") where T <: Integer
+    highlightMutables::Bool = false, highlight::Int = 0, labelDirection = "left") where T <: Integer
 
     if cliques_empty(C)
         error("cliques needed for drawing are empty!")
@@ -339,8 +339,8 @@ function drawPLG_straight(C::WSCollection{T}, title::String, width::Int = 500, h
             end
         end
         #highligt select label
-        if !isnothing(highlight)
-            is_mutable(highlight) || break
+        if highlight > 0
+            is_mutable(C, highlight) || break
 
             i = highlight
             N_out = outneighbors(C.quiver, i)
@@ -607,7 +607,7 @@ end
 
 function WSC.drawPLG(C::WSCollection, title::String, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, highlight::Int labelDirection = "left")
+    highlightMutables::Bool = false, highlight::Int = 0, labelDirection = "left")
 
     if drawmode == "straight"
 
@@ -846,7 +846,7 @@ end
 
 function drawPLG_straight(C::WSCollection{T}, surfacetype::Symbol, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, highlight::Int, labelDirection = "left") where T <: Integer
+    highlightMutables::Bool = false, highlight::Int = 0, labelDirection = "left") where T <: Integer
 
     if cliques_empty(C)
         error("cliques needed for drawing are empty!")
@@ -917,8 +917,8 @@ function drawPLG_straight(C::WSCollection{T}, surfacetype::Symbol, width::Int = 
         end
 
         #highligt select label
-        if !isnothing(highlight)
-            is_mutable(highlight) || break
+        if highlight > 0
+            is_mutable(C, highlight) || break
 
             i = highlight
             N_out = outneighbors(C.quiver, i)
@@ -1184,7 +1184,7 @@ end
 
 function WSC.drawPLG(C::WSCollection, surfacetype::Symbol = :svg, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "lightblue4", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, highlight::Int, labelDirection = "left")
+    highlightMutables::Bool = false, highlight::Int = 0, labelDirection = "left")
 
     if drawmode == "straight"
 
