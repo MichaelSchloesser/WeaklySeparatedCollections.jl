@@ -339,8 +339,7 @@ function drawPLG_straight(C::WSCollection{T}, title::String, width::Int = 500, h
             end
         end
         #highligt select label
-        if highlight > 0
-            is_mutable(C, highlight) || break
+        if highlight > 0 && is_mutable(C, highlight)
 
             i = highlight
             N_out = outneighbors(C.quiver, i)
@@ -917,8 +916,7 @@ function drawPLG_straight(C::WSCollection{T}, surfacetype::Symbol, width::Int = 
         end
 
         #highligt select label
-        if highlight > 0
-            is_mutable(C, highlight) || break
+        if highlight > 0 && is_mutable(C, highlight)
 
             i = highlight
             N_out = outneighbors(C.quiver, i)
