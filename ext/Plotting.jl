@@ -315,17 +315,17 @@ function drawPLG_straight(C::WSCollection{T}, title::String, width::Int = 500, h
 
         circle(LPoint(0, 0), s*r, :stroke)
 
+        function arith_mean(x)
+            len_x = length(x)
+            return sum(tau.(x))/len_x
+        end
+
         # highlight mutable faces
         if highlightMutables 
             for i = n+1:length(C)
                 if is_mutable(C, i)
                     
                     N_out = outneighbors(C.quiver, i)
-
-                    function arith_mean(x)
-                        len_x = length(x)
-                        return sum(tau.(x))/len_x
-                    end
 
                     p1 = arith_mean(W[ intersect_neighbors!(K, C[i], C[N_out[1]]) ])
                     p2 = arith_mean(B[ combine_neighbors!(L, C[i], C[N_out[1]]) ])
@@ -343,11 +343,6 @@ function drawPLG_straight(C::WSCollection{T}, title::String, width::Int = 500, h
 
             i = highlight
             N_out = outneighbors(C.quiver, i)
-
-            function arith_mean(x)
-                len_x = length(x)
-                return sum(tau.(x))/len_x
-            end
 
             p1 = arith_mean(W[ intersect_neighbors!(K, C[i], C[N_out[1]]) ])
             p2 = arith_mean(B[ combine_neighbors!(L, C[i], C[N_out[1]]) ])
@@ -891,17 +886,17 @@ function drawPLG_straight(C::WSCollection{T}, surfacetype::Symbol, width::Int = 
 
         circle(LPoint(0, 0), s*r, :stroke)
 
+        function arith_mean(x)
+            len_x = length(x)
+            return sum(tau.(x))/len_x
+        end
+
         # highlight mutable faces
         if highlightMutables 
             for i = n+1:length(C)
                 if is_mutable(C, i)
                     
                     N_out = outneighbors(C.quiver, i)
-
-                    function arith_mean(x)
-                        len_x = length(x)
-                        return sum(tau.(x))/len_x
-                    end
 
                     p1 = arith_mean(W[ intersect_neighbors!(K, C[i], C[N_out[1]]) ])
                     p2 = arith_mean(B[ combine_neighbors!(L, C[i], C[N_out[1]]) ])
@@ -920,11 +915,6 @@ function drawPLG_straight(C::WSCollection{T}, surfacetype::Symbol, width::Int = 
 
             i = highlight
             N_out = outneighbors(C.quiver, i)
-
-            function arith_mean(x)
-                len_x = length(x)
-                return sum(tau.(x))/len_x
-            end
 
             p1 = arith_mean(W[ intersect_neighbors!(K, C[i], C[N_out[1]]) ])
             p2 = arith_mean(B[ combine_neighbors!(L, C[i], C[N_out[1]]) ])
