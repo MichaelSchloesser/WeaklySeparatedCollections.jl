@@ -18,7 +18,6 @@ Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
 Oscar = "f1435218-dba5-11e9-1e4d-f1a5fab5fc13"
 
 [extensions]
-Gui = ["Luxor", "Mousetrap"]
 OscarExt = "Oscar"
 Plotting = "Luxor"
 
