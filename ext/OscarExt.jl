@@ -140,6 +140,44 @@ function WSC.mutate(seed::Seed, i::Int)
     return mutate!(deepcopy(seed), i)
 end
 
+################## laurent expansions ##################
+
+function laurent_expansion(target_label::Vector{S}, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
+    s = deepcopy(seed)
+
+    if target_label in C
+        return s[ findindex(C.labels, target_label) ]
+    else
+        seq = find_label(C, target_label)
+        
+        for i in seq
+            mutate!(s, i)
+        end
+
+        return s[seq[end]]
+    end
+end
+
+function laurent_expansion(target_labels::Vector{Vector{S}}, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
+    f = L -> laurent_expansion(L, C, seed)
+    return f.(target_labels)
+end
+
+function laurent_expansion(target_label_it, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
+    T = typeof(seed[1])
+    res = Vector{T}(undef, binomial(C.n, C.k))
+
+    i = 1
+    for L in target_label_it
+        res[i] = laurent_expansion(L, C, seed)
+        i += 1
+    end
+
+    return res
+end
+
+
+
 ################## special seeds ##################
 
 function WSC.grid_seed(n::Int, height::Int, width::Int, quiver::SimpleDiGraph{Int})
