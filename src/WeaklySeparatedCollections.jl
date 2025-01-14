@@ -193,6 +193,16 @@ Return the newton okounkov body of the checkboard graph.
 """
 function checkboard_body end
 
+@doc raw"""
+    laurent_expansion(target_label, C::WSCollection, seed::Seed = Seed(C))
+    laurent_expansion(target_labels, C::WSCollection, seed::Seed = Seed(C))
+    laurent_expansion(target_label_it, C::WSCollection, seed::Seed = Seed(C))
+
+Return the Laurent expansion of the plücker coordinate indexed by
+'target_label' in the clustervariables of 'seed' corresponding to 'C'.
+"""
+function laurent_expansion end
+
 # not exported:
 function dihedral_perm_group end
 

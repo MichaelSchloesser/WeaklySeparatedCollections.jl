@@ -142,7 +142,7 @@ end
 
 ################## laurent expansions ##################
 
-function laurent_expansion(target_label::Vector{S}, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
+function WSC.laurent_expansion(target_label::Vector{S}, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
     s = deepcopy(seed)
 
     if target_label in C
@@ -158,12 +158,12 @@ function laurent_expansion(target_label::Vector{S}, C::WSCollection{S}, seed::Se
     end
 end
 
-function laurent_expansion(target_labels::Vector{Vector{S}}, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
+function WSC.laurent_expansion(target_labels::Vector{Vector{S}}, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
     f = L -> laurent_expansion(L, C, seed)
     return f.(target_labels)
 end
 
-function laurent_expansion(target_label_it, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
+function WSC.laurent_expansion(target_label_it, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
     T = typeof(seed[1])
     res = Vector{T}(undef, binomial(C.n, C.k))
 
@@ -175,8 +175,6 @@ function laurent_expansion(target_label_it, C::WSCollection{S}, seed::Seed = See
 
     return res
 end
-
-
 
 ################## special seeds ##################
 
