@@ -20,8 +20,6 @@ export  BFS, DFS, generalized_associahedron, number_wrong_labels, min_label_dist
         Astar, find_label
 
 export  drawTiling, drawPLG
-        
-export  visualizer!
 
 export  Seed, laurent_expansion, grid_seed, extended_rectangle_seed, extended_checkboard_seed,
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
