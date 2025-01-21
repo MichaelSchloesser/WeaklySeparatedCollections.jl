@@ -23,7 +23,7 @@ export  drawTiling, drawPLG
         
 export  visualizer!
 
-export  Seed, grid_seed, extended_rectangle_seed, extended_checkboard_seed,
+export  Seed, laurent_expansion, grid_seed, extended_rectangle_seed, extended_checkboard_seed,
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
         newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
 
