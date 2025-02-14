@@ -2,7 +2,7 @@
 function copy_without_cliques(C::WSCollection{T}) where T <: Integer
     labels = copy_labels(C)
     Q = SimpleDiGraph(C.quiver)
-    return WSCollection(C.k, C.n, labels, Q, C.whiteCliques, C.blackCliques)
+    return WSCollection(C.k, C.n, labels, Q, Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
 end
 
 function limit_searchspace!(mutables::Vector{T}, C1::WSCollection{T}, C2::WSCollection{T}) where T <: Integer
@@ -123,6 +123,39 @@ function DFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = 
             first = false
         end
     end
+end
+
+function wscs(root::WSCollection)
+    queue = Queue{Tuple{WSCollection, Int}}()
+    wsc_list = Vector{WSCollection}()
+
+    push!(wsc_list, WSCollection(root, computeCliques = false))
+    enqueue!(queue, (WSCollection(root, computeCliques = false), 0))
+    current_index = 1
+
+    while !isempty(queue)
+        current, camefrom = dequeue!(queue)
+        mutables = get_mutables(current)
+
+        for m in mutables
+            m == camefrom && continue
+            next = mutate!(WSC.copy_without_cliques(current), m)
+            next_index = WSC.findindex(wsc_list, next)
+
+            if next_index == 0
+                push!(wsc_list, next)
+                enqueue!(queue, (next, m))
+            end
+        end
+
+        current_index += 1
+    end
+
+    return wsc_list
+end
+
+function wscs(k::Int, n::Int, T::Type = Int)
+    return wscs( rectangle_collection(k, n, T))
 end
 
 @doc raw"""
