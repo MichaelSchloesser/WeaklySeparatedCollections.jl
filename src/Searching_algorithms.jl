@@ -139,8 +139,8 @@ function wscs(root::WSCollection)
 
         for m in mutables
             m == camefrom && continue
-            next = mutate!(WSC.copy_without_cliques(current), m)
-            next_index = WSC.findindex(wsc_list, next)
+            next = mutate!(copy_without_cliques(current), m)
+            next_index = findindex(wsc_list, next)
 
             if next_index == 0
                 push!(wsc_list, next)
