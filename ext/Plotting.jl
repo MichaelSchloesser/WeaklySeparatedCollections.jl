@@ -14,12 +14,12 @@ end
 
 function norm(P::LPoint)
     res = P.x*P.x + P.y*P.y
-    return sqrt(res)
+    return @fastmath sqrt(res)
 end
 
 function norm(v::SVector{2, T}) where T <: AbstractFloat
     res = v[1]*v[1] + v[2]*v[2]
-    return sqrt(res)
+    return @fastmath sqrt(res)
 end
 
 intersect_neighbors! = WSC.intersect_neighbors!
@@ -30,7 +30,7 @@ complement = WSC.complement
 
 # sadly we cant really optimize these functions much. The drawing itself takes orders of magnitude longer than anyting else.
 
-function embedding_data(C::WSCollection, width::Int, height::Int, topLabel::AbstractFloat = -1.0)
+function embedding_data(C::WSCollection, width::Int, height::Int, topLabel::T = -1.0) where T <: AbstractFloat
     k, n = C.k, C.n
     W, B = C.whiteCliques, C.blackCliques
     
@@ -62,9 +62,7 @@ function WSC.drawTiling(C::WSCollection, title::String, width::Int = 500, height
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, 
     highlightMutables::Bool = false, labelDirection = "left") 
 
-    if cliques_empty(C)
-        error("cliques needed for drawing are empty!")
-    end
+    cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
     n, k, W, B, r, s, R_poly, tau = embedding_data(C, width, height, topLabel)
     N = length(C)
@@ -96,12 +94,10 @@ function WSC.drawTiling(C::WSCollection, title::String, width::Int = 500, height
             for i in 1:N
                 pos = tau(i)
 
-                label = ""
-
                 if labelDirection == "left"
-                    label = join(C[i])
+                    label = label_to_string(C[i], n)
                 elseif labelDirection == "right"
-                    label = join( complement(C[i], n))
+                    label = label_to_string( complement(C[i], n), n)
                 end
 
                 len = length(label)
