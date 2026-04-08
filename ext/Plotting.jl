@@ -41,7 +41,7 @@ function embedding_data(C::WSCollection, width::Int, height::Int, topLabel::T = 
     s = min(width, height)/(2.4*r)
 
     if topLabel > 0
-        @fastmath @views new_angle = acos( -v[2]/r ) - (k - topLabel + 0.5)*2.0*pi/n 
+        @fastmath @inbounds new_angle = acos( -v[2]/r ) - (k - topLabel + 0.5)*2.0*pi/n 
 
         for i in 0:n-1
             @fastmath @inbounds R_poly[i+1] = SVector{2, Float64}( sin(i*2*pi/n - new_angle), -cos(i*2*pi/n - new_angle))
@@ -53,6 +53,8 @@ function embedding_data(C::WSCollection, width::Int, height::Int, topLabel::T = 
 
     return n, k, W, B, r, s, R_poly, tau
 end
+
+# TODO define tau here instead
 
 function drawTiling(C::WSCollection, title::Union{Symbol, String} = :svg, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
     backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, 
