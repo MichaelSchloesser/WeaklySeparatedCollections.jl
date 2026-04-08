@@ -1,18 +1,32 @@
 
-function copy_without_cliques(C::WSCollection{T}) where T <: Integer
-    labels = copy_labels(C)
-    Q = SimpleDiGraph(C.quiver)
-    return WSCollection(C.k, C.n, labels, Q, Dict{Vector{T}, Vector{T}}(), Dict{Vector{T}, Vector{T}}())
+@inline function update!(dict::Dict{T, V}, key::T, val::V) where {T, V}
+    index = Base.ht_keyindex2!(dict, key)
+    if index > 0
+        @inbounds dict.vals[index] = val
+    else
+        @inbounds Base._setindex!(dict, val, key, -index)
+    end
 end
 
-function limit_searchspace!(mutables::Vector{T}, C1::WSCollection{T}, C2::WSCollection{T}) where T <: Integer
+function limit_searchspace!(mutables::Vector{T}, C1::WSCollection, C2::WSCollection) where T <: Integer
     x = 1
 
     for m in mutables
-        @inbounds C1[m] in C2 || (mutables[x] = m; x += 1)
+        @inbounds @views C1[m] in C2[C2.n+1:end] || (mutables[x] = m; x += 1)
     end
 
     return resize!(mutables, x-1)
+end
+
+function limit_searchspace!(mutables::Vector{T}, num_mutables, C1::WSCollection, su_target) where T <: Integer
+    x = 1
+
+    for i in 1:num_mutables
+        @inbounds m = mutables[i]
+        @inbounds C1[m] in su_target || (mutables[x] = m; x += 1)
+    end
+
+    return x-1
 end
 
 ################## uninformed searching ##################
@@ -29,47 +43,59 @@ This sequence is computed by a breadth first search.
 If `limitSearchSpace` is set to true then labels already contained
 in `target` will never be mutated.
 """
-function BFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = false)
+function BFS(root::WSCollection{T}, target::WSCollection{T}; limitSearchSpace::Bool = true) where T
     queue = Queue{WSCollection}()
-    explored = Vector{WSCollection}()
-    parent = Dict{WSCollection, Int}()
+    parent_explored = Dict{Vector{T}, Int}()
 
-    push!(explored, root)
-    enqueue!(queue, WSCollection(root, computeCliques = false))
+    N = length(root)-root.n
+    mutables = Vector{Int}(undef, N)
+    num_mutables = N
 
-    first = true
+    enqueue!(queue, WSCollection(root))
+    su_root = sorted_unfrozen(root)
+    su_target = sorted_unfrozen(target)
+    su_target_set = Set(su_target)
+    update!(parent_explored, su_root, 0)
+
+    su = Vector{T}(undef, N)
     while !isempty(queue)
-    
         current = dequeue!(queue)
+        sorted_unfrozen!(current, su) # su_current
 
-        if current == target
+        if su == su_target
             sequence = Vector{Int}()
 
-            while current != root
-                m = parent[current]
+            while su != su_root
+                m = parent_explored[su]
                 mutate!(current, m)
+                sorted_unfrozen!(current, su)
                 push!(sequence, m)
             end
 
             return reverse!(sequence)
         end
 
-        mutables = get_mutables(current)
-        limitSearchSpace && limit_searchspace!(mutables, current, target)
+        num_mutables = get_mutables!(current, mutables)
+        limitSearchSpace && (num_mutables = limit_searchspace!(mutables, num_mutables, current, su_target_set))
+        camefrom = parent_explored[su]
 
-        for m in mutables
-
-            !first && m == parent[current] && continue
-            next = mutate!(copy_without_cliques(current), m)
-
-            if !(next in explored)
-                push!(explored, next)
-                parent[next] = m
-                enqueue!(queue, next)
+        for i in 1:num_mutables
+            @inbounds m = mutables[i]
+            m == camefrom && continue
+            
+            @inbounds temp = current[m]
+            @inbounds current.labels[m] = peek(current, m)
+            sorted_unfrozen!(current, su) # su_next
+            @inbounds current.labels[m] = temp
+            
+            index = Base.ht_keyindex2!(parent_explored, su)
+            if index < 0
+                Base._setindex!(parent_explored, m, copy(su), -index)
+                enqueue!(queue, mutate(current, m))
             end
         end
-        first = false
     end
+    # a path always exist so we never get here
 end
 
 @doc raw"""
@@ -84,80 +110,113 @@ This sequence is computed by a depth first search.
 If `limitSearchSpace` is set to true then labels already contained
 in `target` will never be mutated.
 """
-function DFS(root::WSCollection, target::WSCollection; limitSearchSpace::Bool = false)
+function DFS(root::WSCollection{T}, target::WSCollection{T}; limitSearchSpace::Bool = true) where T
     stack = Stack{WSCollection}()
-    explored = Vector{WSCollection}()
-    parent = Dict{WSCollection, Int}()
+    explored = Dict{Vector{T}, Nothing}() # = Set
+    parent = Dict{Vector{T}, Int}()
 
-    push!(stack, WSCollection(root, computeCliques = false))
-    first = true
+    N = length(root)-root.n
+    mutables = Vector{Int}(undef, N)
+    num_mutables = N
+    
+    push!(stack, WSCollection(root))
+    su_root = sorted_unfrozen(root)
+    su_target = sorted_unfrozen(target)
+    su_target_set = Set(su_target)
+    update!(parent, su_root, 0)
+    
+    su = Vector{Int}(undef, N)
+
     while !isempty(stack)
         current = pop!(stack)
-
-        if current == target
+        sorted_unfrozen!(current, su)
+        
+        if su == su_target
             sequence = Vector{Int}()
 
-            while current != root
-                m = parent[current]
-                current = mutate!(current, m)
+            while su != su_root
+                m = parent[su]
+                mutate!(current, m)
+                sorted_unfrozen!(current, su)
                 push!(sequence, m)
             end
 
             return reverse!(sequence)
         end
 
-        if !(current in explored)
-            push!(explored, current)
+        index = Base.ht_keyindex2!(explored, su)
+        if index < 0
+            Base._setindex!(explored, nothing, copy(su), -index)
             
-            mutables = get_mutables(current)
-            limitSearchSpace && limit_searchspace!(mutables, current, target)
+            num_mutables = get_mutables!(current, mutables)
+            limitSearchSpace && (num_mutables = limit_searchspace!(mutables, num_mutables, current, su_target_set))
+            camefrom = parent[su]
 
-            for m in mutables
-                !first && m == parent[current] && continue
-                next = mutate!(copy_without_cliques(current), m)
-                if !(next in explored)
-                    push!(stack, next)
-                    parent[next] = m
+            for i in 1:num_mutables
+                @inbounds m = mutables[i]
+                m == camefrom && continue
+
+                @inbounds temp = current[m]
+                @inbounds current.labels[m] = peek(current, m)
+                sorted_unfrozen!(current, su) 
+                @inbounds current.labels[m] = temp
+
+                index = Base.ht_keyindex(explored, su)
+                if index < 0
+                    push!(stack, mutate(current, m))
+                    update!(parent, copy(su), m)
                 end
             end
-            first = false
         end
     end
 end
 
-function wscs(root::WSCollection)
+# TODO add docstring
+function wscs(root::WSCollection{T}) where T
+    # TODO if we knew how big these get we could use sizehint
     queue = Queue{Tuple{WSCollection, Int}}()
-    wsc_list = Vector{WSCollection}()
+    wsc_list = Dict{Vector{T}, Nothing}()
 
-    push!(wsc_list, WSCollection(root, computeCliques = false))
-    enqueue!(queue, (WSCollection(root, computeCliques = false), 0))
-    current_index = 1
+    N = length(root)-root.n
+    mutables = Vector{Int}(undef, N)
+    su_next = Vector{Int}(undef, N)
+    num_mutables = N
+
+    update!(wsc_list, sorted_unfrozen(root), nothing)
+    enqueue!(queue, (WSCollection(root), 0))
 
     while !isempty(queue)
         current, camefrom = dequeue!(queue)
-        mutables = get_mutables(current)
+        num_mutables = get_mutables!(current, mutables)
 
-        for m in mutables
+        for i in 1:num_mutables
+            @inbounds m = mutables[i]
             m == camefrom && continue
-            next = mutate!(copy_without_cliques(current), m)
-            next_index = findindex(wsc_list, next)
+    
+            @inbounds temp = current[m]
+            @inbounds current.labels[m] = peek(current, m)
+            sorted_unfrozen!(current, su_next)
+            @inbounds current.labels[m] = temp
 
-            if next_index == 0
-                push!(wsc_list, next)
-                enqueue!(queue, (next, m))
+            index = Base.ht_keyindex2!(wsc_list, su_next)
+            if index < 0
+                Base._setindex!(wsc_list, nothing, copy(su_next), -index)
+                enqueue!(queue, (mutate(current, m), m))
             end
+            
         end
 
-        current_index += 1
     end
 
-    return wsc_list
+    return keys(wsc_list)
 end
 
 function wscs(k::Int, n::Int, T::Type = Int)
-    return wscs( rectangle_collection(k, n, T))
+    return wscs( rec_collection(k, n, T))
 end
 
+
+# TODO rework
 @doc raw"""
     generalized_associahedron(root::WSCollection)
 
@@ -206,7 +265,7 @@ Return all maximal weakly separated collections of type `k`, `n`
 together with a graph that decribes mutations between the wsc's. 
 """
 function generalized_associahedron(k::Int, n::Int, T::Type = Int)
-    return generalized_associahedron( rectangle_collection(k, n, T))
+    return generalized_associahedron( rec_collection(k, n, T))
 end
 
 ################## heuristics ##################
@@ -228,12 +287,16 @@ Return the number of labels in `C` that do not occur in `target`.
 """
 function number_wrong_labels(C::WSCollection, target::WSCollection) 
     n = C.n
-    return @views setdiff_length(C.labels[n+1:end], target.labels[n+1:end])
+    return @inbounds @views setdiff_length(C.labels[n+1:end], target.labels[n+1:end])
 end
 
 
-function number_wrong_labels_change(old_label, new_label, h_value, current::WSCollection, target::WSCollection)
-    return h_value + (old_label in target) - (new_label in target)
+function number_wrong_labels_change(old_label, new_label, h_value, current::WSCollection, su_target)
+    return h_value + (old_label in su_target) - (new_label in su_target)
+end
+
+function estimate(w, x)
+    return count_ones(w & ~x)
 end
 
 @doc raw"""
@@ -245,20 +308,17 @@ to exchange in order to obtain a label of `target`.
 """
 function min_label_dist(C::WSCollection, target::WSCollection)
     n = C.n
-    wrong_labels = @views setdiff(C.labels[n+1:end], target.labels[n+1:end])
+    # TODO may be faster to just use C.labels
+    @inbounds @views wrong_labels = setdiff(C.labels[n+1:end], target.labels[n+1:end]) 
 
     isempty(wrong_labels) && return 0
-    estimate = (w, x) -> cld(setdiff_length(w, x), 2)
-
-    return @views sum( w -> minimum( x -> estimate(w, x), target.labels[n+1:end]), wrong_labels)
+    return @views sum( w -> cld( minimum( x -> estimate(w, x), target.labels[n+1:end]), 2), wrong_labels)
 end
 
 
-function min_label_dist_change(old_label, new_label, h_value, current::WSCollection, target::WSCollection)
-    n = target.n
-    estimate = (w, x) -> cld(setdiff_length(w, x), 2)
+function min_label_dist_change(old_label, new_label, h_value, current::WSCollection, su_target)
 
-    return @views h_value + minimum( x -> estimate(new_label, x), target.labels[n+1:end]) - minimum( x -> estimate(old_label, x), target.labels[n+1:end]) 
+    return h_value + cld( minimum( x -> estimate(new_label, x), su_target), 2) - cld( minimum( x -> estimate(old_label, x), su_target), 2)
 end
 
 @doc raw"""
@@ -272,25 +332,22 @@ in the target WSC.
 """
 function min_label_dist_experimental(C::WSCollection, target::WSCollection)
     n = C.n
-    wrong_labels = @views setdiff(C.labels[n+1:end], target.labels[n+1:end])
-    missing_labels = @views setdiff(target.labels[n+1:end], C.labels[n+1:end])
+    @inbounds @views wrong_labels = setdiff(C.labels[n+1:end], target.labels[n+1:end])
+    @inbounds @views missing_labels = setdiff(target.labels[n+1:end], C.labels[n+1:end])
 
     isempty(wrong_labels) && return 0
-    estimate = (w, x) -> cld(setdiff_length(w, x), 2)
-
-    return sum( w -> minimum( x -> estimate(w, x), missing_labels), wrong_labels)
+    return sum( w -> cld( minimum( x -> estimate(w, x), missing_labels), 2), wrong_labels)
 end
 
-function estimate_exp(w, x, current::WSCollection{T}) where T <:Integer
-    @views x in current.labels[current.n+1:end] && return typemax(T)
-    return cld(setdiff_length(w, x), 2)
+function estimate_exp(w, x, view, n::Int)
+    x in view && return n
+    return count_ones(w & ~x)
 end
 
 # assumption: dont need to mutate correct labels -> consider missing labels only
-function min_label_dist_change_experimental(old_label, new_label, h_value, current::WSCollection, target::WSCollection)
-
-    non_frozen = @view target.labels[target.n+1:end]
-    return h_value + minimum( x -> estimate_exp(new_label, x, current), non_frozen) - minimum( x -> estimate_exp(old_label, x, current), non_frozen) 
+function min_label_dist_change_experimental(old_label, new_label, h_value, current::WSCollection, su_target)
+    @inbounds @views view = current.labels[current.n+1:end]
+    return h_value + cld( minimum( x -> estimate_exp(new_label, x, view, current.n), su_target), 2) - cld( minimum( x -> estimate_exp(old_label, x, view, current.n), su_target), 2)
 end
 
 ################## informed searching ##################
@@ -310,46 +367,63 @@ and `"min_label_dist_experimental"`.
 If `limitSearchSpace` is set to true then labels already contained
 in `target` will never be mutated.
 """
-function Astar(root::WSCollection, target::WSCollection; heuristic::String = "number_wrong_labels", limitSearchSpace::Bool = true)
+function Astar(root::WSCollection{T}, target::WSCollection{T}; 
+            heuristic::String = "number_wrong_labels", limitSearchSpace::Bool = true) where T
     
+    N = length(root)-root.n
+    mutables = Vector{Int}(undef, N)
+    num_mutables = N
+
+    su_root = sorted_unfrozen(root)
+    su_target = sorted_unfrozen(target)
+    su_target_set = Set(su_target)
+
     if heuristic == "number_wrong_labels"
         h = number_wrong_labels
         h_change = number_wrong_labels_change
+        su_target_it = su_target_set
         
     elseif heuristic == "min_label_dist"
         h = min_label_dist
         h_change = min_label_dist_change
+        su_target_it = su_target
 
     elseif heuristic == "min_label_dist_experimental"
 
         h = min_label_dist_experimental
         h_change = min_label_dist_change_experimental
+        su_target_it = su_target
     else
         h = number_wrong_labels
         h_change = number_wrong_labels_change
+        su_target_it = su_target_set
     end
-    
+
     # The set of discovered nodes that may need to be (re-)expanded.
     # Initially, only the root node is known.
-    openSet = PriorityQueue{WSCollection, Int}(WSCollection(root, computeCliques = false) => h(root, target))
-    cameFrom = Dict{WSCollection, Int}()
+    openSet = PriorityQueue{WSCollection, Int}(WSCollection(root) => h(root, target))
 
-    # For node n, gScore[n] is the cost of the cheapest path from start to n currently known.
-    gScore = Dict{WSCollection, Int}()
-    gScore[WSCollection(root, computeCliques = false)] = 0
+    # For node n, gScore_parent[n][1] is the cost of the cheapest path from start to n currently known.
+    # gScore_parent[n][2] is the direction in which the parent of n on the currently cheapest path lies.
+    gScore_parent = Dict{Vector{T}, Tuple{Int, Int}}()
+    gScore_parent[su_root] = (0, 0)
 
-    first = true
+    su = Vector{Int}(undef, N)
+
     while !isempty(openSet)
         current, f_current = dequeue_pair!(openSet)
-        h_current = f_current - gScore[current]
+
+        sorted_unfrozen!(current, su) # su_current
+        @inbounds h_current = f_current - gScore_parent[su][1]
         
         # reconstruct and return mutation sequence
-        if current == target
+        if su == su_target
             sequence = Vector{Int}()
 
-            while current != root
-                m = cameFrom[current]
+            while su != su_root
+                @inbounds m = gScore_parent[su][2]
                 mutate!(current, m)
+                sorted_unfrozen!(current, su)
                 push!(sequence, m)
             end
 
@@ -357,33 +431,36 @@ function Astar(root::WSCollection, target::WSCollection; heuristic::String = "nu
         end
 
         # get valid mutation directions
-        mutables = get_mutables(current) 
-        limitSearchSpace && limit_searchspace!(mutables, current, target)
-            
-        for i in mutables
+        num_mutables = get_mutables!(current, mutables)
+        limitSearchSpace && (num_mutables = limit_searchspace!(mutables, num_mutables, current, su_target_set))
+        @inbounds camefrom = gScore_parent[su][2]
 
-            !first && cameFrom[current] == i && continue
-            neighbor = mutate!(copy_without_cliques(current), i)
+        # tentative_gScore is the distance from start to next through current
+        @inbounds tentative_gScore = gScore_parent[su][1] + 1
 
-            # tentative_gScore is the distance from start to the neighbor through current
-            tentative_gScore = gScore[current] + 1
+        for i in 1:num_mutables
+            @inbounds m = mutables[i]
+            m == camefrom && continue
 
-            if !haskey(gScore, neighbor) || tentative_gScore < gScore[neighbor]
-                # This path to neighbor is better than any previous one. Record it!
-                cameFrom[neighbor] = i
-                gScore[neighbor] = tentative_gScore
-                
-                openSet[neighbor] = tentative_gScore + h_change(current[i], neighbor[i], h_current, current, target)
+            @inbounds old_label = current[m]
+            new_label = peek(current, m)
+            @inbounds current.labels[m] = new_label
+            sorted_unfrozen!(current, su) # su_next
+            @inbounds current.labels[m] = old_label
+
+            if @inbounds !haskey(gScore_parent, su) || tentative_gScore < gScore_parent[su][1]
+                # This path to next is better than any previous one. Record it!
+                gScore_parent[copy(su)] = (tentative_gScore, m)
+                openSet[mutate(current, m)] = tentative_gScore + h_change(old_label, new_label, h_current, current, su_target_it)
             end
         end
-        first = false
     end
 
     return [-1]
 end
 
 @doc raw"""
-    Astar(root::WSCollection, target::WSCollection)
+    find_label(root::WSCollection{T}, label::T) where T <: Integer
 
 Returns a sequence of mutations, transforming `root` into a wsc 
 containing `label`.
@@ -399,14 +476,14 @@ and `"min_label_dist_experimental"`.
 If `limitSearchSpace` is set to true then labels already contained
 in `target` will never be mutated.
 """
-function find_label(root::WSCollection{T}, label::Vector{T}; heuristic::String = "number_wrong_labels", 
+function find_label(root::WSCollection{T}, label::T; heuristic::String = "number_wrong_labels", 
                         limitSearchSpace::Bool = true) where T <: Integer
 
     seq = Vector{Int}()
     label in root && return seq
 
-    seq = Astar(root, extend_to_collection([label], root); heuristic = heuristic, limitSearchSpace = limitSearchSpace)
-    temp = WSCollection(root, computeCliques = false)
+    seq = Astar(root, extend_to_collection(label, root); heuristic = heuristic, limitSearchSpace = limitSearchSpace)
+    temp = WSCollection(root)
 
     # only return the subsequence to the first wsc containing label.
     count = 0
