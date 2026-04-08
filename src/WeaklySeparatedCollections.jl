@@ -3,18 +3,19 @@ module WeaklySeparatedCollections
 
 export  WSCollection,
 
-        frozen_label, checkboard_label, rectangle_label, dual_checkboard_label, dual_rectangle_label,
-        frozen_labels, rectangle_labels, checkboard_labels, dual_rectangle_labels, dual_checkboard_labels,
-        checkboard_collection, rectangle_collection, dual_checkboard_collection, dual_rectangle_collection,
+        label_to_string, label_to_array
+        frozen_label, check_label, rec_label, dcheck_label, drec_label,
+        frozen_labels, rec_labels, check_labels, drec_labels, dcheck_labels,
+        check_collection, rec_collection, dcheck_collection, drec_collection,
 
-        getindex, setindex!, length, in,
-        intersect, setdiff, union, 
+        # this may be unnecessary
+        getindex, lastindex, length, in, intersect, setdiff, union, isequal, hash
 
         is_frozen, is_mutable, get_mutables, mutate!, mutate,
         rotate!, mirror!, complements!, swap_colors!, rotate, mirror, complements, swap_colors, 
 
         extend_weakly_separated!, extend_to_collection,
-        is_weakly_separated, hash, cliques_empty
+        is_weakly_separated, cliques_init
 
 export  BFS, DFS, wscs, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, 
         Astar, find_label
@@ -27,7 +28,7 @@ export  Seed, laurent_expansion, grid_seed, extended_rectangle_seed, extended_ch
 
 import Graphs: SimpleGraph, SimpleDiGraph, nv, ne, edges, src, dst, has_edge, add_edge!, add_vertex!, rem_edge!, inneighbors, outneighbors, degree
 
-import IterTools: subsets
+using LazilyInitializedFields
 using DataStructures
 
 include("Combinatorics.jl")

@@ -18,6 +18,20 @@ function label_to_string(label::Integer, n::Int)
     return res
 end
 
+function label_to_array(label::Integer, n::Int)
+    res = Vector{Int}(undef, count_ones(label))
+
+    x = 1
+    for i in 0:n-1
+        if (label & (1 << i)) != 0
+            @inbounds res[x] = i+1
+            x += 1
+        end
+    end
+
+    return res
+end
+
 function findindex(array::Vector, val)
     for i in 1:length(array)
         @inbounds array[i] == val && return i
@@ -434,11 +448,9 @@ function WSCollection(k::Int, n::Int, labels::Vector{T};
     W, B = compute_cliques(labels)
     Q = compute_quiver(n, labels, W)
     
-    if keepCliques 
-        return WSCollection{T}(k, n, labels, Q, W, B)
-    else
-        return WSCollection{T}(k, n, labels, Q, uninit, uninit)
-    end
+    keepCliques && return WSCollection{T}(k, n, labels, Q, W, B)
+    
+    return WSCollection{T}(k, n, labels, Q, uninit, uninit)
 end
 
 # TODO update docstring
@@ -454,12 +466,32 @@ If `keepCliques` is `false` the black and white 2-cells are disgarded.
 function WSCollection(k::Int, n::Int, labels::Vector{T}, quiver::SimpleDiGraph{T}; 
                         keepCliques::Bool = false) where T <: Integer
 
-    if !keepCliques
-        return WSCollection{T}(k, n, labels, quiver, uninit, uninit)
-    else
+    if keepCliques
         W, B = compute_cliques(labels, quiver)
         return WSCollection{T}(k, n, labels, quiver, W, B)
     end
+    
+    return WSCollection{T}(k, n, labels, quiver, uninit, uninit)
+end
+
+@doc raw"""
+    WSCollection(C::WSCollection; keepCliques::Bool = false)
+
+Constructor of WSCollection. Computes 2-cells of `C` if the are empty, 
+othererwise returns a deepcopy of `C`.
+
+If `keepCliques` is `false` the black and white 2-cells are disgarded.
+"""
+function WSCollection(C::WSCollection; keepCliques::Bool = false)
+    labels = copy(C.labels)
+    Q = SimpleDiGraph(C.quiver)
+
+    if keepCliques 
+        W, B = compute_cliques(C.labels, C.quiver)
+        return WSCollection(C.k, C.n, labels, Q, W, B)
+    end
+
+    return WSCollection(C.k, C.n, labels, Q, uninit, uninit)
 end
 
 function Base.deepcopy(C::WSCollection{T}) where T
@@ -478,22 +510,6 @@ function Base.deepcopy(C::WSCollection{T}) where T
         return WSCollection(C.k, C.n, labels, Q, W, B)
     end
 
-    return WSCollection(C.k, C.n, labels, Q, uninit, uninit)
-end
-
-@doc raw"""
-    WSCollection(C::WSCollection; keepCliques::Bool = false)
-
-Constructor of WSCollection. Computes 2-cells of `C` if the are empty, 
-othererwise returns a deepcopy of `C`.
-
-If `keepCliques` is `false` the black and white 2-cells are disgarded.
-"""
-function WSCollection(C::WSCollection; keepCliques::Bool = false)
-    keepCliques && return deepcopy(C)
-    
-    labels = copy(C.labels)
-    Q = SimpleDiGraph(C.quiver)
     return WSCollection(C.k, C.n, labels, Q, uninit, uninit)
 end
 
