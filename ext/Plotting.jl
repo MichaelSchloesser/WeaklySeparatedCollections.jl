@@ -9,17 +9,67 @@ using StaticArrays
 
 const LPoint = Luxor.Point
 
+
+# adjusted from https://github.com/JuliaGraphics/Luxor.jl/blob/master/src/polygons.jl 
+function Luxor.poly(pointlist::NTuple{N,Point} where {N};
+    action = :none,
+    close = false,
+    reversepath = false)
+    if action != :path
+        newpath()
+    end
+    if reversepath == true
+        pointlist = reverse(pointlist)
+    end
+    move(pointlist[1].x, pointlist[1].y)
+    @inbounds for p in pointlist[2:end]
+        line(p.x, p.y)
+    end
+    if close == true
+        closepath()
+    end
+    do_action(action)
+    return pointlist
+end
+
+Luxor.poly(pointlist::NTuple{N,Point} where {N}, a::Symbol;
+    action = a,
+    close = false,
+    reversepath = false) = poly(pointlist, action = action, close = close, reversepath = reversepath)
+
+function Luxor.poly(input_array,
+    tau::Function; # must output Points
+    action = :none,
+    close = false,
+    reversepath = false)
+    if action != :path
+        newpath()
+    end
+    if reversepath == true
+        reverse!(input_array)
+    end
+    @inbounds move(tau(input_array[1]))
+    @inbounds @views for i in input_array[2:end]
+        line(tau(i))
+    end
+    if close == true
+        closepath()
+    end
+    do_action(action)
+    return input_array
+end
+
+Luxor.poly(input_array,
+    tau::Function, 
+    a::Symbol;
+    action = a,
+    close = false,
+    reversepath = false) = poly(input_array, tau, action = action, close = close, reversepath = reversepath)
+
+
 function norm(p::LPoint)
     res = p.x*p.x + p.y*p.y
     return @fastmath sqrt(res)
-end
-
-function sum_to(a::Vector{LPoint}, k::Int) 
-    res = LPoint(0, 0)
-    for i in 1:k
-        @inbounds res += a[i]
-    end
-    res
 end
 
 # TODO add support for non maximal wscs
@@ -34,7 +84,7 @@ function embedding_data(C::WSCollection, width::Int, height::Int, topLabel::T = 
     end
 
     # autoselect appropiate scale
-    v = sum_to(R_poly, k)
+    @inbounds @views v = sum(R_poly[1:k])
     r = norm(v)
     # scale_factor = 2.4
     s = min(width, height)/(2.4*r)
@@ -89,11 +139,11 @@ function drawTiling(C::WSCollection,
         # draw faces
         sethue("white")
         for w in values(W)
-            poly(tau.(w), :fill)
+            poly(w, tau, :fill)
         end
-        sethue("black") # TODO could also just draw a background polygon first
+        sethue("black")
         for b in values(B)
-            poly(tau.(b), :fill)
+            poly(b, tau, :fill)
         end
 
         for i = 1:n
@@ -229,7 +279,7 @@ function drawPLG_straight(C::WSCollection,
                     
                     sethue("orange")
                     setopacity(0.5)
-                    poly([p1, p2, p3, p4], :fill, close = true)
+                    poly((p1, p2, p3, p4), :fill, close = true)
                 end
             end
         end
@@ -246,7 +296,7 @@ function drawPLG_straight(C::WSCollection,
             
             sethue("orange")
             setopacity(0.5)
-            poly([p1, p2, p3, p4], :fill, close = true)
+            poly((p1, p2, p3, p4), :fill, close = true)
         end
         setopacity(1)
 
