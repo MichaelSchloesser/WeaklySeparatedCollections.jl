@@ -7,19 +7,19 @@ using Colors
 import Graphs: all_neighbors, outneighbors
 using StaticArrays
 
-LPoint = Luxor.Point
-function P(v::SVector{2, T}) where T <: AbstractFloat
-    return LPoint(v[1], v[2])
-end
+const LPoint = Luxor.Point
 
-function norm(P::LPoint)
-    res = P.x*P.x + P.y*P.y
+function norm(p::LPoint)
+    res = p.x*p.x + p.y*p.y
     return @fastmath sqrt(res)
 end
 
-function norm(v::SVector{2, T}) where T <: AbstractFloat
-    res = v[1]*v[1] + v[2]*v[2]
-    return @fastmath sqrt(res)
+function sum_to(a::Vector{LPoint}, k::Int) 
+    res = LPoint(0, 0)
+    for i in 1:k
+        @inbounds res += a[i]
+    end
+    res
 end
 
 # TODO add support for non maximal wscs
@@ -27,15 +27,14 @@ end
 # sadly we cant really optimize these functions much. The drawing itself takes orders of magnitude longer than anyting else.
 function embedding_data(C::WSCollection, width::Int, height::Int, topLabel::T = -1.0) where T <: AbstractFloat
     k, n = C.k, C.n
-    W, B = C.whiteCliques, C.blackCliques
     
-    R_poly = Vector{SVector{2, Float64}}(undef, n)
+    R_poly = Vector{LPoint}(undef, n)
     for i in 0:n-1
-        @fastmath @inbounds R_poly[i+1] = SVector{2, Float64}(sin(i*2*pi/n), -cos(i*2*pi/n))
+        @fastmath @inbounds R_poly[i+1] = LPoint(sin(i*2*pi/n), -cos(i*2*pi/n))
     end
 
     # autoselect appropiate scale
-    @inbounds @views v = sum(R_poly[1:k])
+    v = sum_to(R_poly, k)
     r = norm(v)
     # scale_factor = 2.4
     s = min(width, height)/(2.4*r)
@@ -44,27 +43,44 @@ function embedding_data(C::WSCollection, width::Int, height::Int, topLabel::T = 
         @fastmath @inbounds new_angle = acos( -v[2]/r ) - (k - topLabel + 0.5)*2.0*pi/n 
 
         for i in 0:n-1
-            @fastmath @inbounds R_poly[i+1] = SVector{2, Float64}( sin(i*2*pi/n - new_angle), -cos(i*2*pi/n - new_angle))
+            @fastmath @inbounds R_poly[i+1] = LPoint( sin(i*2*pi/n - new_angle), -cos(i*2*pi/n - new_angle))
         end
     end
 
-    # TODO could use preloaded array for label_to_array 
-    @inbounds @views tau = i -> P(s*sum( R_poly[label_to_array(C[i], n)] ))
-
-    return n, k, W, B, r, s, R_poly, tau
+    return r, s, R_poly
 end
 
-# TODO define tau here instead
+function label_emb(label, R_poly, n::Int, s)
+    res = LPoint(0, 0)
 
-function drawTiling(C::WSCollection, title::Union{Symbol, String} = :svg, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, 
-    highlightMutables::Bool = false, labelDirection = "left") 
+    for j in 0:n-1
+        @inbounds (label >>> j) & 1 == 1 && (res += R_poly[j+1])
+    end
+    return s*res
+end
+
+function label_emb(i, R_poly, C::WSCollection, s) 
+    @inbounds label_emb(C[i], R_poly, C.n, s) 
+end
+
+function drawTiling(C::WSCollection, 
+    title::Union{Symbol, String} = :svg, 
+    width::Int = 500, height::Int = 500; 
+    topLabel::AbstractFloat = -1.0, 
+    fontScale = 1.0,
+    backgroundColor::Union{String, ColorTypes.Colorant} = "",
+    drawLabels::Bool = true, 
+    highlightMutables::Bool = false, 
+    labelDirection = "left") 
 
     cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
-    n, k, W, B, r, s, R_poly, tau = embedding_data(C, width, height, topLabel)
+    n, k = C.n, C.k
+    W, B = C.whiteCliques, C.blackCliques
+    r, s, R_poly = embedding_data(C, width, height, topLabel)
+    tau = i -> label_emb(i, R_poly, C, s)
     N = length(C)
-    
+
     Drawing(width, height, title)
         origin()
 
@@ -130,14 +146,37 @@ function drawTiling(C::WSCollection, title::Union{Symbol, String} = :svg, width:
     finish()
 end
 
+function add_dual_vertices!(dual_vertices, i, list, C, tau)
+    for j in list
+        @inbounds K = C[i] & C[j]
+        @inbounds L = C[i] | C[j]
+        p_w = sum(tau, C.whiteCliques[K])/length(C.whiteCliques[K])
+        p_b = sum(tau, C.blackCliques[L])/length(C.blackCliques[L])
+        push!(dual_vertices, p_w)
+        push!(dual_vertices, p_b)
+    end
+end
 
-function drawPLG_straight(C::WSCollection{T}, title::Union{Symbol, String} = :svg, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
-    highlightMutables::Bool = false, highlight::Int = 0, labelDirection = "left") where T <: Integer
+function drawPLG_straight(C::WSCollection, 
+    title::Union{Symbol, String} = :svg, 
+    width::Int = 500, 
+    height::Int = 500; 
+    topLabel::AbstractFloat = -1.0, 
+    fontScale = 1.0,
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", 
+    drawLabels::Bool = false, 
+    highlightMutables::Bool = false, 
+    highlight::Int = 0, 
+    labelDirection = "left")
 
     cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
-    n, k, W, B, r, s, R_poly, tau = embedding_data(C, width, height, topLabel)
+    n, k = C.n, C.k
+    W, B = C.whiteCliques, C.blackCliques
+    r, s, R_poly = embedding_data(C, width, height, topLabel)
+    tau = i -> label_emb(i, R_poly, C, s)
+    tau_direct = l -> label_emb(l, R_poly, n, s)
+    N = length(C)
     
     Drawing(width, height, title)
         origin()
@@ -146,24 +185,23 @@ function drawPLG_straight(C::WSCollection{T}, title::Union{Symbol, String} = :sv
         
         # outer edges and boundary vertices
         fontsize( div(r*s*fontScale, 10))
-        frozen_tau = l -> P(s*sum( @view R_poly[label_to_array(l, n)] ))
 
         for i = 1:n 
             l1, l2 = frozen_label(k, n, i), frozen_label(k, n, mod1(i+1, n))
-            p1, p2 = frozen_tau(l1), frozen_tau(l2)
+            p1, p2 = tau_direct(l1), tau_direct(l2)
             r2 = norm(p1 + p2)
 
             adj = l1 & l2
             if haskey(W, adj)
                 w = W[adj]
                 len_w = length(w)
-                p3 = sum(tau.(w))/len_w
+                p3 = sum(tau, w)/len_w
                 line(r*s*(p1 + p2)/r2, p3, :stroke)
             else
                 adj = l1 | l2
                 b = B[adj]
                 len_b = length(b)
-                p3 = sum(tau.(b))/len_b
+                p3 = sum(tau, b)/len_b
                 line(r*s*(p1 + p2)/r2, p3, :stroke)
             end
             
@@ -174,7 +212,7 @@ function drawPLG_straight(C::WSCollection{T}, title::Union{Symbol, String} = :sv
 
         function arith_mean(x)
             len_x = length(x)
-            return sum(tau.(x))/len_x
+            return sum(tau, x)/len_x
         end
 
         # highlight mutable faces
@@ -216,14 +254,14 @@ function drawPLG_straight(C::WSCollection{T}, title::Union{Symbol, String} = :sv
         sethue("black")
         for w in values(W)
             len_w = length(w)
-            p1 = sum(tau.(w))/len_w # Point in face. 
+            p1 = sum(tau, w)/len_w # Point in face. 
             
             for i = 1:len_w 
                 opp = C[w[i]] | C[w[mod1(i+1,len_w)]]
                 if haskey(B, opp)
                     b = B[opp]
                     len_b = length(b)
-                    p2 = sum(tau.(b))/len_b
+                    p2 = sum(tau, b)/len_b
                     line(p1, p2,  :stroke)
                 end
             end
@@ -235,8 +273,7 @@ function drawPLG_straight(C::WSCollection{T}, title::Union{Symbol, String} = :sv
         end
 
         for b in values(B)
-            len_b = length(b)
-            p1 = sum(tau.(b))/len_b # Point in face. 
+            p1 = sum(tau, b)/length(b) # Point in face. 
 
             circle(p1, s/8, :fill) # draw black vertex
             circle(p1, s/8, :stroke)
@@ -244,7 +281,9 @@ function drawPLG_straight(C::WSCollection{T}, title::Union{Symbol, String} = :sv
 
         # draw face labels
         if drawLabels
-            fontsize( div(s*fontScale ,6))
+            fontsize( div(s*fontScale, 6))
+            dual_vertices = Vector{LPoint}()
+
             for i = 1:n
         
                 if labelDirection == "left"
@@ -252,24 +291,16 @@ function drawPLG_straight(C::WSCollection{T}, title::Union{Symbol, String} = :sv
                 elseif labelDirection == "right"
                     label = label_to_string( complement(C[i], n), n)
                 end
-
-                N_all = all_neighbors(C.quiver, i)
-                dual_vertices = Set{LPoint}()
-
-                for j in N_all
-                    K = C[i] & C[j]
-                    L = C[i] | C[j]
-                    p_w = sum(tau.(W[K]))/length(W[K])
-                    p_b = sum(tau.(B[L]))/length(B[L])
-                    push!(dual_vertices, p_w)
-                    push!(dual_vertices, p_b)
-                end
+                
+                add_dual_vertices!(dual_vertices, i, inneighbors(C.quiver, i), C, tau)
+                add_dual_vertices!(dual_vertices, i, outneighbors(C.quiver, i), C, tau)
 
                 len = length(dual_vertices)
                 push!(dual_vertices, len*tau(i))
 
                 c = sum(dual_vertices)/(2*len)
                 text(label, c, halign=:center, valign=:middle)
+                empty!(dual_vertices)
             end
 
             for i = n+1:length(C)
@@ -279,21 +310,12 @@ function drawPLG_straight(C::WSCollection{T}, title::Union{Symbol, String} = :sv
                 elseif labelDirection == "right"
                     label = label_to_string( complement(C[i], n), n)
                 end
-
-                N_out = outneighbors(C.quiver, i)
                 
-                dual_vertices = Vector{LPoint}()
-                for j in N_out
-                    K = C[i] & C[j]
-                    L = C[i] | C[j]
-                    p_w = sum(tau.(W[K]))/length(W[K])
-                    p_b = sum(tau.(B[L]))/length(B[L])
-                    push!(dual_vertices, p_w)
-                    push!(dual_vertices, p_b)
-                end
+                add_dual_vertices!(dual_vertices, i, outneighbors(C.quiver, i), C, tau)
 
                 c = sum(dual_vertices)/length(dual_vertices)
                 text(label, c, halign=:center, valign=:middle)
+                empty!(dual_vertices)
             end
         end
 
@@ -301,13 +323,24 @@ function drawPLG_straight(C::WSCollection{T}, title::Union{Symbol, String} = :sv
 end
 
 
-function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = false, 
-    labelDirection = "left") where T <: Integer
+function drawPLG_smooth(C::WSCollection, 
+    title::Union{Symbol, String} = :svg, 
+    width::Int = 500, 
+    height::Int = 500; 
+    topLabel::AbstractFloat = -1.0, 
+    fontScale = 1.0,
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", 
+    drawLabels::Bool = false, 
+    labelDirection = "left")
 
     cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
-    n, k, W, B, r, s, R_poly, tau = embedding_data(C, width, height, topLabel)
+    n, k = C.n, C.k
+    W, B = C.whiteCliques, C.blackCliques
+    r, s, R_poly = embedding_data(C, width, height, topLabel)
+    tau = i -> label_emb(i, R_poly, C, s)
+    tau_direct = l -> label_emb(l, R_poly, n, s)
+    N = length(C)
     
     Drawing(width, height, title)
         origin()
@@ -316,11 +349,10 @@ function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg,
 
         # outer edges and boundary vertices
         fontsize( div(r*s*fontScale, 10))
-        frozen_tau = l -> P(s*sum( @view R_poly[label_to_array(l, n)] ))
 
         for i = 1:n 
             l1, l2 = frozen_label(k, n, i), frozen_label(k, n, mod1(i+1, n))
-            p1, p2 = frozen_tau(l1), frozen_tau(l2)
+            p1, p2 = tau_direct(l1), tau_direct(l2)
             p3 = midpoint(p1, p2)
             r2 = norm(p1 + p2)
 
@@ -328,7 +360,7 @@ function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg,
             if haskey(W, adj)
                 w = W[adj]
                 len_w = length(w)
-                p4 = sum(tau.(w))/len_w
+                p4 = sum(tau, w)/len_w
 
                 move(r*s*(p1 + p2)/r2)
                 curve(r*s*(p1 + p2)/r2, p3, p4)
@@ -337,7 +369,7 @@ function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg,
                 adj = l1 | l2
                 b = B[adj]
                 len_b = length(b)
-                p4 = sum(tau.(b))/len_b
+                p4 = sum(tau, b)/len_b
 
                 move(r*s*(p1 + p2)/r2)
                 curve(r*s*(p1 + p2)/r2, p3, p4)
@@ -353,7 +385,7 @@ function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg,
         sethue("black")
         for w in values(W)
             len_w = length(w)
-            p1 = sum(tau.(w))/len_w # Point in face. 
+            p1 = sum(tau, w)/len_w # Point in face. 
             
             for i = 1:len_w 
                 opp = C[w[i]] | C[w[mod1(i+1,len_w)]]
@@ -361,7 +393,7 @@ function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg,
                     p2 = midpoint(tau(w[i]), tau(w[mod1(i+1,len_w)]) )
                     b = B[opp]
                     len_b = length(b)
-                    p3 = sum(tau.(b))/len_b
+                    p3 = sum(tau, b)/len_b
 
                     move(p1)
                     curve(p1, p2, p3) 
@@ -376,9 +408,7 @@ function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg,
         end
 
         for b in values(B)
-            b = tau.(b)
-            len_b = length(b)
-            p1 = sum(b)/len_b # Point in face. 
+            p1 = sum(tau, b)/length(b) # Point in face. 
 
             circle(p1, s/8, :fill) # draw black vertex
             circle(p1, s/8, :stroke)
@@ -387,6 +417,8 @@ function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg,
         # draw face labels. 
         if drawLabels
             fontsize( div(s*fontScale ,6))
+            dual_vertices = Set{LPoint}()
+
             for i = 1:n
                 
                 if labelDirection == "left"
@@ -394,49 +426,31 @@ function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg,
                 elseif labelDirection == "right"
                     label = label_to_string( complement(C[i], n), n)
                 end
-
-                N_all = all_neighbors(C.quiver, i)
-                dual_vertices = Set{LPoint}()
-
-                for j in N_all
-                    K = C[i] & C[j]
-                    L = C[i] | C[j]
-                    p_w = sum(tau.(W[K]))/length(W[K])
-                    p_b = sum(tau.(B[L]))/length(B[L])
-                    push!(dual_vertices, p_w)
-                    push!(dual_vertices, p_b)
-                end
+                
+                add_dual_vertices!(dual_vertices, i, inneighbors(C.quiver, i), C, tau)
+                add_dual_vertices!(dual_vertices, i, outneighbors(C.quiver, i), C, tau)
 
                 len = length(dual_vertices)
                 push!(dual_vertices, len*tau(i))
 
                 c = sum(dual_vertices)/(2*len)
                 text(label, c, halign=:center, valign=:middle)
+                empty!(dual_vertices)
             end
 
             for i = n+1:length(C)
-                label = ""
                 
                 if labelDirection == "left"
                     label = label_to_string(C[i], n)
                 elseif labelDirection == "right"
                     label = label_to_string( complement(C[i], n), n)
                 end
-
-                N_out = outneighbors(C.quiver, i)
                 
-                dual_vertices = Vector{LPoint}()
-                for j in N_out
-                    K = C[i] & C[j]
-                    L = C[i] | C[j]
-                    p_w = sum(tau.(W[K]))/length(W[K])
-                    p_b = sum(tau.(B[L]))/length(B[L])
-                    push!(dual_vertices, p_w)
-                    push!(dual_vertices, p_b)
-                end
+                add_dual_vertices!(dual_vertices, i, outneighbors(C.quiver, i), C, tau)
 
                 c = sum(dual_vertices)/length(dual_vertices)
                 text(label, c, halign=:center, valign=:middle)
+                empty!(dual_vertices)
             end
         end
         
@@ -444,9 +458,18 @@ function drawPLG_smooth(C::WSCollection{T}, title::Union{Symbol, String} = :svg,
 end
 
 
-function drawPLG(C::WSCollection, title::Union{Symbol, String} = :svg, width::Int = 500, height::Int = 500; topLabel::AbstractFloat = -1.0, fontScale = 1.0,
-    drawmode::String = "straight", backgroundColor::Union{String, ColorTypes.Colorant} = "", drawLabels::Bool = true, 
-    highlightMutables::Bool = false, highlight::Int = 0, labelDirection = "left")
+function drawPLG(C::WSCollection, 
+    title::Union{Symbol, String} = :svg, 
+    width::Int = 500, 
+    height::Int = 500; 
+    topLabel::AbstractFloat = -1.0, 
+    fontScale = 1.0,
+    drawmode::String = "straight", 
+    backgroundColor::Union{String, ColorTypes.Colorant} = "", 
+    drawLabels::Bool = true, 
+    highlightMutables::Bool = false, 
+    highlight::Int = 0, 
+    labelDirection = "left")
 
     if drawmode == "straight"
 
