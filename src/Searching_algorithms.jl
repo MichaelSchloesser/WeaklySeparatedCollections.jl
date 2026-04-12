@@ -498,3 +498,13 @@ function find_label(root::WSCollection{T}, label::T; heuristic::String = "number
 
     return seq[1:count]
 end
+
+function find_label(root::WSCollection, label_vec::Vector{T}; heuristic::String = "number_wrong_labels", 
+                        limitSearchSpace::Bool = true) where T <: Integer
+    return find_label(root, label(label_vec); heuristic = heuristic, limitSearchSpace = limitSearchSpace) 
+end
+
+function find_label(root::WSCollection, args...; heuristic::String = "number_wrong_labels", 
+                        limitSearchSpace::Bool = true)
+    return find_label(root, label(args...); heuristic = heuristic, limitSearchSpace = limitSearchSpace) 
+end

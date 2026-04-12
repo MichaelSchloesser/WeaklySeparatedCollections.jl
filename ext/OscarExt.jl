@@ -3,9 +3,8 @@ module OscarExt
 using WeaklySeparatedCollections, Oscar
 import Graphs: SimpleDiGraph, inneighbors, outneighbors, has_edge, add_edge!, rem_edge!
 import WeaklySeparatedCollections as WSC
-
-findindex = WSC.findindex
-super_potential_label = WSC.super_potential_label
+import WSC.findindex as findindex
+import WSC.super_potential_label as super_potential_label
 
 ################## basic seed functionality ##################
 
@@ -75,8 +74,8 @@ function WSC.is_frozen(seed::Seed, i::T) where T <: Integer
     return i <= seed.n_frozen
 end
 
-function myProd(x, array)
-    res = one(x[1])
+function myProd(x::T, array) where T
+    res = one(T)
 
     for a in array
         res*= x[a]
@@ -85,7 +84,7 @@ function myProd(x, array)
     return res
 end
 
-# TODO this only really supports mutations coming from a WSC. need non multigraph for general case
+# TODO this only really supports mutations coming from a WSC. need non multigraph seed for general case
 @doc raw"""
     mutate!(seed::Seed, i::Int)
 
@@ -100,8 +99,10 @@ function WSC.mutate!(seed::Seed, i::T) where T <: Integer
     Q = seed.quiver
     x = seed.variables
 
-    N_in = copy(inneighbors(Q, i))
-    N_out = copy(outneighbors(Q, i))
+    # TODO copy from combinatorics here
+
+    N_in = inneighbors(Q, i) 
+    N_out = outneighbors(Q, i)
 
     new_x_i = (myProd(x, N_in) + myProd(x, N_out)) / x[i]
     seed.variables[i] = new_x_i
@@ -142,11 +143,12 @@ end
 
 ################## laurent expansions ##################
 
-function WSC.laurent_expansion(target_label::Vector{S}, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
+function WSC.laurent_expansion(target_label::S, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
     s = deepcopy(seed)
 
-    if target_label in C
-        return s[ findindex(C.labels, target_label) ]
+    index = findindex(C.labels, target_label)
+    if index > 0
+        return s[index]
     else
         seq = find_label(C, target_label)
         
@@ -158,7 +160,7 @@ function WSC.laurent_expansion(target_label::Vector{S}, C::WSCollection{S}, seed
     end
 end
 
-function WSC.laurent_expansion(target_labels::Vector{Vector{S}}, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
+function WSC.laurent_expansion(target_labels::Vector{S}, C::WSCollection{S}, seed::Seed = Seed(C)) where S <: Integer
     f = L -> laurent_expansion(L, C, seed)
     return f.(target_labels)
 end
@@ -202,16 +204,16 @@ function WSC.grid_seed(collection::WSCollection, height::Int = collection.n - co
     grid_seed(collection.n, height, width,  SimpleDiGraph(collection.quiver))
 end
 
-
-function WSC.extended_checkboard_seed(k, n)
-    check = checkboard_collection(k, n)
+# TODO check
+function WSC.extended_check_seed(k, n)
+    check = check_collection(k, n)
     check_seed = grid_seed(check)
     T = typeof(check_seed[1])
     X = Array{T}(undef, n-k+1, k+1)
 
     for i in 0:n-k
         for j in 0:k
-            label = checkboard_label(k, n, i, j)
+            label = check_label(k, n, i, j)
             pos = findindex(check.labels, label)
 
             X[i+1, j+1] = check_seed[pos]
@@ -221,16 +223,16 @@ function WSC.extended_checkboard_seed(k, n)
     return check_seed, X
 end
 
-
-function WSC.extended_rectangle_seed(k, n)
-    rec = rectangle_collection(k, n)
+# TODO check
+function WSC.extended_rec_seed(k, n)
+    rec = rec_collection(k, n)
     rec_seed = grid_seed(rec)
     T = typeof(rec_seed[1])
     X = Array{T}(undef, n-k+1, k+1)
 
     for i in 0:n-k
         for j in 0:k
-            label = rectangle_label(k, n, i, j)
+            label = rec_label(k, n, i, j)
             pos = findindex(rec.labels, label)
 
             X[i+1, j+1] = rec_seed[pos]
@@ -251,6 +253,7 @@ function WSC.get_superpotential_terms(collection::WSCollection{S}, seed::Seed = 
 
     terms = Vector{T}()
 
+    # TODO incorporate shifts
     for i in 1:n
         super = super_potential_label(k, n, i, S)
         denom_index = findindex(collection.labels, frozen_label(k, n, i, S))
@@ -274,9 +277,9 @@ function WSC.get_superpotential_terms(collection::WSCollection{S}, seed::Seed = 
     return terms
 end
 
-
-function WSC.checkboard_potential_terms(k::Int, n::Int)
-    _, X = extended_checkboard_seed(k, n)
+# TODO check
+function WSC.check_potential_terms(k::Int, n::Int)
+    _, X = extended_check_seed(k, n)
     x = (i, j) -> X[i+1, j+1]
 
     terms = [x(1, 1) for i in 1:n]
@@ -336,7 +339,7 @@ function WSC.newton_okounkov_inequalities(collection::WSCollection, r::Int = 1; 
 end
 
 # return the inequalities of the newton okounkov body associated to the checkboard graph
-function WSC.checkboard_inequalities(k::Int, n::Int, r::Int = 1; q_term_index::Int = k)
+function WSC.check_inequalities(k::Int, n::Int, r::Int = 1; q_term_index::Int = k)
     T = checkboard_potential_terms(k, n)
     empty_index = n # TODO changed empty_index = n-k+1  to  empty_index = n
     A = Vector{Vector{Int}}()
@@ -360,8 +363,8 @@ function WSC.checkboard_inequalities(k::Int, n::Int, r::Int = 1; q_term_index::I
     return Matrix(reduce(hcat, A)'), b
 end
 
-function WSC.checkboard_body(k::Int, n::Int; q_term_index::Int = k)
-    return polyhedron(checkboard_inequalities(k, n; q_term_index = q_term_index))
+function WSC.check_body(k::Int, n::Int; q_term_index::Int = k)
+    return polyhedron(check_inequalities(k, n; q_term_index = q_term_index))
 end
 
 function WSC.newton_okounkov_body(collection::WSCollection; q_term_index::Int = collection.k)
@@ -379,15 +382,23 @@ function WSC.cyclic_perm_group(n::Int) # C_n as specific permutation group
     return permutation_group(n, [cperm(collect(1:n))] )
 end
 
+# TODO this could be more efficient if we first decompose p in D_n into standard gens
 @doc raw"""
     ^(collection::WSCollection, p::PermGroupElem)
 
 Let `p` act on `collection` via the natural right action.
 """
-function Base.:^(collection::WSCollection{T}, p::PermGroupElem) where T <: Integer# works for D_n and C_n defined via above functions
-    f = let p = Vector{T}(p)
-        x -> p[x]
-    end 
+function Base.:^(collection::WSCollection{T}, p::PermGroupElem) where T # works for D_n and C_n embedded into the symmetric group
+    
+    function f(x::T)
+        res = zero(T)
+        for i in 0:collection.n-1
+            (x >>> i) & one(T) == one(T) && (res += one(T) << p(i+1))
+        end
+
+        return res
+    end
+
     return WSC.apply_to_collection!(f, deepcopy(collection))
 end
 
@@ -396,7 +407,7 @@ end
 
 Return the G-set of the natural action of `D` on the specified WSC's in `seeds`.
 """
-function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection{T}}; closed::Bool = false) where T <: Integer # standard action for gset on WSCollections
+function Oscar.gset(D::PermGroup, seeds::Vector{WSCollection}; closed::Bool = false) # standard action for gset on WSCollections
     return gset(D, ^ , seeds; closed = closed)
 end
 
@@ -417,8 +428,7 @@ Return the orbit of `collection` under the natural action of the dihedral group.
 """
 function Oscar.orbit(collection::WSCollection)
     D = WSC.dihedral_perm_group(collection.n)
-    M = gset(D, ^, [collection])
-    return orbit(M, collection)
+    return orbit(D, collection)
 end
 
 @doc raw"""

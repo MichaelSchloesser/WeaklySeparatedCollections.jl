@@ -4,14 +4,14 @@ module Plotting
 using WeaklySeparatedCollections, Luxor
 import WeaklySeparatedCollections as WSC
 using Colors
-import Graphs: all_neighbors, outneighbors
+import Graphs: inneighbors, outneighbors
 using StaticArrays
 
 const LPoint = Luxor.Point
 
 
 # adjusted from https://github.com/JuliaGraphics/Luxor.jl/blob/master/src/polygons.jl 
-function Luxor.poly(pointlist::NTuple{N,Point} where {N};
+function myPoly(pointlist::NTuple{N,Point} where {N};
     action = :none,
     close = false,
     reversepath = false)
@@ -32,12 +32,12 @@ function Luxor.poly(pointlist::NTuple{N,Point} where {N};
     return pointlist
 end
 
-Luxor.poly(pointlist::NTuple{N,Point} where {N}, a::Symbol;
+myPoly(pointlist::NTuple{N,Point} where {N}, a::Symbol;
     action = a,
     close = false,
-    reversepath = false) = poly(pointlist, action = action, close = close, reversepath = reversepath)
+    reversepath = false) = myPoly(pointlist, action = action, close = close, reversepath = reversepath)
 
-function Luxor.poly(input_array,
+function myPoly(input_array,
     tau::Function; # must output Points
     action = :none,
     close = false,
@@ -59,12 +59,12 @@ function Luxor.poly(input_array,
     return input_array
 end
 
-Luxor.poly(input_array,
+myPoly(input_array,
     tau::Function, 
     a::Symbol;
     action = a,
     close = false,
-    reversepath = false) = poly(input_array, tau, action = action, close = close, reversepath = reversepath)
+    reversepath = false) = myPoly(input_array, tau, action = action, close = close, reversepath = reversepath)
 
 
 function norm(p::LPoint)
@@ -75,7 +75,7 @@ end
 # TODO add support for non maximal wscs
 
 # sadly we cant really optimize these functions much. The drawing itself takes orders of magnitude longer than anyting else.
-function embedding_data(C::WSCollection, width::Int, height::Int, topLabel::T = -1.0) where T <: AbstractFloat
+function WSC.embedding_data(C::WSCollection, width::Int, height::Int, top_label::T = -1.0) where T <: AbstractFloat
     k, n = C.k, C.n
     
     R_poly = Vector{LPoint}(undef, n)
@@ -89,8 +89,8 @@ function embedding_data(C::WSCollection, width::Int, height::Int, topLabel::T = 
     # scale_factor = 2.4
     s = min(width, height)/(2.4*r)
 
-    if topLabel > 0
-        @fastmath @inbounds new_angle = acos( -v[2]/r ) - (k - topLabel + 0.5)*2.0*pi/n 
+    if top_label > 0
+        @fastmath @inbounds new_angle = acos( -v[2]/r ) - (k - top_label + 0.5)*2.0*pi/n 
 
         for i in 0:n-1
             @fastmath @inbounds R_poly[i+1] = LPoint( sin(i*2*pi/n - new_angle), -cos(i*2*pi/n - new_angle))
@@ -113,37 +113,38 @@ function label_emb(i, R_poly, C::WSCollection, s)
     @inbounds label_emb(C[i], R_poly, C.n, s) 
 end
 
-function drawTiling(C::WSCollection, 
+function WSC.drawTiling(C::WSCollection, 
     title::Union{Symbol, String} = :svg, 
-    width::Int = 500, height::Int = 500; 
-    topLabel::AbstractFloat = -1.0, 
-    fontScale = 1.0,
-    backgroundColor::Union{String, ColorTypes.Colorant} = "",
-    drawLabels::Bool = true, 
-    highlightMutables::Bool = false, 
-    labelDirection = "left") 
+    width::Int = 500, 
+    height::Int = 500;
+    top_label::AbstractFloat = -1.0, 
+    font_scale = 1.0,
+    background_color::Union{String, ColorTypes.Colorant} = "",
+    draw_labels::Bool = true, 
+    highlight_mutables::Bool = false, 
+    label_direction = "left") 
 
     cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
     n, k = C.n, C.k
     W, B = C.whiteCliques, C.blackCliques
-    r, s, R_poly = embedding_data(C, width, height, topLabel)
+    r, s, R_poly = embedding_data(C, width, height, top_label)
     tau = i -> label_emb(i, R_poly, C, s)
     N = length(C)
 
-    Drawing(width, height, title)
+    drawing = Drawing(width, height, title)
         origin()
 
-        backgroundColor != "" && background(backgroundColor)
+        background_color != "" && background(background_color)
         
         # draw faces
         sethue("white")
         for w in values(W)
-            poly(w, tau, :fill)
+            myPoly(w, tau, :fill)
         end
         sethue("black")
         for b in values(B)
-            poly(b, tau, :fill)
+            myPoly(b, tau, :fill)
         end
 
         for i = 1:n
@@ -151,20 +152,20 @@ function drawTiling(C::WSCollection,
         end
         
         # draw vertices + labels
-        if drawLabels
-            fontsize( div(s*fontScale, 6))
+        if draw_labels
+            fontsize( div(s*font_scale, 6))
             for i in 1:N
                 pos = tau(i)
 
-                if labelDirection == "left"
+                if label_direction == "left"
                     label = label_to_string(C[i], n)
-                elseif labelDirection == "right"
+                elseif label_direction == "right"
                     label = label_to_string( complement(C[i], n), n)
                 end
 
                 len = length(label)
 
-                if is_mutable(C, i) && highlightMutables
+                if is_mutable(C, i) && highlight_mutables
                     sethue("orange")
                 else
                     sethue("white")
@@ -179,7 +180,7 @@ function drawTiling(C::WSCollection,
             for i = 1:length(C)
                 pos = tau(i)
 
-                if is_mutable(C, i) && highlightMutables
+                if is_mutable(C, i) && highlight_mutables
                     sethue("orange")
                     circle(pos, s/8, :fill)
                     sethue("black")
@@ -193,7 +194,7 @@ function drawTiling(C::WSCollection,
             end
         end
 
-    finish()
+    return drawing
 end
 
 function add_dual_vertices!(dual_vertices, i, list, C, tau)
@@ -207,34 +208,34 @@ function add_dual_vertices!(dual_vertices, i, list, C, tau)
     end
 end
 
-function drawPLG_straight(C::WSCollection, 
+function WSC.drawPLG_straight(C::WSCollection, 
     title::Union{Symbol, String} = :svg, 
     width::Int = 500, 
     height::Int = 500; 
-    topLabel::AbstractFloat = -1.0, 
-    fontScale = 1.0,
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", 
-    drawLabels::Bool = false, 
-    highlightMutables::Bool = false, 
+    top_label::AbstractFloat = -1.0, 
+    font_scale = 1.0,
+    background_color::Union{String, ColorTypes.Colorant} = "", 
+    draw_labels::Bool = false, 
+    highlight_mutables::Bool = false, 
     highlight::Int = 0, 
-    labelDirection = "left")
+    label_direction = "left")
 
     cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
     n, k = C.n, C.k
     W, B = C.whiteCliques, C.blackCliques
-    r, s, R_poly = embedding_data(C, width, height, topLabel)
+    r, s, R_poly = embedding_data(C, width, height, top_label)
     tau = i -> label_emb(i, R_poly, C, s)
     tau_direct = l -> label_emb(l, R_poly, n, s)
     N = length(C)
     
-    Drawing(width, height, title)
+    drawing = Drawing(width, height, title)
         origin()
         
-        backgroundColor != "" && background(backgroundColor)
+        background_color != "" && background(background_color)
         
         # outer edges and boundary vertices
-        fontsize( div(r*s*fontScale, 10))
+        fontsize( div(r*s*font_scale, 10))
 
         for i = 1:n 
             l1, l2 = frozen_label(k, n, i), frozen_label(k, n, mod1(i+1, n))
@@ -255,7 +256,7 @@ function drawPLG_straight(C::WSCollection,
                 line(r*s*(p1 + p2)/r2, p3, :stroke)
             end
             
-            text( "$(mod1(i+k+1, n))", (1.1+fontScale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
+            text( "$(mod1(i+k+1, n))", (1.1+font_scale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle )
         end
 
         circle(LPoint(0, 0), s*r, :stroke)
@@ -266,7 +267,7 @@ function drawPLG_straight(C::WSCollection,
         end
 
         # highlight mutable faces
-        if highlightMutables 
+        if highlight_mutables 
             for i = n+1:length(C)
                 if is_mutable(C, i)
                     
@@ -279,7 +280,7 @@ function drawPLG_straight(C::WSCollection,
                     
                     sethue("orange")
                     setopacity(0.5)
-                    poly((p1, p2, p3, p4), :fill, close = true)
+                    myPoly((p1, p2, p3, p4), :fill, close = true)
                 end
             end
         end
@@ -296,7 +297,7 @@ function drawPLG_straight(C::WSCollection,
             
             sethue("orange")
             setopacity(0.5)
-            poly((p1, p2, p3, p4), :fill, close = true)
+            myPoly((p1, p2, p3, p4), :fill, close = true)
         end
         setopacity(1)
 
@@ -330,15 +331,15 @@ function drawPLG_straight(C::WSCollection,
         end
 
         # draw face labels
-        if drawLabels
-            fontsize( div(s*fontScale, 6))
+        if draw_labels
+            fontsize( div(s*font_scale, 6))
             dual_vertices = Vector{LPoint}()
 
             for i = 1:n
         
-                if labelDirection == "left"
+                if label_direction == "left"
                     label = label_to_string(C[i], n)
-                elseif labelDirection == "right"
+                elseif label_direction == "right"
                     label = label_to_string( complement(C[i], n), n)
                 end
                 
@@ -355,9 +356,9 @@ function drawPLG_straight(C::WSCollection,
 
             for i = n+1:length(C)
                 
-                if labelDirection == "left"
+                if label_direction == "left"
                     label = label_to_string(C[i], n)
-                elseif labelDirection == "right"
+                elseif label_direction == "right"
                     label = label_to_string( complement(C[i], n), n)
                 end
                 
@@ -369,36 +370,36 @@ function drawPLG_straight(C::WSCollection,
             end
         end
 
-    finish()
+    return drawing
 end
 
 
-function drawPLG_smooth(C::WSCollection, 
+function WSC.drawPLG_smooth(C::WSCollection, 
     title::Union{Symbol, String} = :svg, 
     width::Int = 500, 
     height::Int = 500; 
-    topLabel::AbstractFloat = -1.0, 
-    fontScale = 1.0,
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", 
-    drawLabels::Bool = false, 
-    labelDirection = "left")
+    top_label::AbstractFloat = -1.0, 
+    font_scale = 1.0,
+    background_color::Union{String, ColorTypes.Colorant} = "", 
+    draw_labels::Bool = false, 
+    label_direction = "left")
 
     cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
     n, k = C.n, C.k
     W, B = C.whiteCliques, C.blackCliques
-    r, s, R_poly = embedding_data(C, width, height, topLabel)
+    r, s, R_poly = embedding_data(C, width, height, top_label)
     tau = i -> label_emb(i, R_poly, C, s)
     tau_direct = l -> label_emb(l, R_poly, n, s)
     N = length(C)
     
-    Drawing(width, height, title)
+    drawing = Drawing(width, height, title)
         origin()
         
-        backgroundColor != "" && background(backgroundColor)
+        background_color != "" && background(background_color)
 
         # outer edges and boundary vertices
-        fontsize( div(r*s*fontScale, 10))
+        fontsize( div(r*s*font_scale, 10))
 
         for i = 1:n 
             l1, l2 = frozen_label(k, n, i), frozen_label(k, n, mod1(i+1, n))
@@ -426,7 +427,7 @@ function drawPLG_smooth(C::WSCollection,
                 strokepath()
             end
             
-            text( "$(mod1(i+k+1, n))", (1.1+fontScale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
+            text( "$(mod1(i+k+1, n))", (1.1+font_scale/50)*(r*s*(p1 + p2)/r2), halign=:center, valign=:middle)
         end
 
         circle(LPoint(0,0), s*r, :stroke)
@@ -465,15 +466,15 @@ function drawPLG_smooth(C::WSCollection,
         end
 
         # draw face labels. 
-        if drawLabels
-            fontsize( div(s*fontScale ,6))
+        if draw_labels
+            fontsize( div(s*font_scale ,6))
             dual_vertices = Set{LPoint}()
 
             for i = 1:n
                 
-                if labelDirection == "left"
+                if label_direction == "left"
                     label = label_to_string(C[i], n)
-                elseif labelDirection == "right"
+                elseif label_direction == "right"
                     label = label_to_string( complement(C[i], n), n)
                 end
                 
@@ -490,9 +491,9 @@ function drawPLG_smooth(C::WSCollection,
 
             for i = n+1:length(C)
                 
-                if labelDirection == "left"
+                if label_direction == "left"
                     label = label_to_string(C[i], n)
-                elseif labelDirection == "right"
+                elseif label_direction == "right"
                     label = label_to_string( complement(C[i], n), n)
                 end
                 
@@ -504,35 +505,58 @@ function drawPLG_smooth(C::WSCollection,
             end
         end
         
-    finish()
+    return drawing
 end
 
 
-function drawPLG(C::WSCollection, 
+function WSC.draw(C::WSCollection, 
     title::Union{Symbol, String} = :svg, 
     width::Int = 500, 
     height::Int = 500; 
-    topLabel::AbstractFloat = -1.0, 
-    fontScale = 1.0,
-    drawmode::String = "straight", 
-    backgroundColor::Union{String, ColorTypes.Colorant} = "", 
-    drawLabels::Bool = true, 
-    highlightMutables::Bool = false, 
+    top_label::AbstractFloat = -1.0, 
+    font_scale = 1.0,
+    drawmode::Symbol = :straight, 
+    background_color::Union{String, ColorTypes.Colorant} = "", 
+    draw_labels::Bool = true, 
+    highlight_mutables::Bool = false, 
     highlight::Int = 0, 
-    labelDirection = "left")
+    label_direction = "left")
 
-    if drawmode == "straight"
+    if drawmode == :tiling
 
-        drawPLG_straight(C, title, width, height; topLabel, fontScale, backgroundColor, drawLabels,
-        highlightMutables, highlight, labelDirection)
+        drawing = drawTiling(C, title, width, height; 
+        top_label, 
+        font_scale,
+        background_color,
+        draw_labels, 
+        highlight_mutables, 
+        label_direction) 
 
-    elseif drawmode == "smooth"
+    elseif drawmode == :straight
 
-        drawPLG_smooth(C, title, width, height; topLabel, fontScale, backgroundColor, drawLabels, labelDirection)
+        drawing = drawPLG_straight(C, title, width, height; 
+        top_label, 
+        font_scale,
+        background_color, 
+        draw_labels,
+        highlight_mutables, 
+        highlight, 
+        label_direction)
+
+    elseif drawmode == :smooth
+
+        drawing = drawPLG_smooth(C, title, width, height; 
+        top_label, 
+        font_scale, 
+        background_color, 
+        draw_labels, 
+        label_direction)
     else 
         error("invalid drawmode: $drawmode")
     end
 
+    finish()
+    return drawing
 end
 
 end

@@ -370,32 +370,32 @@ function compute_quiver(n::Int, labels::Vector{T}, W) where T <: Integer
     return Q
 end
 
-# TODO update docstring
-@doc raw"""
-    WSCollection
+# TODO update docstring. also does not work because of @lazy...
+# @doc raw"""
+#     @lazy WSCollection
+#
+# An abstract 2-dimensional cell complex living inside the matriod of `k-sets` in `{1, ..., n}`. 
+# Its vertices are labelled by elements of `labels` while `quiver` encodes adjacencies 
+# between the vertices. 
+# The 2-cells are colored black or white and contained in `blackCliques` and `whiteCliques`.
+#
+# # Attributes
+# - `k::Int`
+# - `n::Int`
+# - `labels::Vector{Vector{T}}`
+# - `quiver::SimpleDiGraph{T}`
+# - `whiteCliques::Dict{Vector{T}, Vector{T}}`
+# - `blackCliques::Dict{Vector{T}, Vector{T}}`
+#
+# # Constructors
+#     WSCollection(k::Int, n::Int, labels::Vector{Vector{T}}, 
+#                 computeCliques::Bool = true, frozenFirst::Bool = true)
 
-An abstract 2-dimensional cell complex living inside the matriod of `k-sets` in `{1, ..., n}`. 
-Its vertices are labelled by elements of `labels` while `quiver` encodes adjacencies 
-between the vertices. 
-The 2-cells are colored black or white and contained in `blackCliques` and `whiteCliques`.
+#     WSCollection(k::Int, n::Int, labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}, 
+#                 computeCliques::Bool = true, frozenFirst::Bool = true)
 
-# Attributes
-- `k::Int`
-- `n::Int`
-- `labels::Vector{Vector{T}}`
-- `quiver::SimpleDiGraph{T}`
-- `whiteCliques::Dict{Vector{T}, Vector{T}}`
-- `blackCliques::Dict{Vector{T}, Vector{T}}`
-
-# Constructors
-    WSCollection(k::Int, n::Int, labels::Vector{Vector{T}}, 
-                computeCliques::Bool = true, frozenFirst::Bool = true)
-
-    WSCollection(k::Int, n::Int, labels::Vector{Vector{T}}, quiver::SimpleDiGraph{T}, 
-                computeCliques::Bool = true, frozenFirst::Bool = true)
-
-    WSCollection(C::WSCollection; computeCliques::Bool = true)
-"""
+#     WSCollection(C::WSCollection; computeCliques::Bool = true)
+# """
 @lazy mutable struct WSCollection{T <: Integer}
     k::Int
     n::Int
@@ -1167,7 +1167,7 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{T},
 
     for v in labels2
         if !(v in labels1)
-            is_weakly_separated(push!(labels1, copy(v))) || pop!(labels1)
+            is_weakly_separated(push!(labels1, v)) || pop!(labels1)
         end
 
         length(labels1) == max && return labels1
@@ -1175,7 +1175,7 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{T},
 
     v = frozen[n]
 
-    while v < frozen[n-k-1]
+    while v < frozen[n-k]
 
         if !(v in labels1)
             is_weakly_separated(push!(labels1, v)) || pop!(labels1)
@@ -1185,7 +1185,8 @@ function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{T},
 
         v = next_combination(v)
     end
-
+    
+    return labels1
 end
 
 

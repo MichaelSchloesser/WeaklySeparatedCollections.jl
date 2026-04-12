@@ -3,13 +3,13 @@ module WeaklySeparatedCollections
 
 export  WSCollection,
 
-        label_to_string, label_to_array
+        label_to_string, label_to_array, label,
         frozen_label, check_label, rec_label, dcheck_label, drec_label,
         frozen_labels, rec_labels, check_labels, drec_labels, dcheck_labels,
         check_collection, rec_collection, dcheck_collection, drec_collection,
 
         # this may be unnecessary
-        getindex, lastindex, length, in, intersect, setdiff, union, isequal, hash
+        getindex, lastindex, length, in, intersect, setdiff, union, isequal, hash,
 
         is_frozen, is_mutable, get_mutables, mutate!, mutate,
         rotate!, mirror!, complements!, swap_colors!, rotate, mirror, complements, swap_colors, 
@@ -20,7 +20,7 @@ export  WSCollection,
 export  BFS, DFS, wscs, generalized_associahedron, number_wrong_labels, min_label_dist, min_label_dist_experimental, 
         Astar, find_label
 
-export  drawTiling, drawPLG
+export  drawTiling, drawPLG_straight, drawPLG_smooth, draw, embedding_data
 
 export  Seed, laurent_expansion, grid_seed, extended_rectangle_seed, extended_checkboard_seed,
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
@@ -34,6 +34,9 @@ using DataStructures
 include("Combinatorics.jl")
 include("Searching_algorithms.jl")
 
+function embedding_data end
+
+# TODO update
 @doc raw"""
     drawTiling(collection::WSCollection, title::String, width::Int = 500, height::Int = 500)
 
@@ -57,8 +60,13 @@ labels are drawn.
 """
 function drawTiling end
 
+function drawPLG_straight end
+
+function drawPLG_smooth end
+
+# TODO update
 @doc raw"""
-    drawPLG(collection::WSCollection, title::String, width::Int = 500, height::Int = 500)
+    draw(collection::WSCollection, title::Union{Symbol, String} = :svg, width::Int = 500, height::Int = 500)
 
 Draw the plabic graph of the provided weakly separated `collection` and save it as an 
 image file of specified size.
@@ -80,7 +88,7 @@ Inside a Jupyter sheet drawing without saving an image is possible by omitting t
 `labelDirection` controls whether the "left" (i.e. the usual ones) or "right" (complementss) labels 
 are drawn.
 """
-function drawPLG end
+function draw end
 
 @doc raw"""
     visualizer!(collection::WSCollection = rectangle_collection(4, 9))
