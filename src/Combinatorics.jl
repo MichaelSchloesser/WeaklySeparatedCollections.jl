@@ -848,14 +848,14 @@ function _update_cliques!(x, y, i, C::WSCollection)
 end
 
 @doc raw"""
-    mutate!(C::WSCollection, i::Integer, updateCliques::Bool = false)
+    mutate!(C::WSCollection, i::Integer; updateCliques::Bool = false)
 
 Mutate the `C` in direction `i` if `i` is a mutable vertex of `C`.
 
 If `updateCliques` is set to false, the 2-cells are disgarded.
 """
 # TODO this does not check for mutability. make safe version
-function mutate!(C::WSCollection{T}, i::Integer, updateCliques::Bool = false) where T <: Integer
+function mutate!(C::WSCollection{T}, i::Integer; updateCliques::Bool = false) where T <: Integer
     # is_mutable(C, i) || error("vertex $i with label $(label_to_string(C[i], C.n)) is not mutable!")
         
     Q = C.quiver
@@ -899,11 +899,11 @@ function mutate!(C::WSCollection{T}, i::Integer, updateCliques::Bool = false) wh
 end
 
 @doc raw"""
-    mutate(C::WSCollection, i::Int, updateCliques::Bool = true)
+    mutate(C::WSCollection, i::Int; updateCliques::Bool = true)
 
 Version of `mutate!` that does not modify its arguments.
 """
-function mutate(C::WSCollection, i::Integer, updateCliques::Bool = false)
+function mutate(C::WSCollection, i::Integer; updateCliques::Bool = false)
     return mutate!( deepcopy(C), i, updateCliques)
 end
 
@@ -945,8 +945,8 @@ end
 
 Mutate the `C` by addressing a vertex with its label, without modifying arguments.
 """
-function mutate(C::WSCollection, label::Vector{Int}, mutateCliques::Bool = true)
-    return mutate!( deepcopy(C), label, mutateCliques)
+function mutate(C::WSCollection, label::Vector{Int}; updateCliques::Bool = true)
+    return mutate!( deepcopy(C), label, updateCliques)
 end
 
 # TODO add docstring
