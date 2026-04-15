@@ -795,26 +795,26 @@ end
 function _merge_cliques!(X::Dict{T, Vector{T}}, Y::Dict{T, Vector{T}}, i, ind_adj, ind_opp) where T <: Integer
     @inbounds A = X.vals[ind_adj]
     l = findindex(A, i)
-    @inbounds succ = A[mod1(l+1 ,3)]
+    @inbounds succ = A[mod1(l+1 ,3)] 
 
     @inbounds O = Y.vals[ind_opp]
     l = findindex(O, succ)
 
-    insert!(O, l, i)
+    insert!(O, l+1, i) # TODO changed: l to l+1. may be wrong
     Base._delete!(X, ind_adj) # TODO this is depreceated and might be unnecessary in the newest julia version. 
 end
 
 function _split_clique!(X::Dict{T, Vector{T}}, Y::Dict{T, Vector{T}}, i, ind_adj, opp::T) where T <: Integer
     @inbounds A = X.vals[ind_adj]
 
-    if length(A) == 3 # adjacent clique is trangle at the boundary. Just flip colors
+    if length(A) == 3 # adjacent clique is triangle at the boundary. Just flip colors
         Y[opp] = A
         Base._delete!(X, ind_adj) # TODO this is depreceated and might be unnecessary in the newest julia version. 
     else # split off a triangle from the adjacent clique
 
         l = findindex(A, i)
         m = length(A)
-        @inbounds Y[opp] = [ A[mod1(l-1, m)], i, A[mod1(l+1, m)] ]
+        @inbounds Y[opp] = [ A[mod1(l+1, m)], i, A[mod1(l-1, m)] ] #TODO changed: reversed order. may be wrong
 
         deleteat!(A, l)
     end
@@ -859,18 +859,16 @@ function mutate!(C::WSCollection{T}, i::Integer; updateCliques::Bool = false) wh
     # is_mutable(C, i) || error("vertex $i with label $(label_to_string(C[i], C.n)) is not mutable!")
         
     Q = C.quiver
-    @inbounds i1, i2 = Q.badjlist[i]
-    @inbounds o1, o2 = Q.fadjlist[i]
+    i1, i2 = inneighbors(Q, i)
+    o1, o2 = outneighbors(Q, i)
 
     ##### update cliques #####
     
     if updateCliques && cliques_init(C)
-        
         _update_cliques!(i1, o1, i, C)
         _update_cliques!(i1, o2, i, C)
         _update_cliques!(i2, o1, i, C)
         _update_cliques!(i2, o2, i, C)
-        
     else
         C.whiteCliques = uninit
         C.blackCliques = uninit
