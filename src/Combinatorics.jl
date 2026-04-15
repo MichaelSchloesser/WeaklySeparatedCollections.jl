@@ -297,7 +297,7 @@ function compute_cliques(labels::Vector{T}) where T <: Integer
     filter!( p -> length(p.second) > 2, B)
 
     for C in values(W) label_positions!(labels, sort!(C)) end
-    for C in values(B) label_positions!(labels, sort!(C)) end
+    for C in values(B) label_positions!(labels, sort!(C, rev = true)) end
 
     return W, B
 end
@@ -332,7 +332,7 @@ function compute_cliques(labels::Vector{T}, quiver::SimpleDiGraph{T}) where T <:
     # there are no trivial cliques generated this way
 
     for C in values(W) label_positions!(labels, sort!(C)) end
-    for C in values(B) label_positions!(labels, sort!(C)) end
+    for C in values(B) label_positions!(labels, sort!(C, rev = true)) end
 
     return W, B
 end
@@ -800,7 +800,7 @@ function _merge_cliques!(X::Dict{T, Vector{T}}, Y::Dict{T, Vector{T}}, i, ind_ad
     @inbounds O = Y.vals[ind_opp]
     l = findindex(O, succ)
 
-    insert!(O, l+1, i) # TODO changed: l to l+1. may be wrong
+    insert!(O, l, i)
     Base._delete!(X, ind_adj) # TODO this is depreceated and might be unnecessary in the newest julia version. 
 end
 
@@ -814,8 +814,7 @@ function _split_clique!(X::Dict{T, Vector{T}}, Y::Dict{T, Vector{T}}, i, ind_adj
 
         l = findindex(A, i)
         m = length(A)
-        @inbounds Y[opp] = [ A[mod1(l+1, m)], i, A[mod1(l-1, m)] ] #TODO changed: reversed order. may be wrong
-
+        @inbounds Y[opp] = [ A[mod1(l-1, m)], i, A[mod1(l+1, m)] ]
         deleteat!(A, l)
     end
 end
