@@ -122,7 +122,7 @@ function WSC.drawTiling(C::WSCollection,
     background_color::Union{String, ColorTypes.Colorant} = "",
     draw_labels::Bool = true, 
     highlight_mutables::Bool = false, 
-    label_direction = "left") 
+    label_direction::Symbol = :left) 
 
     cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
@@ -157,13 +157,13 @@ function WSC.drawTiling(C::WSCollection,
             for i in 1:N
                 pos = tau(i)
 
-                if label_direction == "left"
-                    label = label_to_string(C[i], n)
-                elseif label_direction == "right"
-                    label = label_to_string( complement(C[i], n), n)
+                if label_direction == :left
+                    L = label_to_string(C[i], n)
+                else
+                    L = label_to_string( WSC.complement(C[i], n), n)
                 end
 
-                len = length(label)
+                len = length(L)
 
                 if is_mutable(C, i) && highlight_mutables
                     sethue("orange")
@@ -174,7 +174,7 @@ function WSC.drawTiling(C::WSCollection,
                 ellipse(pos, s/8*(len+1), s/4, :fill)
                 sethue("black")
                 ellipse(pos, s/8*(len+1), s/4, :stroke)
-                text(label, pos, halign=:center, valign=:middle)
+                text(L, pos, halign=:center, valign=:middle)
             end
         else
             for i = 1:length(C)
@@ -218,7 +218,7 @@ function WSC.drawPLG_straight(C::WSCollection,
     draw_labels::Bool = false, 
     highlight_mutables::Bool = false, 
     highlight::Int = 0, 
-    label_direction = "left")
+    label_direction::Symbol = :left)
 
     cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
@@ -337,10 +337,10 @@ function WSC.drawPLG_straight(C::WSCollection,
 
             for i = 1:n
         
-                if label_direction == "left"
-                    label = label_to_string(C[i], n)
-                elseif label_direction == "right"
-                    label = label_to_string( complement(C[i], n), n)
+                if label_direction == :left
+                    L = label_to_string(C[i], n)
+                else
+                    L = label_to_string( WSC.complement(C[i], n), n)
                 end
                 
                 add_dual_vertices!(dual_vertices, i, inneighbors(C.quiver, i), C, tau)
@@ -350,22 +350,22 @@ function WSC.drawPLG_straight(C::WSCollection,
                 push!(dual_vertices, len*tau(i))
 
                 c = sum(dual_vertices)/(2*len)
-                text(label, c, halign=:center, valign=:middle)
+                text(L, c, halign=:center, valign=:middle)
                 empty!(dual_vertices)
             end
 
             for i = n+1:length(C)
                 
-                if label_direction == "left"
-                    label = label_to_string(C[i], n)
-                elseif label_direction == "right"
-                    label = label_to_string( complement(C[i], n), n)
+                if label_direction == :left
+                    L = label_to_string(C[i], n)
+                else
+                    L = label_to_string( WSC.complement(C[i], n), n)
                 end
                 
                 add_dual_vertices!(dual_vertices, i, outneighbors(C.quiver, i), C, tau)
 
                 c = sum(dual_vertices)/length(dual_vertices)
-                text(label, c, halign=:center, valign=:middle)
+                text(L, c, halign=:center, valign=:middle)
                 empty!(dual_vertices)
             end
         end
@@ -382,7 +382,7 @@ function WSC.drawPLG_smooth(C::WSCollection,
     font_scale = 1.0,
     background_color::Union{String, ColorTypes.Colorant} = "", 
     draw_labels::Bool = false, 
-    label_direction = "left")
+    label_direction::Symbol = :left)
 
     cliques_init(C) || (C = WSCollection(C, keepCliques = true))
 
@@ -472,10 +472,10 @@ function WSC.drawPLG_smooth(C::WSCollection,
 
             for i = 1:n
                 
-                if label_direction == "left"
-                    label = label_to_string(C[i], n)
-                elseif label_direction == "right"
-                    label = label_to_string( complement(C[i], n), n)
+                if label_direction == :left
+                    L = label_to_string(C[i], n)
+                else
+                    L = label_to_string( WSC.complement(C[i], n), n)
                 end
                 
                 add_dual_vertices!(dual_vertices, i, inneighbors(C.quiver, i), C, tau)
@@ -485,22 +485,22 @@ function WSC.drawPLG_smooth(C::WSCollection,
                 push!(dual_vertices, len*tau(i))
 
                 c = sum(dual_vertices)/(2*len)
-                text(label, c, halign=:center, valign=:middle)
+                text(L, c, halign=:center, valign=:middle)
                 empty!(dual_vertices)
             end
 
             for i = n+1:length(C)
                 
-                if label_direction == "left"
-                    label = label_to_string(C[i], n)
-                elseif label_direction == "right"
-                    label = label_to_string( complement(C[i], n), n)
+                if label_direction == :left
+                    L = label_to_string(C[i], n)
+                else
+                    L = label_to_string( WSC.complement(C[i], n), n)
                 end
                 
                 add_dual_vertices!(dual_vertices, i, outneighbors(C.quiver, i), C, tau)
 
                 c = sum(dual_vertices)/length(dual_vertices)
-                text(label, c, halign=:center, valign=:middle)
+                text(L, c, halign=:center, valign=:middle)
                 empty!(dual_vertices)
             end
         end
@@ -510,7 +510,7 @@ end
 
 
 function WSC.draw(C::WSCollection, 
-    title::Union{Symbol, String} = :svg, 
+    title::Union{Symbol, String} = :svg,
     width::Int = 500, 
     height::Int = 500; 
     top_label::AbstractFloat = -1.0, 
@@ -520,7 +520,7 @@ function WSC.draw(C::WSCollection,
     draw_labels::Bool = true, 
     highlight_mutables::Bool = false, 
     highlight::Int = 0, 
-    label_direction = "left")
+    label_direction::Symbol = :left)
 
     if drawmode == :tiling
 

@@ -972,7 +972,7 @@ function peek(C::WSCollection, i::Integer)
 end
 
 
-function apply_to_collection!(f::Function, C::WSCollection, swap = false) # WSCollection{T}, f: T -> T
+function apply_to_collection!(f::Function, C::WSCollection{T}, swap = false) where T # f: T -> T
     
     # apply to labels
     for i in 1:length(C)
@@ -1027,7 +1027,7 @@ function rotate(C::WSCollection, amount::Int = 1)
     return rotate!(deepcopy(C), amount)
 end
 
-function reverse_bits(x::Integer, n)
+function reverse_bits(x::T, n::Int) where T <: Integer
     res = zero(T)
     for i in 1:n
         res <<= 1
@@ -1059,7 +1059,7 @@ function mirror(C::WSCollection)
 end
 
 function complement(x::T, n::Int) where T <: Integer
-    return ~x & (one(T) << n  -1)
+    return ~x & (one(T) << n  -one(T))
 end
 
 @doc raw"""
@@ -1068,7 +1068,7 @@ end
 Return the collection whose labels are complementary to those of `C`.
 """
 function complements!(C::WSCollection{T}) where T <: Integer
-    f = x-> ~x & (one(T) << C.n  -1)
+    f = x-> ~x & (one(T) << C.n  -one(T))
     return apply_to_collection!(f, C, true)
 end
 
@@ -1093,7 +1093,7 @@ This is the same as taking complements and rotating by `C.k`.
 function swap_colors!(C::WSCollection{T}) where T <: Integer
     # swapping colors = complement + rotate by k
 
-    f = x-> myBitrotate(~x & (one(T) << C.n  -1), C.k, C.n)
+    f = x-> myBitrotate(~x & (one(T) << C.n  -one(T)), C.k, C.n)
     return apply_to_collection!(f, C, true)
 end
 
