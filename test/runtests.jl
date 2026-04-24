@@ -7,64 +7,64 @@ using Test
 
     ######## temporary ########
         
-
+    label_to_string, label_to_array, label
 
 
     ######## Combinatorics ########
     
     @test begin
-        "is_weakly_separated, false example"
+        "label"
         
         v = [1,2,3,5,6,9]
-        w = [1,2,4,5,7,8]
+        label(v) == 311
+    end
+
+    @test begin
+        "is_weakly_separated, false example"
+        
+        v = label([1,2,3,5,6,9])
+        w = label([1,2,4,5,7,8])
+
         is_weakly_separated(v, w) == false
     end
 
     @test begin
         "is_weakly_separated, true example"
 
-        v = [1,2,3,5,6,9]
-        w = [1,2,3,5,7,8]
+        v = label([1,2,3,5,6,9])
+        w = label([1,2,3,5,7,8])
         is_weakly_separated(v, w) == true
     end
 
-    
+
     @test begin
-        "checkboard_labels return type"
+        "is_weakly_separated for rec_labels"
 
-        labels = checkboard_labels(4, 9)
-        typeof(labels) == Vector{Vector{Int}}
-    end
-
-    
-    @test begin
-        "is_weakly_separated for rectangle_labels"
-
-        labels = rectangle_labels(4, 9)
+        labels = rec_labels(4, 9)
         is_weakly_separated(labels)
     end
 
 
     @test begin
-        "is_weakly_separated for dual_checkboard_labels"
+        "is_weakly_separated for dcheck_labels"
 
-        labels = dual_checkboard_labels(4, 9)
+        labels = dcheck_labels(4, 9)
         is_weakly_separated(labels)
     end
 
 
     @test begin
-        "is_weakly_separated for dual_rectangle_labels"
+        "is_weakly_separated for drec_labels"
 
-        labels = dual_rectangle_labels(4, 9)
+        labels = drec_labels(4, 9)
         is_weakly_separated(labels)
     end
 
 
     @test begin
-        "is_weakly_separated for checkboard_labels"
+        "is_weakly_separated for check_labels"
 
-        labels = checkboard_labels(4, 9)
+        labels = check_labels(4, 9)
         is_weakly_separated(labels)
     end
 
@@ -72,25 +72,37 @@ using Test
     @test begin
         "compute_cliques from labels"
 
-        labels = checkboard_labels(4, 9)
-        WeaklySeparatedCollections.compute_cliques(labels)
+        labels = check_labels(4, 9)
+        WSC.compute_cliques(labels)
+        true
+    end
+
+    @test begin
+        "compute_quiver from labels & whiteCliques"
+
+        labels = check_labels(4, 9)
+        W, _ = WSC.compute_cliques(labels)
+        WSC.compute_quiver(9, labels, W)
+
+        true
+    end
+
+    @test begin
+        "compute_cliques from labels and quiver"
+
+        labels = check_labels(4, 9)
+        W, _ = WSC.compute_cliques(labels)
+        quiver = WSC.compute_quiver(9, labels, W)
+        WSC.compute_cliques(labels, quiver)
+
         true
     end
 
     
     @test begin
-        "compute_adjacencies from labels"
+        "compute_cliques using quiver vs only labels"
 
-        labels = checkboard_labels(4, 9)
-        WeaklySeparatedCollections.compute_adjacencies(9, labels)
-        true
-    end
-
-    
-    @test begin
-        "compute_cliques using quiver"
-
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         labels = check.labels
         quiver = check.quiver
         W, B = WSC.compute_cliques(labels, quiver)
@@ -120,24 +132,11 @@ using Test
 
     
     @test begin
-        "compute_boundaries"
-
-        check = checkboard_collection(4, 9)
-        labels = check.labels
-        quiver = check.quiver
-
-        W, B = WSC.compute_boundaries(labels, quiver)
-        _, W2, B2 = WSC.compute_adjacencies(9, labels)
-        (W == W2) && (B == B2)
-    end
-
-    
-    @test begin
         "WSCollection constructors from labels"
 
-        labels = checkboard_labels(4, 9)
+        labels = check_labels(4, 9)
         WSCollection(4, 9, labels)
-        WSCollection(4, 9, labels; computeCliques =  false)
+        WSCollection(4, 9, labels; keepCliques =  false)
 
         true
     end
@@ -146,46 +145,46 @@ using Test
     @test begin
         "WSCollection constructor using quiver"
 
-        labels = checkboard_collection(4, 9).labels
-        quiver = checkboard_collection(4, 9).quiver
+        labels = check_collection(4, 9).labels
+        quiver = check_collection(4, 9).quiver
         WSCollection(4, 9, labels, quiver)
-        WSCollection(4, 9, labels, quiver; computeCliques =  false)
+        WSCollection(4, 9, labels, quiver; keepCliques =  false)
 
         true
     end
 
     
     @test begin
-        "checkboard_collection"
+        "check_collection"
 
-        checkboard_collection(4, 9)
+        check_collection(4, 9)
         true
     end
 
     
     @test begin
-        "rectangle_collection"
+        "rec_collection"
 
-        rectangle_collection(4, 9)
+        rec_collection(4, 9)
         true
     end
 
     
     @test begin
-        "dual_rectangle_collection"
+        "drec_collection"
         
-        drec1 = dual_rectangle_collection(4, 9)
-        drec2 = complements(rectangle_collection(5, 9))
+        drec1 = drec_collection(4, 9)
+        drec2 = complements(rec_collection(5, 9))
 
         drec1 == drec2
     end
 
     
     @test begin
-        "dual_checkboard_collection"
+        "dcheck_collection"
 
-        dcheck1 = dual_checkboard_collection(4, 9)
-        dcheck2 = complements(checkboard_collection(5, 9))
+        dcheck1 = dcheck_collection(4, 9)
+        dcheck2 = complements(check_collection(5, 9))
 
         dcheck1 == dcheck2
     end
@@ -194,8 +193,8 @@ using Test
     @test begin
         "isequal, false example"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
 
         isequal(check, rec) == false
     end
@@ -204,9 +203,9 @@ using Test
     @test begin
         "isequal, true example"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         (check.labels[10], check.labels[11]) = (check.labels[11], check.labels[10])
-        check2 = checkboard_collection(4, 9)
+        check2 = check_collection(4, 9)
 
         isequal(check, check2) 
     end
@@ -215,8 +214,8 @@ using Test
     @test begin
         "overload Base.:(==) , false example"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
 
         (check == rec) == false
     end
@@ -225,9 +224,9 @@ using Test
     @test begin
         "overload Base.:(==) , true example"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         (check.labels[10], check.labels[11]) = (check.labels[11], check.labels[10])
-        check2 = checkboard_collection(4, 9)
+        check2 = check_collection(4, 9)
 
         check == check2
     end
@@ -236,8 +235,8 @@ using Test
     @test begin
         "overload Base.:(!=) , true example"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
 
         check != rec
     end
@@ -246,9 +245,9 @@ using Test
     @test begin
         "overload Base.:(!=) , false example"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         (check.labels[10], check.labels[11]) = (check.labels[11], check.labels[10])
-        check2 = checkboard_collection(4, 9)
+        check2 = check_collection(4, 9)
 
         (check != check2) == false
     end
@@ -257,25 +256,15 @@ using Test
     @test begin
         "getindex: collection"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         check[10] == check.labels[10]
     end
-    
-
-    # @test begin
-    #     "setindex!: collection"
-
-    #     check = checkboard_collection(4, 9)
-    #     check[10] = check.labels[11]
-
-    #     true
-    # end
 
 
     @test begin
         "label in collection, true example"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         check[10] in check
     end
 
@@ -283,8 +272,8 @@ using Test
     @test begin
         "label in collection, false example"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
         !(check[10] in rec)
     end
 
@@ -292,32 +281,32 @@ using Test
     @test begin
         "length: collection"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         length(check) == 21
     end
 
 
     @test begin
-        "cliques empty, true example"
+        "cliques_init, true example"
 
-        check = WSCollection(checkboard_collection(4, 9), computeCliques = false)
-        cliques_empty(check)
+        check = check_collection(4, 9, keepCliques = false)
+        cliques_init(check)
     end
 
 
     @test begin
-        "cliques empty, false example"
+        "cliques_init, false example"
 
-        check = checkboard_collection(4, 9)
-        !cliques_empty(check)
+        check = check_collection(4, 9)
+        !cliques_init(check)
     end
 
 
     @test begin
         "intersect: collection"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
         
         intersect(check, rec)
         true
@@ -327,8 +316,8 @@ using Test
     @test begin
         "setdiff: collection"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
         
         setdiff(check, rec)
         true
@@ -338,8 +327,8 @@ using Test
     @test begin
         "union: collection"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
         
         union(check, rec)
         true
@@ -349,7 +338,7 @@ using Test
     @test begin
         "is_frozen"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         is_frozen(check, 1) && is_frozen(check, 9) && !is_frozen(check, 10)
     end
 
@@ -357,7 +346,7 @@ using Test
     @test begin
         "is_mutable"
 
-        rec = rectangle_collection(4, 9)
+        rec = rec_collection(4, 9)
         !is_mutable(rec, 1) && is_mutable(rec, 10) && !is_mutable(rec, 11)
     end
 
@@ -365,7 +354,15 @@ using Test
     @test begin
         "get_mutables"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
+        get_mutables(check) == collect(10:21)
+    end
+
+    # TODO get_mutables!(C::WSCollection, preloaded)
+    @test begin
+        "get_mutables"
+
+        check = check_collection(4, 9)
         get_mutables(check) == collect(10:21)
     end
 
@@ -373,7 +370,7 @@ using Test
     @test begin
         "mutate! and mutate"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         mutate!(check, 10)
         mutate(check, 13)
         true
@@ -383,8 +380,8 @@ using Test
     @test begin
         "rotate"
 
-        rec = rectangle_collection(4, 9)
-        rotate(rec, 1)
+        rec = rec_collection(4, 9)
+        rotate!(rec, 1)
         rotate(rec, 5)
         true
     end
@@ -393,8 +390,8 @@ using Test
     @test begin
         "mirror"
 
-        rec = rectangle_collection(4, 9)
-        mirror(rec, 1)
+        rec = rec_collection(4, 9)
+        mirror!(rec, 1)
         mirror(rec, 4)
         true
     end
@@ -403,7 +400,8 @@ using Test
     @test begin
         "complements"
 
-        rec = rectangle_collection(4, 9)
+        rec = rec_collection(4, 9)
+        complements!(rec)
         complements(rec)
         true
     end
@@ -412,12 +410,14 @@ using Test
     @test begin 
         "swap_colors"
 
-        rec = rectangle_collection(4, 9)
+        rec = rec_collection(4, 9)
         swap_colors(rec)
+        swap_colors!(rec)
         true
     end
 
 
+    # TODO hier weiter machen
     @test begin 
         "extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})"
 
@@ -431,7 +431,7 @@ using Test
         "extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})"
 
         label = [3,5,6]
-        rec_labels = rectangle_labels(3, 6)
+        rec_labels = rec_labels(3, 6)
         extend_weakly_separated!(3, 6, [label], rec_labels)
         true
     end
@@ -441,7 +441,7 @@ using Test
         "extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)"
 
         label = [3,5,6]
-        rec = rectangle_collection(3, 6)
+        rec = rec_collection(3, 6)
         extend_weakly_separated!([label], rec)
         true
     end
@@ -460,7 +460,7 @@ using Test
         "extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})"
 
         label = [3,5,6]
-        rec_labels = rectangle_labels(3, 6)
+        rec_labels = rec_labels(3, 6)
         extend_to_collection(3, 6, [label], rec_labels)
         true
     end
@@ -470,7 +470,7 @@ using Test
         "extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})"
 
         label = [3,5,6]
-        rec_labels = rectangle_labels(3, 6)
+        rec_labels = rec_labels(3, 6)
         extend_to_collection(3, 6, [label], rec_labels)
         true
     end
@@ -480,7 +480,7 @@ using Test
         "extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)"
 
         label = [3,5,6]
-        rec = rectangle_collection(3, 6)
+        rec = rec_collection(3, 6)
         extend_to_collection([label], rec)
         true
     end
@@ -491,8 +491,8 @@ using Test
     @test begin 
         "BFS"
 
-        check = checkboard_collection(3, 6)
-        rec = rectangle_collection(3, 6)
+        check = check_collection(3, 6)
+        rec = rec_collection(3, 6)
         seq = BFS(check, rec)
 
         for m in seq
@@ -506,8 +506,8 @@ using Test
     @test begin 
         "BFS with limited search space"
 
-        check = checkboard_collection(3, 6)
-        rec = rectangle_collection(3, 6)
+        check = check_collection(3, 6)
+        rec = rec_collection(3, 6)
         seq = BFS(check, rec, limitSearchSpace = true)
         
         for m in seq
@@ -521,8 +521,8 @@ using Test
     @test begin 
         "DFS"
 
-        check = checkboard_collection(3, 6)
-        rec = rectangle_collection(3, 6)
+        check = check_collection(3, 6)
+        rec = rec_collection(3, 6)
         seq = DFS(check, rec)
         
         for m in seq
@@ -536,8 +536,8 @@ using Test
     @test begin 
         "DFS with limited search space"
 
-        check = checkboard_collection(3, 6)
-        rec = rectangle_collection(3, 6)
+        check = check_collection(3, 6)
+        rec = rec_collection(3, 6)
         seq = DFS(check, rec, limitSearchSpace = true)
         
         for m in seq
@@ -551,7 +551,7 @@ using Test
     @test begin 
         "generalized_associahedron"
 
-        check = checkboard_collection(3, 6)
+        check = check_collection(3, 6)
         generalized_associahedron(check)
         generalized_associahedron(3, 6)
         
@@ -582,8 +582,8 @@ using Test
     @test begin 
         "number_wrong_labels"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
 
         number_wrong_labels(check, rec)
         true
@@ -593,8 +593,8 @@ using Test
     @test begin 
         "min_label_dist(collection::WSCollection, target::WSCollection)"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
 
         min_label_dist(check, rec)
         true
@@ -604,8 +604,8 @@ using Test
     @test begin 
         "min_label_dist_experimental(collection::WSCollection, target::WSCollection)"
 
-        check = checkboard_collection(4, 9)
-        rec = rectangle_collection(4, 9)
+        check = check_collection(4, 9)
+        rec = rec_collection(4, 9)
 
         min_label_dist_experimental(check, rec)
         true
@@ -615,8 +615,8 @@ using Test
     @test begin 
         "Astar"
 
-        check = checkboard_collection(3, 7)
-        rec = rectangle_collection(3, 7)
+        check = check_collection(3, 7)
+        rec = rec_collection(3, 7)
         seq = Astar(check, rec)
 
         for m in seq
@@ -630,7 +630,7 @@ using Test
     @test begin 
         "find_label"
 
-        check = checkboard_collection(4, 9)
+        check = check_collection(4, 9)
         label = WSC.super_potential_label(4, 9, 3)
         seq = find_label(check, label)
 
@@ -649,15 +649,15 @@ using Test
     @test begin 
         "Seed: constructors"
 
-        Q = rectangle_collection(4, 9).quiver 
+        Q = rec_collection(4, 9).quiver 
         R, _ = polynomial_ring(ZZ, 21)
         S = fraction_field(R)
         Seed(9, gens(S), Q)
         
-        Q = rectangle_collection(4, 9).quiver 
+        Q = rec_collection(4, 9).quiver 
         Seed(21, 9, Q)
         
-        Seed(rectangle_collection(4, 9)) 
+        Seed(rec_collection(4, 9)) 
 
         true
     end
@@ -666,7 +666,7 @@ using Test
     @test begin 
         "Seed: getindex"
 
-        s = Seed(rectangle_collection(4, 9)) 
+        s = Seed(rec_collection(4, 9)) 
         s[10] == s.variables[10]
     end
 
@@ -674,7 +674,7 @@ using Test
     @test begin 
         "Seed: setindex!"
 
-        s = Seed(rectangle_collection(4, 9)) 
+        s = Seed(rec_collection(4, 9)) 
         s[10] = s[11]
 
         s[10] == s[11]
@@ -684,7 +684,7 @@ using Test
     @test begin 
         "Seed: is_frozen, true example"
 
-        s = Seed(rectangle_collection(4, 9)) 
+        s = Seed(rec_collection(4, 9)) 
         is_frozen(s, 1)
     end
 
@@ -692,7 +692,7 @@ using Test
     @test begin 
         "Seed: is_frozen, false example"
 
-        s = Seed(rectangle_collection(4, 9)) 
+        s = Seed(rec_collection(4, 9)) 
         !is_frozen(s, 11)
     end
 
@@ -700,7 +700,7 @@ using Test
     @test begin 
         "Seed: length"
 
-        s = Seed(rectangle_collection(4, 9)) 
+        s = Seed(rec_collection(4, 9)) 
         length(s) == 21
     end
 
@@ -708,10 +708,10 @@ using Test
     @test begin 
         "grid_seed"
 
-        Q = rectangle_collection(4, 9).quiver
+        Q = rec_collection(4, 9).quiver
         grid_seed(9, 5, 4, Q)
-        grid_seed(rectangle_collection(4, 9))
-        grid_seed(rectangle_collection(4, 9), 4, 5) 
+        grid_seed(rec_collection(4, 9))
+        grid_seed(rec_collection(4, 9), 4, 5) 
 
         true
     end
@@ -737,7 +737,7 @@ using Test
         "checkboard_potential_terms"
 
         seed, _ = extended_checkboard_seed(3, 6)
-        T1 = get_superpotential_terms(checkboard_collection(3, 6), seed)
+        T1 = get_superpotential_terms(check_collection(3, 6), seed)
         T2 = checkboard_potential_terms(3, 6)
         T1 == T2
     end
@@ -746,7 +746,7 @@ using Test
     @test begin 
         "newton_okounkov_inequalities"
 
-        newton_okounkov_inequalities(checkboard_collection(3, 6))
+        newton_okounkov_inequalities(check_collection(3, 6))
         true
     end
 
@@ -754,7 +754,7 @@ using Test
     @test begin 
         "checkboard_inequalities"
 
-        A1, b1 = newton_okounkov_inequalities(checkboard_collection(3, 6))
+        A1, b1 = newton_okounkov_inequalities(check_collection(3, 6))
         A2, b2 = checkboard_inequalities(3, 6)
 
         (A1 == A2) && (b1 == b2)
@@ -764,7 +764,7 @@ using Test
     @test begin 
         "newton_okounkov_body"
 
-        newton_okounkov_body(checkboard_collection(3, 6))
+        newton_okounkov_body(check_collection(3, 6))
         true
     end
 
@@ -772,7 +772,7 @@ using Test
     @test begin 
         "checkboard_body"
 
-        N1 = newton_okounkov_body(checkboard_collection(3, 6))
+        N1 = newton_okounkov_body(check_collection(3, 6))
         N2 = checkboard_body(3, 6)
         N1 == N2
     end
@@ -799,7 +799,7 @@ using Test
         "Base.:^"
 
         s, t = gens(WSC.dihedral_perm_group(6))
-        check = checkboard_collection(3, 6)
+        check = check_collection(3, 6)
 
         (check^s)^t == check^(s*t)
     end
@@ -808,7 +808,7 @@ using Test
         "gset"
 
         D = WSC.dihedral_perm_group(6)
-        check = checkboard_collection(3, 6)
+        check = check_collection(3, 6)
 
         gset(D, [check])
         true
@@ -819,7 +819,7 @@ using Test
         "orbit"
 
         D = WSC.dihedral_perm_group(6)
-        check = checkboard_collection(3, 6)
+        check = check_collection(3, 6)
 
         M = gset(D, [check])
         
@@ -831,7 +831,7 @@ using Test
         "stabilizer"
 
         D = WSC.dihedral_perm_group(6)
-        check = checkboard_collection(3, 6)
+        check = check_collection(3, 6)
 
         (stabilizer(D, check) == stabilizer(check) )
     end
@@ -841,35 +841,35 @@ using Test
     import Luxor
     
     @test begin # drawTiling
-        G = checkboard_collection(4, 9)
+        G = check_collection(4, 9)
         drawTiling(G, "test_1.png", 500, 500)
         true
     end
 
     
     @test begin # drawPLG_poly
-        G = checkboard_collection(4, 9)
+        G = check_collection(4, 9)
         drawPLG(G, "test_2.png", 500, 500; drawmode = "polygonal")
         true
     end
 
     
     @test begin # drawPLG_straight
-        G = checkboard_collection(4, 9)
+        G = check_collection(4, 9)
         drawPLG(G, "test_3.png", 500, 500; drawmode = "straight")
         true
     end
 
     
     @test begin # drawPLG_smooth
-        G = checkboard_collection(4, 9)
+        G = check_collection(4, 9)
         drawPLG(G, "test_4.png", 500, 500; drawmode = "smooth")
         true
     end
 
     
     @test begin # backgroundColor via named colors
-        G = checkboard_collection(4, 9)
+        G = check_collection(4, 9)
         drawPLG(G, "test_5.png", 500, 500; backgroundColor = "purple")
         true
     end
@@ -877,7 +877,7 @@ using Test
      
     using Colors 
     @test begin # backgroundColor via RGBA value. fails without using Colors
-        G = checkboard_collection(4, 9)
+        G = check_collection(4, 9)
         drawPLG(G, "test_6.png", 500, 500; backgroundColor = RGBA(1.0, 1.0, 1.0, 0.4))
         true
     end
@@ -887,7 +887,7 @@ using Test
     # using Mousetrap
 
     # @test begin
-    #     check = checkboard_collection(4, 9)
+    #     check = check_collection(4, 9)
     #     visualizer!(check)
     #     true
     # end
