@@ -26,6 +26,8 @@ export  Seed, laurent_expansion, grid_seed, extended_rectangle_seed, extended_ch
         get_superpotential_terms, rectangle_potential_terms, checkboard_potential_terms,
         newton_okounkov_inequalities, checkboard_inequalities, checkboard_body, newton_okounkov_body
 
+export  visualizer!
+
 import Graphs: SimpleGraph, SimpleDiGraph, nv, ne, edges, src, dst, has_edge, add_edge!, add_vertex!, rem_edge!, inneighbors, outneighbors, degree
 
 using LazilyInitializedFields

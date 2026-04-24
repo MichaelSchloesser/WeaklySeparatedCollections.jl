@@ -1,13 +1,10 @@
-
 module Plotting
 
 using WeaklySeparatedCollections, Luxor
+import Luxor: Point as LPoint
 import WeaklySeparatedCollections as WSC
 using Colors
 import Graphs: inneighbors, outneighbors
-using StaticArrays
-
-const LPoint = Luxor.Point
 
 
 # adjusted from https://github.com/JuliaGraphics/Luxor.jl/blob/master/src/polygons.jl 
