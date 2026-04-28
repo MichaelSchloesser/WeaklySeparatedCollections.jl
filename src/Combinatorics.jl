@@ -41,9 +41,9 @@ function findindex(array::Vector, val)
 end
 
 @doc raw"""
-    is_weakly_separated(n::Int, v::Vector{Int}, w::Vector{Int})
+    is_weakly_separated(x::T, y::T) where T <: Integer
 
-Test if two vectors `v` and `w` viewed as subsets of `{1 , ..., n}` are weakly separated.
+Test if `x` and `y` are weakly separated.
 """
 function is_weakly_separated(x::T, y::T) where T <: Integer
     a =  x & ~y
@@ -56,11 +56,24 @@ function is_weakly_separated(x::T, y::T) where T <: Integer
 end
 
 @doc raw"""
-    is_weakly_separated(labels::Vector{Vector{Int}})
+    is_weakly_separated(x, labels)
+
+Test if all elements of `labels` are weakly separated from 'x'.
+"""
+function is_weakly_separated(x, labels) # labels should be something like Vector{T}, T <: Integer
+    for y in labels
+        is_weakly_separated(x, y) || return false
+    end
+
+    return true
+end
+
+@doc raw"""
+    is_weakly_separated(labels)
 
 Test if the elements of `labels` are pairwise weakly separated.
 """
-function is_weakly_separated(labels::Vector{T}) where T <: Integer
+function is_weakly_separated(labels) # labels should be something like Vector{T}, T <: Integer
     len = length(labels)
     
     for i = 1:len-1
@@ -1114,38 +1127,9 @@ end
     return (t+one(T)) | (((~t & -~t) - one(T)) >>> (trailing_zeros(x) + one(T)))
 end
 
-# extend to maximal weakly separated collection using brute force
-@doc raw"""
-    extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{T}})  
 
-Extend `labels` to contain the labels of a maximal weakly separated collection.
-"""
-function extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{T}}) where T <: Integer # TODO optimize
-    N = k*(n-k)+1
-
-    # enforce frozen labels in the first n positions
-    frozen = frozen_labels(k, n, T)
-    labels = union(frozen, labels)
-
-    if length(labels) == N
-        return labels
-    end
-
-    k_sets = subsets(1:n, k)
-
-    for v in k_sets
-        v = Vector{T}(v)
-        if !(v in labels)
-            is_weakly_separated(push!(labels, v)) || pop!(labels)
-        end
-
-        if length(labels) == N
-            return labels
-        end
-    end
-
-end
-
+# TODO check if this even mutates labels1. maybe rename frozen to labels. 
+# update extend_to_collection accordinly (dont need copying then).
 # extend to maximal weakly separated collection using know labels, then brute fore
 @doc raw"""
     extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{T}}, 
@@ -1154,30 +1138,30 @@ end
 Extend `labels1` to contain the labels of a maximal weakly separated collection.
 Use elements of `labels2` if possible.
 """
-function extend_weakly_separated!(k::Int, n::Int, labels1::Vector{T}, 
-                                                  labels2::Vector{T} = Vector{T}()) where T <: Integer
+function extend_weakly_separated!(k::Int, n::Int, labels1, labels2 = ())
+
+    isempty(labels1) && error("labels1 must be nonempty.")
+    T = eltype(labels1)
+
+    isempty(labels2) || (T == eltype(labels2)) || error("eltype(labels1) = $(eltype(labels1)) does not match eltype(labels2) = $(eltyype(labels)).")
+
     max = k*(n-k)+1
 
     # enforce frozen labels in the first n positions
     frozen = frozen_labels(k, n, T)
-    labels1 = union(frozen, labels1)
+    labels1 = union!(frozen, labels1)
 
+    # try to add elements from labels2 to labels1
     for v in labels2
-        if !(v in labels1)
-            is_weakly_separated(push!(labels1, v)) || pop!(labels1)
-        end
-
+        (v in labels1) || is_weakly_separated(v, labels1) && push!(labels1, v)
         length(labels1) == max && return labels1
     end
 
+    # continue by brute force
     v = frozen[n]
-
     while v < frozen[n-k]
 
-        if !(v in labels1)
-            is_weakly_separated(push!(labels1, v)) || pop!(labels1)
-        end
-
+        (v in labels1) || is_weakly_separated(v, labels1) && push!(labels1, v)
         length(labels1) == max && return labels1
 
         v = next_combination(v)
@@ -1194,9 +1178,7 @@ end
 Return a maximal weakly separated collection containing all elements of `labels1`.
 Use elements of `labels2` if possible.
 """
-function extend_to_collection(k::Int, n::Int, labels1::Vector{T}, 
-                                              labels2::Vector{T} = Vector{T}()) where T <: Integer
-
+function extend_to_collection(k::Int, n::Int, labels1, labels2 = ())
     return WSCollection(k, n, extend_weakly_separated!(k, n, copy(labels1), labels2))
 end
 
@@ -1208,18 +1190,18 @@ Use labels of `C` if possible.
 """
 function extend_to_collection(label::T, C::WSCollection{T}) where T <: Integer
 
-    L = extend_weakly_separated!(C.k, C.n, [label], C.labels)
+    L = extend_weakly_separated!(C.k, C.n, (label,), C.labels)
     return WSCollection(C.k, C.n, L)
 end
 
 @doc raw"""
     extend_to_collection(labels::Vector{T}, C::WSCollection{T}) where T <: Integer
 
-Return a maximal weakly separated collection containing all elements of `labels`.
-Use labels of `C` if possible.
+Return a maximal weakly separated collection containing all elements of `labels`,
+provided 'labels' is weakly separated. Use labels of `C` if possible.
 """
-function extend_to_collection(labels::Vector{T}, C::WSCollection{T}) where T <: Integer
-
+function extend_to_collection(labels, C::WSCollection)
+    
     L = extend_weakly_separated!(C.k, C.n, copy(labels), C.labels)
     return WSCollection(C.k, C.n, L)
 end

@@ -358,12 +358,14 @@ using Test
         get_mutables(check) == collect(10:21)
     end
 
-    # TODO get_mutables!(C::WSCollection, preloaded)
-    @test begin
-        "get_mutables"
 
+    @test begin
+        "get_mutables with preloaded vector" 
+
+        preloaded = Vector{Int}(undef, 21)
         check = check_collection(4, 9)
-        get_mutables(check) == collect(10:21)
+
+        (get_mutables!(check, preloaded) == 12) && (collect(10:21) == preloaded[1:12])
     end
 
     
@@ -417,75 +419,58 @@ using Test
     end
 
 
-    # TODO hier weiter machen
     @test begin 
-        "extend_weakly_separated!(k::Int, n::Int, labels::Vector{Vector{Int}})"
+        "extend_weakly_separated!(k::Int, n::Int, labels1, labels2)"
 
-        label = [3,5,6]
-        extend_weakly_separated!(3, 6, [label])
-        true
-    end
-
-
-    @test begin 
-        "extend_weakly_separated!(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})"
-
-        label = [3,5,6]
+        L = label([3,5,6])
         rec_labels = rec_labels(3, 6)
-        extend_weakly_separated!(3, 6, [label], rec_labels)
-        true
-    end
-
-    
-    @test begin 
-        "extend_weakly_separated!(labels::Vector{Vector{Int}}, collection::WSCollection)"
-
-        label = [3,5,6]
-        rec = rec_collection(3, 6)
-        extend_weakly_separated!([label], rec)
-        true
+        length(extend_weakly_separated!(3, 6, (L,), rec_labels)) == 10
     end
 
 
     @test begin 
-        "extend_to_collection(k::Int, n::Int, labels::Vector{Vector{Int}})"
+        "extend_weakly_separated!(k::Int, n::Int, labels1)"
 
-        label = [3,5,6]
-        extend_to_collection(3, 6, [label])
-        true
+        L = label([3,5,6])
+        length(extend_weakly_separated!(3, 6, (L,))) == 10
     end
 
 
     @test begin 
-        "extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})"
+        "extend_to_collection(k::Int, n::Int, labels)"
 
-        label = [3,5,6]
+        L = label([3,5,6])
+        length(extend_to_collection(3, 6, (L,))) == 10
+    end
+
+
+    @test begin 
+        "extend_to_collection(k::Int, n::Int, labels1, labels2)"
+
+        L = label([3,5,6])
         rec_labels = rec_labels(3, 6)
-        extend_to_collection(3, 6, [label], rec_labels)
-        true
-    end
-
-
-    @test begin 
-        "extend_to_collection(k::Int, n::Int, labels1::Vector{Vector{Int}}, labels2::Vector{Vector{Int}})"
-
-        label = [3,5,6]
-        rec_labels = rec_labels(3, 6)
-        extend_to_collection(3, 6, [label], rec_labels)
-        true
+        length(extend_to_collection(3, 6, (L,), rec_labels)) == 10
     end
     
 
     @test begin 
-        "extend_to_collection(labels::Vector{Vector{Int}}, collection::WSCollection)"
+        "extend_to_collection(label, collection::WSCollection)"
 
-        label = [3,5,6]
+        L = label([3,5,6])
         rec = rec_collection(3, 6)
-        extend_to_collection([label], rec)
-        true
+        length(extend_to_collection(L, rec)) == 10
     end
 
 
+    @test begin 
+        "extend_to_collection(labels, collection::WSCollection)"
+
+        L = label([3,5,6])
+        rec = rec_collection(3, 6)
+        length(extend_to_collection((L,), rec)) == 10
+    end
+
+    # TODO continue here
     ######## Searching ########
 
     @test begin 
